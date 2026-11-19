@@ -34,7 +34,7 @@ Checked with:
 - Optional: SAIN, MoreBotsAPI, Smoothie, Fika
 
 ## Installation
-1. Download `DMNV-Perun-<version>.zip` from Releases (Fika groups: `DMNV-Perun-<version>-fika.zip`, which also has the Fika bridge).
+1. Download `DMNV-Perun-<version>.zip` from Releases. The same zip works in single player and in Fika: it also has the Fika bridge, which stays off without Fika.
 2. Extract it into your SPT folder (the one with `EscapeFromTarkov.exe`). You should get `BepInEx\plugins\DMNV-Perun\Perun.Client.dll`.
 3. Install BigBrain if you don't have it.
 4. Start the game. `BepInEx\LogOutput.log` shows `DMNV-Perun 0.12.0 loaded`.
@@ -73,8 +73,7 @@ Perun works for the **Fika host** (and in single player). Bots spawned by the ho
 
 **Take control in Fika (experimental, host only):** off by default; turn on "Allow take control in Fika" in F12. The bot you control becomes "your player" as in single player.
 
-For pause, weather and time to reach the clients, everyone (host and clients) needs `Perun.Fika.dll` next to `Perun.Client.dll` in `BepInEx\plugins\DMNV-Perun\` (the `-fika` release zip). 
-Don't install the bridge without Fika: BepInEx would skip it with a missing-dependency warning. 
+For pause, weather and time to reach the clients, everyone (host and clients) needs `Perun.Fika.dll` next to `Perun.Client.dll` in `BepInEx\plugins\DMNV-Perun\`; the release zip includes it. 
 Clients without it simply don't see those changes.
 
 ## Building
@@ -90,7 +89,7 @@ Requirements: .NET SDK 8 or newer, and an SPT 4.1.x install with BigBrain in `Be
    The release zip is written to `dist\DMNV-Perun-<version>.zip`.
 3. Optional: `-p:DeployToGame=true` copies the DLL into `<SPTPath>\BepInEx\plugins\DMNV-Perun\`.
 
-The Fika bridge (`Fika` project) also needs a Fika install for `Fika.Core.dll`: add `-p:FikaGamePath="D:\Fika"` (default `C:\Games\Fika4`) and build `Fika` instead of `Client`. A Release build writes `dist\DMNV-Perun-<version>-fika.zip` with both DLLs.
+The Fika bridge (`Fika` project) also needs a Fika install for `Fika.Core.dll`: add `-p:FikaGamePath="D:\Fika"` (default `C:\Games\Fika4`) and build `Fika` instead of `Client`. A Release build writes `dist\DMNV-Perun-<version>.zip` with both DLLs (building only `Client` gives a zip without the bridge).
 
 Other paths can be overridden too: `ManagedPath`, `BepInExPath`, `HollowedPath`, `FikaPluginsPath`.
 
