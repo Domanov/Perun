@@ -45,7 +45,7 @@
     </PropertyGroup>
     <RemoveDir Directories="$(FikaStaging)" />
     <Copy SourceFiles="$(TargetPath);$(ClientBuilt);$(MSBuildProjectDirectory)\..\LICENSE.txt" DestinationFolder="$(FikaPluginStaging)" />
-    <ZipDirectory SourceDirectory="$(FikaStaging)" DestinationFile="$(DistDir)\$(ModAuthor)-$(ModName)-$(Version)-fika.zip" Overwrite="true" />
-    <Message Importance="High" Text="Fika release zip: $(DistDir)\$(ModAuthor)-$(ModName)-$(Version)-fika.zip" />
+    <ZipDirectory SourceDirectory="$(FikaStaging)" DestinationFile="$(DistDir)\$(ModAuthor)-$(ModName)-$(Version).zip" Overwrite="true" />
+    <Message Importance="High" Text="Release zip (with the Fika bridge): $(DistDir)\$(ModAuthor)-$(ModName)-$(Version).zip" />
   </Target>
 </Project>
