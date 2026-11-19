@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.0 (unreleased)
+## 0.12.0 (2026-11-19)
 - Verbose logging also writes the game version, plugin list and Perun settings once per session (the password only as set or empty), and each raid's map, Fika role, your character and game time.
 - Edge scrolling: moving the cursor to the screen edge pans the view, now on by default ("Edge scrolling" in F12; it replaces "Edge pan"). The cursor stays inside the game window in RTS mode, also in windowed mode.
 - When the bot you control dies, the camera pulls back over its body instead of flying back to where you took control.
