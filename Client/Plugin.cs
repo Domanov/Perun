@@ -105,6 +105,7 @@ public class Plugin : BaseUnityPlugin
         Compat.FovFixCompat.Enable();
         Compat.RealismCompat.Enable();
         Compat.FikaDeathGuard.Enable();
+        Compat.FikaBridgeLoader.Load(System.IO.Path.GetDirectoryName(Info.Location), gameObject, Config);
     }
 
     private void Update()

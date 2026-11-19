@@ -15,8 +15,6 @@ namespace Perun.Client;
 // With Verbose logging on: the setup once per game session and each raid once, so a shared log shows what Perun ran with.
 internal static class Diagnostics
 {
-    private const string PerunFikaGuid = "com.dmnv.perunfika";
-
     private static bool _setupLogged;
     private static GameWorld _raidLogged;
 
@@ -98,5 +96,5 @@ internal static class Diagnostics
     }
 
     private static string Bridge() =>
-        Chainloader.PluginInfos.TryGetValue(PerunFikaGuid, out PluginInfo info) ? $"Perun bridge {info.Metadata.Version}" : "no Perun bridge";
+        FikaBridgeLoader.Version != null ? $"Perun bridge {FikaBridgeLoader.Version}" : "no Perun bridge";
 }
