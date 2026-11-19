@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Perun.Client</AssemblyName>
+    <RootNamespace>Perun.Client</RootNamespace>
+    <ModAuthor>DMNV</ModAuthor>
+    <ModName>Perun</ModName>
+    <Version>$(PerunVersion)</Version>
+    <!-- Nullable reference types are off: the code was written without them, and turning them on project-wide
+         would raise warnings across every file at once. Enable per file (#nullable enable) for new code. -->
+    <Nullable>disable</Nullable>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Perun.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp" HintPath="$(HollowedPath)" Private="False" />
+    <Reference Include="Comfort" HintPath="$(ManagedPath)\Comfort.dll" Private="False" />
+    <Reference Include="Comfort.Unity" HintPath="$(ManagedPath)\Comfort.Unity.dll" Private="False" />
+    <Reference Include="UnityEngine" HintPath="$(ManagedPath)\UnityEngine.dll" Private="False" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedPath)\UnityEngine.CoreModule.dll" Private="False" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(ManagedPath)\UnityEngine.InputLegacyModule.dll" Private="False" />
+    <Reference Include="UnityEngine.IMGUIModule" HintPath="$(ManagedPath)\UnityEngine.IMGUIModule.dll" Private="False" />
+    <Reference Include="UnityEngine.PhysicsModule" HintPath="$(ManagedPath)\UnityEngine.PhysicsModule.dll" Private="False" />
+    <Reference Include="UnityEngine.AIModule" HintPath="$(ManagedPath)\UnityEngine.AIModule.dll" Private="False" />
+    <Reference Include="UnityEngine.AnimationModule" HintPath="$(ManagedPath)\UnityEngine.AnimationModule.dll" Private="False" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(ManagedPath)\UnityEngine.TextRenderingModule.dll" Private="False" />
+    <Reference Include="Sirenix.Serialization" HintPath="$(ManagedPath)\Sirenix.Serialization.dll" Private="False" />
+    <Reference Include="DissonanceVoip" HintPath="$(ManagedPath)\DissonanceVoip.dll" Private="False" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(ManagedPath)\Newtonsoft.Json.dll" Private="False" />
+    <Reference Include="BepInEx" HintPath="$(BepInExPath)\core\BepInEx.dll" Private="False" />
+    <Reference Include="0Harmony" HintPath="$(BepInExPath)\core\0Harmony.dll" Private="False" />
+    <Reference Include="spt-common" HintPath="$(SptPluginsPath)\spt-common.dll" Private="False" />
+    <Reference Include="DrakiaXYZ-BigBrain" HintPath="$(BepInExPath)\plugins\DrakiaXYZ-BigBrain.dll" Private="False" />
+    <Reference Include="spt-reflection" HintPath="$(SptPluginsPath)\spt-reflection.dll" Private="False" />
+  </ItemGroup>
+
+  <Target Name="DeployClient" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
+    <PropertyGroup>
+      <ClientDeployDir>$(BepInExPath)\plugins\$(ModAuthor)-$(ModName)</ClientDeployDir>
+    </PropertyGroup>
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ClientDeployDir)" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ClientDeployDir)" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Message Importance="High" Text="Client deployed: $(ClientDeployDir)" />
+  </Target>
+
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+      <Staging>$(DistDir)\staging</Staging>
+      <PluginStaging>$(Staging)\BepInEx\plugins\$(ModAuthor)-$(ModName)</PluginStaging>
+    </PropertyGroup>
+    <RemoveDir Directories="$(Staging)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginStaging)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\LICENSE.txt" DestinationFolder="$(PluginStaging)" />
+    <ZipDirectory SourceDirectory="$(Staging)" DestinationFile="$(DistDir)\$(ModAuthor)-$(ModName)-$(Version).zip" Overwrite="true" />
+    <Message Importance="High" Text="Release zip: $(DistDir)\$(ModAuthor)-$(ModName)-$(Version).zip" />
+  </Target>
+</Project>

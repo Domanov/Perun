@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Perun.Fika</AssemblyName>
+    <RootNamespace>Perun.Fika</RootNamespace>
+    <ModAuthor>DMNV</ModAuthor>
+    <ModName>Perun</ModName>
+    <Version>$(PerunVersion)</Version>
+    <!-- Nullable reference types are off: the code was written without them, and turning them on project-wide
+         would raise warnings across every file at once. Enable per file (#nullable enable) for new code. -->
+    <Nullable>disable</Nullable>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <FikaGamePath Condition="'$(FikaGamePath)' == ''">C:\Games\Fika4</FikaGamePath>
+    <FikaPluginsPath Condition="'$(FikaPluginsPath)' == ''">$(FikaGamePath)\BepInEx\plugins</FikaPluginsPath>
+    <DeployToFika Condition="'$(DeployToFika)' == ''">false</DeployToFika>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Perun.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Perun.Client.csproj" Private="False" />
+    <Reference Include="Assembly-CSharp" HintPath="$(HollowedPath)" Private="False" />
+    <Reference Include="Comfort" HintPath="$(ManagedPath)\Comfort.dll" Private="False" />
+    <Reference Include="UnityEngine" HintPath="$(ManagedPath)\UnityEngine.dll" Private="False" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedPath)\UnityEngine.CoreModule.dll" Private="False" />
+    <Reference Include="BepInEx" HintPath="$(BepInExPath)\core\BepInEx.dll" Private="False" />
+    <Reference Include="Fika.Core" HintPath="$(FikaPluginsPath)\Fika\Fika.Core.dll" Private="False" />
+  </ItemGroup>
+
+  <Target Name="DeployFika" AfterTargets="Build" Condition="'$(DeployToFika)' == 'true'">
+    <PropertyGroup>
+      <FikaDeployDir>$(FikaPluginsPath)\$(ModAuthor)-$(ModName)</FikaDeployDir>
+    </PropertyGroup>
+    <Copy SourceFiles="$(TargetPath);$(OutDir)Perun.Client.dll" DestinationFolder="$(FikaDeployDir)" />
+    <Message Importance="High" Text="Perun + Fika bridge deployed: $(FikaDeployDir)" />
+  </Target>
+  <Target Name="PackageFikaRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+      <FikaStaging>$(DistDir)\staging-fika</FikaStaging>
+      <FikaPluginStaging>$(FikaStaging)\BepInEx\plugins\$(ModAuthor)-$(ModName)</FikaPluginStaging>
+      <ClientBuilt>$(MSBuildProjectDirectory)\..\Client\bin\$(Configuration)\$(TargetFramework)\Perun.Client.dll</ClientBuilt>
+    </PropertyGroup>
+    <RemoveDir Directories="$(FikaStaging)" />
+    <Copy SourceFiles="$(TargetPath);$(ClientBuilt);$(MSBuildProjectDirectory)\..\LICENSE.txt" DestinationFolder="$(FikaPluginStaging)" />
+    <ZipDirectory SourceDirectory="$(FikaStaging)" DestinationFile="$(DistDir)\$(ModAuthor)-$(ModName)-$(Version)-fika.zip" Overwrite="true" />
+    <Message Importance="High" Text="Fika release zip: $(DistDir)\$(ModAuthor)-$(ModName)-$(Version)-fika.zip" />
+  </Target>
+</Project>

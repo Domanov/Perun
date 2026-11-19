@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RollForward>Major</RollForward>
+    <Nullable>enable</Nullable>
+    <FikaGamePath Condition="'$(FikaGamePath)' == ''">C:\Games\Fika4</FikaGamePath>
+    <FikaPluginsPath Condition="'$(FikaPluginsPath)' == ''">$(FikaGamePath)\BepInEx\plugins</FikaPluginsPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Perun.Client.csproj" />
+    <ProjectReference Include="..\Fika\Perun.Fika.csproj" />
+    <Reference Include="Assembly-CSharp" HintPath="$(HollowedPath)" Private="True" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedPath)\UnityEngine.CoreModule.dll" Private="True" />
+    <Reference Include="Fika.Core" HintPath="$(FikaPluginsPath)\Fika\Fika.Core.dll" Private="True" />
+  </ItemGroup>
+</Project>

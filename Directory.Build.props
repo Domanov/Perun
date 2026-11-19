@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <PerunParentProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))</PerunParentProps>
+  </PropertyGroup>
+
+  <Import Project="$(PerunParentProps)" Condition="'$(PerunParentProps)' != '' And Exists('$(PerunParentProps)')" />
+
+  <PropertyGroup>
+    <PerunVersion>0.11.2</PerunVersion>
+    <SPTPath Condition="'$(SPTPath)' == ''">C:\Games\SPT</SPTPath>
+    <ManagedPath Condition="'$(ManagedPath)' == ''">$(SPTPath)\EscapeFromTarkov_Data\Managed</ManagedPath>
+    <BepInExPath Condition="'$(BepInExPath)' == ''">$(SPTPath)\BepInEx</BepInExPath>
+    <SptPluginsPath Condition="'$(SptPluginsPath)' == ''">$(BepInExPath)\plugins\spt</SptPluginsPath>
+    <HollowedPath Condition="'$(HollowedPath)' == ''">$(MSBuildThisFileDirectory)references\hollowed.dll</HollowedPath>
+    <DeployToGame Condition="'$(DeployToGame)' == ''">false</DeployToGame>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>

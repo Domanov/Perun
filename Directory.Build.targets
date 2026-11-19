@@ -1,0 +1,14 @@
+<Project>
+  <Target Name="PerunCheckReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(HollowedPath)')" Text="hollowed.dll not found at '$(HollowedPath)'. See README, Building." />
+    <Error Condition="!Exists('$(ManagedPath)\UnityEngine.dll')" Text="Game DLLs not found in '$(ManagedPath)'. Set SPTPath to your SPT install, see README, Building." />
+    <Error Condition="!Exists('$(BepInExPath)\plugins\DrakiaXYZ-BigBrain.dll')" Text="DrakiaXYZ-BigBrain.dll not found in '$(BepInExPath)\plugins'. Install BigBrain into the SPT install you build against." />
+  </Target>
+  <Target Name="PerunCheckVersion" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <PerunPluginSource>$(MSBuildThisFileDirectory)Client\Plugin.cs</PerunPluginSource>
+      <PerunVersionLine>Version = &quot;$(PerunVersion)&quot;</PerunVersionLine>
+    </PropertyGroup>
+    <Error Condition="Exists('$(PerunPluginSource)') And !$([System.IO.File]::ReadAllText('$(PerunPluginSource)').Contains('$(PerunVersionLine)'))" Text="Client\Plugin.cs Version doesn't match PerunVersion $(PerunVersion) in Directory.Build.props." />
+  </Target>
+</Project>

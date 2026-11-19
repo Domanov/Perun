@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Client/Perun.Client.csproj" />
+  <Project Path="Fika/Perun.Fika.csproj" />
+  <Project Path="Tests/Perun.Tests.csproj" />
+</Solution>
