@@ -17,6 +17,9 @@ internal static class Theme
     public static GUIStyle DangerButton { get; private set; }
     public static GUIStyle Row { get; private set; }
     public static GUIStyle RowSelected { get; private set; }
+    public static GUIStyle RowBadged { get; private set; }
+    public static GUIStyle RowSelectedBadged { get; private set; }
+    public static GUIStyle Badge { get; private set; }
     public static GUIStyle Group { get; private set; }
     public static GUIStyle Label { get; private set; }
     public static GUIStyle Small { get; private set; }
@@ -133,6 +136,10 @@ internal static class Theme
         RowSelected.normal.background = accentDim;
         RowSelected.hover.background = accentDim;
         RowSelected.normal.textColor = Color.white;
+
+        RowBadged = new GUIStyle(Row) { padding = new RectOffset(10, 76, 3, 3) };
+        RowSelectedBadged = new GUIStyle(RowSelected) { padding = new RectOffset(10, 76, 3, 3) };
+        Badge = new GUIStyle { fontSize = 11, richText = true, alignment = TextAnchor.MiddleRight, padding = new RectOffset(0, 8, 0, 0) };
 
         Group = new GUIStyle(Row) { fontStyle = FontStyle.Bold, padding = new RectOffset(4, 6, 4, 4) };
         Group.normal.textColor = Dim;

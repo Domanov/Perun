@@ -273,6 +273,7 @@ internal sealed class PerunHud
         }
         _cardShown = _mode.Picker.Selection.Count > 0;
         _spawn.Visible = _dockOpen && _tab == AssetTab.Units;
+        _spawn.BadgeTarget = _mode.Picker.Selected;
     }
 
     private void Layout(out Rect top, out Rect left, out Rect card, out Rect right, out Rect status, out Rect help)

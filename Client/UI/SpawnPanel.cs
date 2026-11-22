@@ -54,6 +54,11 @@ internal sealed class SpawnPanel
     private int _countIndex;
     private WildSpawnType? _selected;
     private string _selectedName = "";
+    private readonly Dictionary<WildSpawnType, string> _badges = new();
+    private (WildSpawnType role, EPlayerSide side, bool bot, int version)? _badgeKey;
+    private string _badgeNote = "";
+
+    public Player BadgeTarget { get; set; }
 
     public bool Visible { get; set; }
     public bool Armed => Visible && _selected.HasValue;
@@ -139,6 +144,7 @@ internal sealed class SpawnPanel
                 _activeSearch = _search;
                 _scroll = Vector2.zero;
             }
+            UpdateBadges();
             RefreshStatus();
         }
 
@@ -178,7 +184,9 @@ internal sealed class SpawnPanel
         {
             WildSpawnType role = roles[i];
             bool isSelected = _selected == role;
-            if (GUILayout.Button(names[i], isSelected ? Theme.RowSelected : Theme.Row, GUILayout.Height(RowHeight)))
+            bool badged = _badgeKey.HasValue;
+            GUIStyle style = isSelected ? badged ? Theme.RowSelectedBadged : Theme.RowSelected : badged ? Theme.RowBadged : Theme.Row;
+            if (GUILayout.Button(names[i], style, GUILayout.Height(RowHeight)))
             {
                 if (isSelected)
                 {
@@ -191,6 +199,14 @@ internal sealed class SpawnPanel
                     Commands.Prewarm(role, Difficulty, Count);
                 }
                 _nextStatus = 0f;
+            }
+            if (badged && Event.current.type == EventType.Repaint)
+            {
+                string badge = Badge(role);
+                if (badge.Length > 0)
+                {
+                    GUI.Label(GUILayoutUtility.GetLastRect(), badge, Theme.Badge);
+                }
             }
         }
         _list.SpaceAfter();
@@ -262,6 +278,7 @@ internal sealed class SpawnPanel
             _difficultyLabel = "DIFFICULTY";
             _prompt = "<color=#9fb4c8>Pick a unit, then click the map to place it.</color>";
             _status = units + result;
+            _prompt += _badgeNote;
             return;
         }
 
@@ -278,6 +295,52 @@ internal sealed class SpawnPanel
                 ? $"<color=#ffc847>◐ Preparing in advance… {ready}/{Count} ready</color>"
                 : $"<color=#ffc847>● {ready}/{Count} ready</color> · the rest loads when you place them";
         _status = $"{readiness}\n{units}{result}";
+        _prompt += _badgeNote;
+    }
+
+    private void UpdateBadges()
+    {
+        Player target = BadgeTarget;
+        if (target == null || target.Profile == null)
+        {
+            if (_badgeKey.HasValue)
+            {
+                _badgeKey = null;
+                _badgeNote = "";
+                _nextStatus = 0f;
+            }
+            return;
+        }
+
+        bool bot = Bots.IsBot(target);
+        WildSpawnType role = bot ? target.Profile.Info.Settings.Role : WildSpawnType.assault;
+        var key = (role, target.Side, bot, Hostility.Version);
+        if (_badgeKey == key)
+        {
+            return;
+        }
+
+        _badgeKey = key;
+        _badges.Clear();
+        string who = bot ? $"{target.Profile.Nickname} ({SpawnNames.Of(role)})" : target.Profile.Nickname;
+        _badgeNote = $"\n<color=#7f8a95>Badges: attitude toward {who}</color>";
+        _nextStatus = 0f;
+    }
+
+    private string Badge(WildSpawnType role)
+    {
+        if (_badges.TryGetValue(role, out string badge))
+        {
+            return badge;
+        }
+
+        var key = _badgeKey.Value;
+        Stance stance = key.bot
+            ? Hostility.Between(key.role, key.side, role, HostilityRules.SideOf(role))
+            : Hostility.TowardPlayer(role, key.side);
+        badge = HostilityRules.Badge(stance);
+        _badges[role] = badge;
+        return badge;
     }
 
     private string AllowedNote(WildSpawnType role)
