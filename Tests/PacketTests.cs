@@ -194,5 +194,25 @@ public class PacketTests
     }
 
     [Fact]
+    public void AGroupSurvivesTheTrip()
+    {
+        PerunGroupSpawn sent = RulesTests.Group();
+        sent.Leader = 1;
+        PerunGroupSpawnPacket read = RoundTrip(new PerunGroupSpawnPacket { Group = sent });
+
+        Assert.True(read.Valid);
+        Assert.Equal(sent.Name, read.Group.Name);
+        Assert.Equal(2, read.Group.Members.Length);
+        Assert.Equal(sent.Members[1].Role, read.Group.Members[1].Role);
+        Assert.Equal(sent.Members[1].Difficulty, read.Group.Members[1].Difficulty);
+        Assert.Equal(sent.Members[1].Counts, read.Group.Members[1].Counts);
+        Assert.Equal(1, read.Group.Leader);
+        Assert.Equal(-1, read.Group.Difficulty);
+        Assert.Equal(sent.Position, read.Group.Position);
+        Assert.Equal(sent.Yaw, read.Group.Yaw);
+        Assert.Equal(sent.Spacing, read.Group.Spacing);
+    }
+
+    [Fact]
     public void TheAuthPacketCarriesTheToken() => Assert.Equal(123456789UL, RoundTrip(new PerunAuthPacket { Token = 123456789 }).Token);
 }

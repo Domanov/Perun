@@ -832,7 +832,7 @@ internal sealed class PerunMode
         {
             if (!Commands.SpawnGroup(spawn.Group, spawn.GroupDifficulty, point, yaw ?? Camera.Yaw, GroupSpacing))
             {
-                Notify("Group spawning works on the host for now");
+                Notify("The host's Perun is too old to spawn groups for a game master");
             }
             return true;
         }

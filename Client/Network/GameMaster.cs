@@ -42,6 +42,55 @@ public struct PerunOrderInfo
     public bool Forced;
 }
 
+public sealed class PerunGroupMember
+{
+    public int Role;
+    public int Difficulty;
+    public int[] Counts = Array.Empty<int>();
+}
+
+// A group as the game master's client sends it: the members with their count options, rolled on the host.
+public sealed class PerunGroupSpawn
+{
+    public string Name = "";
+    public PerunGroupMember[] Members = Array.Empty<PerunGroupMember>();
+    public int Leader = -1;
+    public int Difficulty = -1;
+    public Vector3 Position;
+    public float Yaw;
+    public float Spacing;
+
+    internal static PerunGroupSpawn From(GroupPlan plan, BotDifficulty? difficulty, Vector3 position, float yaw, float spacing)
+    {
+        PerunGroupMember[] members = new PerunGroupMember[plan.Members.Count];
+        for (int i = 0; i < members.Length; i++)
+        {
+            GroupMember member = plan.Members[i];
+            members[i] = new PerunGroupMember { Role = (int)member.Role, Difficulty = (int)member.Difficulty, Counts = new List<int>(member.Counts).ToArray() };
+        }
+        return new PerunGroupSpawn
+        {
+            Name = plan.Name ?? "",
+            Members = members,
+            Leader = plan.LeaderChoice ?? -1,
+            Difficulty = difficulty.HasValue ? (int)difficulty.Value : -1,
+            Position = position,
+            Yaw = yaw,
+            Spacing = spacing
+        };
+    }
+
+    internal GroupPlan ToPlan()
+    {
+        List<GroupMember> members = new(Members.Length);
+        foreach (PerunGroupMember member in Members)
+        {
+            members.Add(new GroupMember((WildSpawnType)member.Role, (BotDifficulty)member.Difficulty, member.Counts));
+        }
+        return new GroupPlan(GroupSource.Custom, Name, members, null, Leader >= 0 ? Leader : null);
+    }
+}
+
 public sealed class PerunStatus
 {
     public string LastResult = "";
@@ -63,6 +112,7 @@ public interface IGameMasterLink
     void Claim(string password, string profileId);
     void Release();
     void Spawn(int role, int difficulty, int count, Vector3 position, float yaw);
+    bool SpawnGroup(PerunGroupSpawn group);
     void Watch(int role, int difficulty, int count);
     void Order(PerunOrderKind kind, string[] profileIds, Vector3 point, bool run, bool forced);
     void Pause(bool paused);
@@ -143,6 +193,11 @@ public static class PerunHost
     {
         WildSpawnType type = (WildSpawnType)role;
         SpawnService.TrySpawn(type, SpawnService.AllowedDifficulty(type, (BotDifficulty)difficulty), count, position, yaw);
+    }
+
+    public static void SpawnGroup(PerunGroupSpawn group)
+    {
+        SpawnService.TrySpawnGroup(group.ToPlan(), group.Difficulty >= 0 ? (BotDifficulty)group.Difficulty : null, group.Position, group.Yaw, group.Spacing);
     }
 
     public static void Watch(int role, int difficulty, int count)

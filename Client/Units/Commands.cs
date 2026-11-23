@@ -28,6 +28,7 @@ internal interface IRemoteSession
     bool IsWarming(WildSpawnType role, BotDifficulty difficulty);
     void Prewarm(WildSpawnType role, BotDifficulty difficulty, int count);
     void Spawn(WildSpawnType role, BotDifficulty difficulty, int count, Vector3 position, float yaw);
+    bool SpawnGroup(PerunGroupSpawn group);
     int Move(IReadOnlyList<Player> units, Vector3 point, bool run, bool forced);
     int Halt(IReadOnlyList<Player> units);
     void Remove(IReadOnlyList<Player> units, bool kill);
@@ -84,7 +85,7 @@ internal static class Commands
     {
         if (Remote != null)
         {
-            return false;
+            return Remote.SpawnGroup(PerunGroupSpawn.From(plan, difficulty, position, yaw, spacing));
         }
         SpawnService.TrySpawnGroup(plan, difficulty, position, yaw, spacing);
         return true;

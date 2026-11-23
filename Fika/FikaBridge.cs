@@ -12,12 +12,13 @@ namespace Perun.Fika;
 internal sealed class FikaBridge : IGameMasterLink
 {
     private const DeliveryMethod Reliable = DeliveryMethod.ReliableOrdered;
-    private const byte Protocol = 6;
+    private const byte Protocol = 7;
     private const byte EnvironmentProtocol = 2;
     private const byte GameMasterProtocol = 3;
     private const byte PlayerActionProtocol = 4;
     private const byte AuthProtocol = HostAuth.AuthProtocol;
     private const byte AckProtocol = 6;
+    private const byte GroupProtocol = 7;
     private const int MaxRejectLogs = 5;
     private const float HelloRetrySeconds = 2f;
     private const int MaxHelloAttempts = 10;
@@ -69,6 +70,7 @@ internal sealed class FikaBridge : IGameMasterLink
         _manager.RegisterPacket<PerunClaimResultPacket, NetPeer>(OnClaimResult);
         _manager.RegisterPacket<PerunReleasePacket, NetPeer>(OnRelease);
         _manager.RegisterPacket<PerunSpawnPacket, NetPeer>(OnSpawn);
+        _manager.RegisterPacket<PerunGroupSpawnPacket, NetPeer>(OnSpawnGroup);
         _manager.RegisterPacket<PerunWatchPacket, NetPeer>(OnWatch);
         _manager.RegisterPacket<PerunOrderPacket, NetPeer>(OnOrder);
         _manager.RegisterPacket<PerunPauseRequestPacket, NetPeer>(OnPauseRequest);
@@ -212,6 +214,18 @@ internal sealed class FikaBridge : IGameMasterLink
 
         PerunSpawnPacket packet = new() { Role = role, Difficulty = difficulty, Count = count, Position = position, Yaw = yaw };
         _manager.SendData(ref packet, Reliable, false);
+    }
+
+    public bool SpawnGroup(PerunGroupSpawn group)
+    {
+        if (!_granted || _hostProtocol < GroupProtocol)
+        {
+            return false;
+        }
+
+        PerunGroupSpawnPacket packet = new() { Group = group };
+        _manager.SendData(ref packet, Reliable, false);
+        return true;
     }
 
     public void Watch(int role, int difficulty, int count)
@@ -627,6 +641,20 @@ internal sealed class FikaBridge : IGameMasterLink
         if (IsGameMaster(peer))
         {
             PerunHost.Spawn(packet.Role, packet.Difficulty, packet.Count, packet.Position, packet.Yaw);
+            _nextStatusAt = 0f;
+        }
+    }
+
+    private void OnSpawnGroup(PerunGroupSpawnPacket packet, NetPeer peer)
+    {
+        if (!packet.Valid)
+        {
+            Invalid(peer);
+            return;
+        }
+        if (IsGameMaster(peer))
+        {
+            PerunHost.SpawnGroup(packet.Group);
             _nextStatusAt = 0f;
         }
     }

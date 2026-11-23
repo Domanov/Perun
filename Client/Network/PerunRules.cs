@@ -11,6 +11,8 @@ public static class PerunRules
     public const int MaxGroup = 10;
     public const float WorldLimit = 10000f;
     public const float MaxYaw = 720f;
+    public const int MaxGroupMembers = 16;
+    public const int MaxCountOptions = 8;
 
     // Roles the spawn panel hides because spawning them breaks the game: test bots, and the BTR gunner, which belongs to
     // the BTR vehicle.
@@ -38,6 +40,30 @@ public static class PerunRules
 
     public static bool IsSaneSpawn(int role, int difficulty, int count, Vector3 position, float yaw) =>
         IsSaneWatch(role, difficulty, count) && IsInWorld(position) && IsSaneYaw(yaw);
+
+    public static bool IsSaneGroup(PerunGroupSpawn group)
+    {
+        if (group.Members.Length == 0 || group.Members.Length > MaxGroupMembers || group.Leader < -1 || group.Leader >= group.Members.Length)
+        {
+            return false;
+        }
+        foreach (PerunGroupMember member in group.Members)
+        {
+            if (!IsSpawnableRole(member.Role) || !IsKnownDifficulty(member.Difficulty) || member.Counts.Length == 0 || member.Counts.Length > MaxCountOptions)
+            {
+                return false;
+            }
+            foreach (int count in member.Counts)
+            {
+                if (count < 0 || count > MaxGroup)
+                {
+                    return false;
+                }
+            }
+        }
+        return (group.Difficulty == -1 || IsKnownDifficulty(group.Difficulty)) && IsInWorld(group.Position) && IsSaneYaw(group.Yaw)
+            && Within(group.Spacing, Units.SpawnService.MinGroupSpacing, Units.SpawnService.MaxGroupSpacing);
+    }
 
     public static bool IsSaneOrder(byte kind, Vector3 point)
     {

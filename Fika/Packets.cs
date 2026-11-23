@@ -254,6 +254,77 @@ public struct PerunSpawnPacket : INetSerializable
     }
 }
 
+public struct PerunGroupSpawnPacket : INetSerializable
+{
+    public bool Valid;
+    public PerunGroupSpawn Group;
+
+    public void Serialize(NetDataWriter writer)
+    {
+        PerunGroupSpawn group = Group ?? new PerunGroupSpawn();
+        writer.Put(group.Name ?? "", PerunWire.TitleLength);
+        int members = System.Math.Min(group.Members.Length, PerunRules.MaxGroupMembers);
+        writer.Put((byte)members);
+        for (int i = 0; i < members; i++)
+        {
+            PerunGroupMember member = group.Members[i];
+            writer.Put(member.Role);
+            writer.Put(member.Difficulty);
+            int counts = System.Math.Min(member.Counts.Length, PerunRules.MaxCountOptions);
+            writer.Put((byte)counts);
+            for (int c = 0; c < counts; c++)
+            {
+                writer.Put((byte)member.Counts[c]);
+            }
+        }
+        writer.Put(group.Leader);
+        writer.Put(group.Difficulty);
+        writer.Put(group.Position.x);
+        writer.Put(group.Position.y);
+        writer.Put(group.Position.z);
+        writer.Put(group.Yaw);
+        writer.Put(group.Spacing);
+    }
+
+    public void Deserialize(NetDataReader reader)
+    {
+        Valid = false;
+        Group = null;
+        if (!PerunWire.TryString(reader, PerunWire.TitleLength, out string name) || !reader.TryGetByte(out byte count)
+            || !PerunWire.Fits(reader, count, PerunRules.MaxGroupMembers, 9))
+        {
+            return;
+        }
+        PerunGroupMember[] members = new PerunGroupMember[count];
+        for (int i = 0; i < count; i++)
+        {
+            if (!reader.TryGetInt(out int role) || !reader.TryGetInt(out int difficulty) || !reader.TryGetByte(out byte options)
+                || !PerunWire.Fits(reader, options, PerunRules.MaxCountOptions, 1))
+            {
+                return;
+            }
+            int[] counts = new int[options];
+            for (int c = 0; c < options; c++)
+            {
+                if (!reader.TryGetByte(out byte value))
+                {
+                    return;
+                }
+                counts[c] = value;
+            }
+            members[i] = new PerunGroupMember { Role = role, Difficulty = difficulty, Counts = counts };
+        }
+        PerunGroupSpawn group = new() { Name = name, Members = members };
+        if (!reader.TryGetInt(out group.Leader) || !reader.TryGetInt(out group.Difficulty) || !PerunWire.TryVector(reader, out group.Position)
+            || !reader.TryGetFloat(out group.Yaw) || !reader.TryGetFloat(out group.Spacing) || !PerunRules.IsSaneGroup(group))
+        {
+            return;
+        }
+        Group = group;
+        Valid = true;
+    }
+}
+
 public struct PerunWatchPacket : INetSerializable
 {
     public bool Valid;

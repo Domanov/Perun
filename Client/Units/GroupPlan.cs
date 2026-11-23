@@ -31,6 +31,8 @@ internal sealed class GroupMember
     public int Max { get; }
     public string CountText { get; }
 
+    public IReadOnlyList<int> Counts => _counts;
+
     public int Roll(Random random) => _counts[random.Next(_counts.Length)];
 }
 

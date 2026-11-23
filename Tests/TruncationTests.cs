@@ -228,6 +228,17 @@ public class TruncationTests
     }
 
     [Fact]
+    public void GroupSpawn() => ValidOnlyAt(new PerunGroupSpawnPacket { Group = RulesTests.Group() });
+
+    [Fact]
+    public void AnInsaneGroupIsRejected()
+    {
+        PerunGroupSpawn group = RulesTests.Group();
+        group.Members[1].Role = (int)WildSpawnType.test;
+        Assert.False(ReadAll(new PerunGroupSpawnPacket { Group = group }));
+    }
+
+    [Fact]
     public void TeleportOutsideTheWorldIsRejected()
     {
         byte[] bytes = Bytes(new PerunTeleportPacket { ProfileId = "a", Position = new Vector3(0, 0, 20000f) });

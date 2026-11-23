@@ -130,6 +130,21 @@ internal sealed class RemoteSession : IRemoteSession
         LastResult = $"Asked the host for {SpawnNames.Of(role)} ×{count}…";
     }
 
+    public bool SpawnGroup(PerunGroupSpawn group)
+    {
+        if (!PerunRules.IsSaneGroup(group))
+        {
+            LastResult = $"{group.Name} can't be sent to the host (at most {PerunRules.MaxGroupMembers} member types)";
+            return true;
+        }
+        if (!_link.SpawnGroup(group))
+        {
+            return false;
+        }
+        LastResult = $"Asked the host for {group.Name}…";
+        return true;
+    }
+
     public int Move(IReadOnlyList<Player> units, Vector3 point, bool run, bool forced)
     {
         string[] ids = Ids(units);

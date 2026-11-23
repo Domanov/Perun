@@ -310,13 +310,6 @@ internal sealed class GroupsPanel
             return;
         }
 
-        if (Commands.IsRemote)
-        {
-            _prompt = "<color=#ffd36f>Group spawning works on the host for now.</color>";
-            _status = units + result;
-            return;
-        }
-
         if (_selected == null)
         {
             _prompt = "<color=#9fb4c8>Pick a group, then click the map to place it.</color>";
@@ -331,9 +324,11 @@ internal sealed class GroupsPanel
         _prompt = Armed
             ? $"<color=#ffc847>Click the map to place {_selected.Name} ({_selected.CountText})</color>  <color=#9fb4c8>· RMB stops</color>"
             : "<color=#9fb4c8>PLACE GROUP to place it on the map.</color>";
-        string readiness = Ready
-            ? $"<color=#8be38b>● Ready to drop: {wanted}</color> · spawns instantly"
-            : $"<color=#ffc847>◐ Preparing in advance… {ready}/{wanted} ready</color>";
+        string readiness = Commands.IsRemote
+            ? "<color=#9fb4c8>The host loads the members when you place the group</color>"
+            : Ready
+                ? $"<color=#8be38b>● Ready to drop: {wanted}</color> · spawns instantly"
+                : $"<color=#ffc847>◐ Preparing in advance… {ready}/{wanted} ready</color>";
         int room = Commands.MaxUnits - Commands.AliveCount - Commands.Pending;
         string limit = room < _selected.Min ? $"\n<color=#ff8080>Only {Math.Max(room, 0)} more units fit (limit {Commands.MaxUnits})</color>" : "";
         _status = $"{readiness}\n{units}{limit}{result}";

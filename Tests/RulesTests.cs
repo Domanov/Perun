@@ -1,3 +1,4 @@
+using System.Linq;
 using EFT;
 using Perun.Client;
 using UnityEngine;
@@ -95,5 +96,56 @@ public class RulesTests
         Assert.False(PerunRules.IsSaneOrder((byte)PerunOrderKind.Move, nowhere));
         Assert.False(PerunRules.IsSaneOrder((byte)PerunOrderKind.Teleport, new Vector3(0f, 20000f, 0f)));
         Assert.False(PerunRules.IsSaneOrder(99, Vector3.zero));
+    }
+
+    internal static PerunGroupSpawn Group() => new()
+    {
+        Name = "Reshala",
+        Members = new[]
+        {
+            new PerunGroupMember { Role = (int)WildSpawnType.bossBully, Difficulty = (int)BotDifficulty.normal, Counts = new[] { 1 } },
+            new PerunGroupMember { Role = (int)WildSpawnType.followerBully, Difficulty = (int)BotDifficulty.hard, Counts = new[] { 2, 3, 4 } }
+        },
+        Leader = -1,
+        Difficulty = -1,
+        Position = new Vector3(10f, 2f, -30f),
+        Yaw = 90f,
+        Spacing = 1.3f
+    };
+
+    [Fact]
+    public void AGroupFromTheEditorIsSane()
+    {
+        Assert.True(PerunRules.IsSaneGroup(Group()));
+        PerunGroupSpawn chosen = Group();
+        chosen.Leader = 1;
+        chosen.Difficulty = (int)BotDifficulty.impossible;
+        Assert.True(PerunRules.IsSaneGroup(chosen));
+    }
+
+    [Fact]
+    public void BrokenGroupsAreRejected()
+    {
+        void Rejected(System.Action<PerunGroupSpawn> change)
+        {
+            PerunGroupSpawn group = Group();
+            change(group);
+            Assert.False(PerunRules.IsSaneGroup(group));
+        }
+
+        Rejected(g => g.Members = new PerunGroupMember[0]);
+        Rejected(g => g.Members = new PerunGroupMember[PerunRules.MaxGroupMembers + 1].Select(_ => g.Members[0]).ToArray());
+        Rejected(g => g.Leader = 2);
+        Rejected(g => g.Leader = -2);
+        Rejected(g => g.Difficulty = 99);
+        Rejected(g => g.Members[0].Role = (int)WildSpawnType.shooterBTR);
+        Rejected(g => g.Members[0].Difficulty = -1);
+        Rejected(g => g.Members[1].Counts = new int[0]);
+        Rejected(g => g.Members[1].Counts = new int[PerunRules.MaxCountOptions + 1]);
+        Rejected(g => g.Members[1].Counts = new[] { PerunRules.MaxGroup + 1 });
+        Rejected(g => g.Position = new Vector3(0f, float.NaN, 0f));
+        Rejected(g => g.Yaw = float.PositiveInfinity);
+        Rejected(g => g.Spacing = 0.1f);
+        Rejected(g => g.Spacing = 50f);
     }
 }
