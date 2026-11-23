@@ -36,9 +36,10 @@ internal sealed class GroupMember
 
 internal sealed class GroupPlan
 {
-    public GroupPlan(GroupSource source, string name, IReadOnlyList<GroupMember> members, IReadOnlyList<string> maps, int? leaderChoice)
+    public GroupPlan(GroupSource source, string name, IReadOnlyList<GroupMember> members, IReadOnlyList<string> maps, int? leaderChoice, string faction = null)
     {
         Source = source;
+        Faction = faction;
         Name = name;
         Members = members;
         Maps = maps ?? Array.Empty<string>();
@@ -50,6 +51,7 @@ internal sealed class GroupPlan
     }
 
     public GroupSource Source { get; }
+    public string Faction { get; }
     public string Name { get; }
     public IReadOnlyList<GroupMember> Members { get; }
     public IReadOnlyList<string> Maps { get; }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using EFT;
 using Perun.Client.Units;
@@ -199,16 +200,19 @@ internal sealed class GroupsPanel
     {
         _rows.Clear();
         string needle = (_activeSearch ?? "").Trim();
-        AddSection("SPT PRESETS", _plans, needle);
+        if (_plans != null)
+        {
+            AddSection("SPT PRESETS", _plans.Where(p => p.Faction == null), needle);
+            foreach (var faction in _plans.Where(p => p.Faction != null).GroupBy(p => p.Faction).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                AddSection(faction.Key.ToUpperInvariant(), faction, needle);
+            }
+        }
         AddSection("CUSTOM", CustomGroups.All, needle);
     }
 
-    private void AddSection(string title, IReadOnlyList<GroupPlan> plans, string needle)
+    private void AddSection(string title, IEnumerable<GroupPlan> plans, string needle)
     {
-        if (plans == null)
-        {
-            return;
-        }
         int header = _rows.Count;
         foreach (GroupPlan plan in plans)
         {
@@ -226,7 +230,7 @@ internal sealed class GroupsPanel
 
     private static bool Matches(GroupPlan plan, string needle)
     {
-        if (plan.Name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
+        if (plan.Name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0 || plan.Faction?.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
         {
             return true;
         }
@@ -359,7 +363,7 @@ internal sealed class GroupsPanel
         }
         else if (plan.Maps.Count > 0)
         {
-            b.Append("\n<color=#7f8a95>SPT · ").Append(string.Join(", ", plan.Maps)).Append("</color>");
+            b.Append("\n<color=#7f8a95>").Append(plan.Faction ?? "SPT").Append(" · ").Append(string.Join(", ", plan.Maps)).Append("</color>");
         }
         _summary = b.ToString();
     }

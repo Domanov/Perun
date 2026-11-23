@@ -135,4 +135,26 @@ public class BossPresetsTests
         Assert.Single(plan.Roll(new Random(1), 10, null));
     }
 
+    [Fact]
+    public void FactionWavesOfOneLeaderMergeByRole()
+    {
+        static string Faction(WildSpawnType role) => role is WildSpawnType.pmcBot or WildSpawnType.exUsec ? "Raiders" : null;
+
+        List<GroupPlan> plans = BossPresets.Build(new[]
+        {
+            ("bigmap", Wave("pmcBot", "pmcBot", "1", Support(WildSpawnType.exUsec, 1), Support(WildSpawnType.assault, 2))),
+            ("woods", Wave("pmcBot", "pmcBot", "1", Support(WildSpawnType.assault, 3), Support(WildSpawnType.marksman, 1))),
+            ("woods", Wave("bossBully", "followerBully", "4"))
+        }, Faction);
+
+        GroupPlan faction = Assert.Single(plans, p => p.Faction != null);
+        Assert.Equal("Raiders", faction.Faction);
+        Assert.Equal(new[] { "Customs", "Woods" }, faction.Maps);
+        Assert.Equal(WildSpawnType.pmcBot, faction.Leader.Role);
+        Assert.Equal(new[] { WildSpawnType.pmcBot, WildSpawnType.exUsec, WildSpawnType.assault, WildSpawnType.marksman }, faction.Members.Select(m => m.Role));
+        Assert.Equal("0–1", faction.Members[1].CountText);
+        Assert.Equal("2–3", faction.Members[2].CountText);
+        Assert.Equal("0–1", faction.Members[3].CountText);
+        Assert.Null(Assert.Single(plans, p => p.Faction == null).Faction);
+    }
 }
