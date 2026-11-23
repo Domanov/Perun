@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.1 (unreleased)
+## 0.13.0 (2026-11-23)
 - Groups: the Units tab (B) now has BOTS and GROUPS. A group spawns as one squad: the leader first, every member following him, sharing one group and its enemies.
   - SPT presets: every boss group in the server's map data (Reshala and guards, Goons, Kaban, Kollontay, Raiders, Rogues, Cultists, …), with the counts the maps use; a range like 2–4 is rolled on each placement. The summary lists the members, their attitude toward the leader and the maps they come from.
   - Faction mods (MoreBotsAPI, e.g. RUAF Come Home, UNTAR Go Home, Black Division): their patrols, checkpoints and hunts are listed in a section per faction. All waves of one leader become one preset, so each placement rolls a make-up the mod could have spawned.
@@ -10,7 +10,7 @@
   - Placing: groups stand in a wedge with the leader at the point, facing away from the camera. Hold the mouse button and drag to turn it (this also works for single bots), Ctrl+wheel changes the spacing (0.8–4 m). Dots show where each member will stand.
   - When a group's leader dies, Perun picks the next one (another boss if there is one) and the rest follow him.
   - With SAIN, the group's leader also leads its SAIN squad. SAIN would otherwise pick a boss or its strongest member, also after a leader dies.
-  - Fika: a game master can place groups too; the host rolls the counts and spawns them (bridge protocol 7, the host needs Perun 0.12.1).
+  - Fika: a game master can place groups too; the host rolls the counts and spawns them (bridge protocol 7, the host needs Perun 0.13.0).
 - Moving a group's leader now brings his followers along: they wake up with him and walk to his destination in a wedge, keeping pace with him. Followers fight on their own again when they meet enemies, unless the order was forced (Ctrl+right-click).
 - Your own character is a unit: click the magenta dot (where you return) or "You" in the unit list to select it. Heal and the Arsenal work on it, Teleport moves where you return, and Kill asks for a second press because it ends your raid. Move orders, Remove and Take control skip it.
 - Fika: Perun keeps working after your character dies. Once Fika's spectator camera is on, the RTS key opens Perun as usual (host, or game master on a headless raid); Fika's spectator camera, its UI and the extract message come back when you close it. You can take control of a bot from there (host, with "Allow take control in Fika" on) and keep playing as it; the raid HUD shows while you control it. Your own character as a unit isn't available while dead.

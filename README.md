@@ -6,7 +6,7 @@ ZEUS (game master) mode for Tushonka.
 |---|---|
 | GUID | `com.dmnv.perun` |
 | Plugin | `DMNV-Perun` |
-| Version | 0.12.0 |
+| Version | 0.13.0 |
 | SPT | 4.1.x (client, BepInEx plugin) |
 | Fika | host only |
 | License | MIT |
@@ -14,6 +14,7 @@ ZEUS (game master) mode for Tushonka.
 ## Features
 - **RTS camera**: overhead view of map.
 - **Spawning**: spawn all vanilla type bots in groups up to 10. Should support custom factions, at least RUAF and UNTAR work.
+- **Groups**: spawn whole squads with a leader the rest follow: boss groups from the map data (Reshala, Goons, Rogues, …), faction mod patrols, or your own groups from the group editor. Placed in a wedge you can turn and spread; with SAIN the leader also leads the SAIN squad.
 - **Orders**: give orders to bots or groups of bots - force movement (ignoring enemies) with ctrl.
 - **Take control**: control any of the bots (save for btr) in first person, including inventory,
 - **Arsenal**: copy, paste and save loadouts, give random role kits to the selection, give or remove single items, and an arsenal crate to edit a controlled bot's gear with the game's own inventory (DOESNT WORK FOR FIKA YET).
@@ -37,7 +38,7 @@ Checked with:
 1. Download `DMNV-Perun-<version>.zip` from Releases. The same zip works in single player and in Fika: it also has the Fika bridge, which stays off without Fika.
 2. Extract it into your SPT folder (the one with `EscapeFromTarkov.exe`). You should get `BepInEx\plugins\DMNV-Perun\Perun.Client.dll`.
 3. Install BigBrain if you don't have it.
-4. Start the game. `BepInEx\LogOutput.log` shows `DMNV-Perun 0.12.0 loaded`.
+4. Start the game. `BepInEx\LogOutput.log` shows `DMNV-Perun 0.13.0 loaded`.
 
 To uninstall, delete `BepInEx\plugins\DMNV-Perun\`. Saved weather lives in `BepInEx\config\com.dmnv.perun.weather.json`, saved loadouts in `BepInEx\config\com.dmnv.perun.loadouts.json`, and settings in `BepInEx\config\com.dmnv.perun.cfg`.
 
@@ -72,6 +73,8 @@ Perun works for the **Fika host** (and in single player). Bots spawned by the ho
 3. The headless host checks the password and makes them game master; spawning, orders, pause, weather and time are carried out on the host. One game master at a time; leaving RTS mode or disconnecting hands it back. Five wrong passwords lock that player out for a minute.
 
 **Take control in Fika (experimental, host only):** off by default; turn on "Allow take control in Fika" in F12. The bot you control becomes "your player" as in single player.
+
+**After you die:** Perun keeps working. Once Fika's spectator camera is on, the RTS key opens it as usual, and you can take control of a bot to keep playing (host, with the option above on).
 
 For pause, weather and time to reach the clients, everyone (host and clients) needs `Perun.Fika.dll` next to `Perun.Client.dll` in `BepInEx\plugins\DMNV-Perun\`; the release zip includes it. 
 Clients without it simply don't see those changes.
