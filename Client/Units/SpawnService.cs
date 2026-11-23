@@ -184,10 +184,13 @@ internal static partial class SpawnService
         return result;
     }
 
+    private const string SpawnId = "perun";
+
     private static async Task<BotCreationData> CreateData(WildSpawnType role, BotDifficulty difficulty, int count, LoadJob job)
     {
         BotSpawner spawner = Singleton<IBotGame>.Instance.BotsController.BotSpawner;
-        PerunProfileData profileData = new(new GetProfileDataParams(SideFor(role), role, difficulty, 0f, new BotSpawnParams()));
+        // Map spawns always name their wave; mods read it on every new bot (MoreBotsAPI's hunts call Id_spawn.ToLower()).
+        PerunProfileData profileData = new(new GetProfileDataParams(SideFor(role), role, difficulty, 0f, new BotSpawnParams { Id_spawn = SpawnId }));
 
         BotProfileClient profiles = (spawner._botCreator as BotCreatorClient)?._creatorProfile as BotProfileClient;
         if (profiles?._backEndSession == null)
