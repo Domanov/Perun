@@ -57,6 +57,7 @@ public class PerunMoveLogic : CustomLogic
             order.LastProgressAt = now;
             order.Repaths++;
             _nextPathAt = 0f;
+            TraceStuck(order, distance);
         }
 
         if (order.Repaths > MaxRepaths)
@@ -81,5 +82,21 @@ public class PerunMoveLogic : CustomLogic
                 order.Repaths++;
             }
         }
+    }
+
+    // Verbose only: what holds a bot in place while its order runs (combat pauses, a blocked mover, no path).
+    private void TraceStuck(MoveOrder order, float distance)
+    {
+        if (!Plugin.Verbose.Value)
+        {
+            return;
+        }
+        BotMover mover = BotOwner.Mover;
+        Plugin.Log.LogInfo(
+            $"Order trace [{BotOwner.Profile.Nickname}]: {(order.Forced ? "forced" : order.Run ? "run" : "move")} {distance:F1} m left, try {order.Repaths}; " +
+            $"layer {BrainManager.GetActiveLayerName(BotOwner)} / {BrainManager.GetActiveLogic(BotOwner)?.GetType().Name}; " +
+            $"enemy {(BotOwner.Memory.GoalEnemy?.Person?.Profile?.Nickname ?? "none")}; " +
+            $"mover moving {mover.IsMoving}, path {mover.HasPathAndNoComplete}, pause {mover.Pause} ({mover.RemainPause:F1} s), blocked {mover.Blocked}, speed {mover.DestMoveSpeed:F2}, sprint {mover.Sprinting}; " +
+            $"pose {BotOwner.GetPlayer.MovementContext.PoseLevel:F2}, standby {BotOwner.StandBy?.StandByType}, leader {BotOwner.Boss?.IamBoss == true}, follows {BotOwner.BotFollower?.BossToFollow != null}");
     }
 }
