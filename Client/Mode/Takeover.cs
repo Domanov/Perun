@@ -40,6 +40,7 @@ internal sealed class Takeover
     private readonly WeaponSwitch _weapon = new();
     private GamePlayerOwner _reshowOwner;
     private int _reshowFrame;
+    private GameObject _shownBattleScreen;
 
     public void Tick()
     {
@@ -144,6 +145,10 @@ internal sealed class Takeover
             }
             ControlAudio.FollowCamera();
             _botOwner.vmethod_0();
+            if (!main.HealthController.IsAlive)
+            {
+                ShowHiddenBattleScreen();
+            }
             ControlAudio.MatchEnvironment(bot);
             ControlAudio.StopTinnitus();
             ControlAudio.MatchHearing(bot);
@@ -156,6 +161,17 @@ internal sealed class Takeover
             Plugin.Log.LogError($"Take control failed: {ex}");
             End();
             return "taking control failed (see log)";
+        }
+    }
+
+    // Fika hides the raid HUD once you're dead; the bot you control needs it back until you give the bot back.
+    private void ShowHiddenBattleScreen()
+    {
+        EftBattleUIScreen screen = Object.FindObjectOfType<EftBattleUIScreen>(true);
+        if (screen != null && !screen.gameObject.activeSelf)
+        {
+            _shownBattleScreen = screen.gameObject;
+            _shownBattleScreen.SetActive(true);
         }
     }
 
@@ -343,12 +359,23 @@ internal sealed class Takeover
             }
         });
 
+        Step("hide the raid HUD again", false, () =>
+        {
+            GameObject screen = _shownBattleScreen;
+            _shownBattleScreen = null;
+            if (screen != null)
+            {
+                screen.SetActive(false);
+            }
+        });
+
+        bool mainAlive = main != null && main.HealthController != null && main.HealthController.IsAlive;
         Step("give your character its controls back", true, () =>
         {
             if (main != null)
             {
                 MyPlayerField?.SetValue(null, main);
-                if (MonoBehaviourSingleton<GameUI>.Instantiated)
+                if (mainAlive && MonoBehaviourSingleton<GameUI>.Instantiated)
                 {
                     MonoBehaviourSingleton<GameUI>.Instance.UsingPanel.Init(main.HealthController, main.InventoryController);
                 }
@@ -356,8 +383,11 @@ internal sealed class Takeover
             if (mainOwner != null)
             {
                 mainOwner.Mute(false);
-                _reshowOwner = mainOwner;
-                _reshowFrame = Time.frameCount + 5;
+                if (mainAlive)
+                {
+                    _reshowOwner = mainOwner;
+                    _reshowFrame = Time.frameCount + 5;
+                }
             }
         });
 

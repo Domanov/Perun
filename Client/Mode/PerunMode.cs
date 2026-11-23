@@ -126,15 +126,18 @@ internal sealed class PerunMode
 
     public bool ReturnArmed => _returnArmed;
 
+    public bool WatchingDead => Active && _dead;
+
     private const float DotRadius = 14f;
     private const float KillSelfConfirmSeconds = 3f;
+    private bool _dead;
     private float _killSelfUntil;
     private bool _killSelfRequested;
 
     // The dot stands for your parked character: clicking it selects you and arms moving where you return.
     private bool ClickOnScreen(Vector2 cursor)
     {
-        if (_returnArmed || _camera == null || !CursorPicker.ToScreen(_camera, ReturnPoint, out Vector2 dot) || (dot - cursor).sqrMagnitude > DotRadius * DotRadius)
+        if (_dead || _returnArmed || _camera == null || !CursorPicker.ToScreen(_camera, ReturnPoint, out Vector2 dot) || (dot - cursor).sqrMagnitude > DotRadius * DotRadius)
         {
             return false;
         }
@@ -540,7 +543,9 @@ internal sealed class PerunMode
     private void FinishTakeControl(Player bot)
     {
         RtsVision.Off();
-        string error = _takeover.Begin(_player, _owner, bot);
+        // After death Fika has switched your controls off; they are still the raid's owner object the bot's copy comes from.
+        GamePlayerOwner owner = _dead ? _player.GetComponentInChildren<GamePlayerOwner>() : _owner;
+        string error = _takeover.Begin(_player, owner, bot);
         if (error != null)
         {
             Possession.End();
@@ -1024,24 +1029,40 @@ internal sealed class PerunMode
             return false;
         }
 
+        bool dead = !player.HealthController.IsAlive;
+        if (dead && PerunNetwork.SuspendDeathCamera?.Invoke() != true)
+        {
+            Notify("Wait until Fika's spectator camera is on, then try again");
+            return false;
+        }
+
         _player = player;
         _camera = camera;
+        _dead = dead;
 
-        if (player.HandsController is Player.FirearmController firearm && firearm.IsAiming)
+        if (_dead)
         {
-            firearm.SetAim(false);
+            // Fika keeps the raid going after you die and owns your character's state; only its camera is borrowed.
+            _parking.Remember(player);
         }
-        SwitchVision(player, false);
-
-        _owner = player.GetComponentInChildren<GamePlayerOwner>();
-        if (_owner != null)
+        else
         {
-            _owner.enabled = false;
-        }
+            if (player.HandsController is Player.FirearmController firearm && firearm.IsAiming)
+            {
+                firearm.SetAim(false);
+            }
+            SwitchVision(player, false);
 
-        GodMode.Enable(player);
-        AiIgnore.Enable(player);
-        _parking.Park(player);
+            _owner = player.GetComponentInChildren<GamePlayerOwner>();
+            if (_owner != null)
+            {
+                _owner.enabled = false;
+            }
+
+            GodMode.Enable(player);
+            AiIgnore.Enable(player);
+            _parking.Park(player);
+        }
         _smoothie.Apply();
         _culling.Apply();
 
@@ -1050,7 +1071,10 @@ internal sealed class PerunMode
         Vector3 start = cameraTransform.position;
         cameraTransform.SetParent(null, true);
         Camera.Begin(camera, _parking.SavedPosition, start, player.Rotation.x);
-        ControlScreenEffects.Unhook(player);
+        if (!_dead)
+        {
+            ControlScreenEffects.Unhook(player);
+        }
         if (Plugin.Verbose.Value)
         {
             List<string> effects = new();
@@ -1123,12 +1147,20 @@ internal sealed class PerunMode
 
         _culling.Restore();
         _smoothie.Restore();
-        ControlScreenEffects.Hook(_player);
-        SwitchVision(_player, true);
+        if (_dead)
+        {
+            PerunNetwork.ResumeDeathCamera?.Invoke();
+        }
+        else
+        {
+            ControlScreenEffects.Hook(_player);
+            SwitchVision(_player, true);
+        }
         ShowCursor(false);
         Picker.Reset();
 
-        _graceUntil = Time.time + GraceSeconds;
+        _graceUntil = _dead ? -1f : Time.time + GraceSeconds;
+        _dead = false;
         _owner = null;
         _camera = null;
         _cameraParent = null;
@@ -1152,6 +1184,11 @@ internal sealed class PerunMode
         RtsVision.Off();
         Active = false;
         OwnsCamera = false;
+        if (_dead)
+        {
+            PerunNetwork.ResumeDeathCamera?.Invoke();
+            _dead = false;
+        }
         _parking.Forget();
         GodMode.Disable();
         AiIgnore.Disable(false);
@@ -1265,9 +1302,11 @@ internal sealed class PerunMode
         }
     }
 
+    // Under Fika the raid goes on after you die (the bridge sets the death camera hooks), so Perun can still run.
     private static bool IsValid(Player player)
     {
-        return player != null && Singleton<GameWorld>.Instantiated && player.HealthController != null && player.HealthController.IsAlive;
+        return player != null && Singleton<GameWorld>.Instantiated && player.HealthController != null &&
+            (player.HealthController.IsAlive || PerunNetwork.SuspendDeathCamera != null);
     }
 
     public bool SelectionWatchOnly => Picker.Selection.Count > 0 && CountProtected() == Picker.Selection.Count;

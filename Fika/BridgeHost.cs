@@ -23,6 +23,17 @@ internal sealed class BridgeHost : MonoBehaviour
         _malformed = config.Bind("Debug build", "Send malformed game master requests", false, "Sends a NaN spawn, a BTR gunner spawn, a 500-bot spawn and an unknown order to the host. Debug builds only.");
 #endif
         PerunNetwork.ObservedBot = player => player is FikaPlayer fikaPlayer && fikaPlayer.IsObservedAI;
+        string missing = DeathCamera.Missing;
+        if (missing == null)
+        {
+            DeathCamera deathCamera = new();
+            PerunNetwork.SuspendDeathCamera = deathCamera.Suspend;
+            PerunNetwork.ResumeDeathCamera = deathCamera.Resume;
+        }
+        else
+        {
+            Plugin.Log.LogWarning($"Fika's {missing} wasn't found; Perun won't open after you die");
+        }
         FikaEventDispatcher.SubscribeEvent<FikaNetworkManagerCreatedEvent>(_bridge.OnManagerCreated);
         FikaEventDispatcher.SubscribeEvent<FikaNetworkManagerDestroyedEvent>(_bridge.OnManagerDestroyed);
         FikaEventDispatcher.SubscribeEvent<PeerDisconnectedEvent>(_bridge.OnPeerDisconnected);

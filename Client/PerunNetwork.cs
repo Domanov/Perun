@@ -71,6 +71,12 @@ public static class PerunNetwork
 
     public static Action<string, Vector3> TeleportRemote { get; set; }
 
+    // Fika's spectator camera after you die; paused while RTS mode has the camera, then put back as it was. Suspending
+    // fails until Fika has switched it on, a few seconds after death.
+    public static Func<bool> SuspendDeathCamera { get; set; }
+
+    public static Action ResumeDeathCamera { get; set; }
+
     public static bool TeleportFromHost(string profileId, Vector3 position)
     {
         if (string.IsNullOrEmpty(profileId) || !Comfort.Common.Singleton<GameWorld>.Instantiated)

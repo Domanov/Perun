@@ -16,13 +16,18 @@ internal sealed class BodyParking
 
     public Player Body { get; private set; }
 
+    public void Remember(Player player)
+    {
+        _savedPosition = player.Position;
+        _savedRotation = player.Rotation;
+    }
+
     public void Park(Player player)
     {
         Body = player;
         player.HeavyBreath = false;
         player.Speaker?.Shut();
-        _savedPosition = player.Position;
-        _savedRotation = player.Rotation;
+        Remember(player);
         _parkPosition = _savedPosition + Vector3.down * ParkDepth;
         _parked = true;
         player.MovementContext.FreefallTime = 0f;

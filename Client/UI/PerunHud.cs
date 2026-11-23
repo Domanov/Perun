@@ -1079,7 +1079,7 @@ internal sealed class PerunHud
 
     private void DrawReturnPoint(Camera camera)
     {
-        if (_mode.Controlling)
+        if (_mode.Controlling || _mode.WatchingDead)
         {
             return;
         }

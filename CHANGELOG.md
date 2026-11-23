@@ -12,6 +12,7 @@
   - Host and single player only for now; a Fika game master sees a notice.
 - Moving a group's leader now brings his followers along: they wake up with him and walk to his destination in a wedge, keeping pace with him. Followers fight on their own again when they meet enemies, unless the order was forced (Ctrl+right-click).
 - Your own character is a unit: click the magenta dot (where you return) or "You" in the unit list to select it. Heal and the Arsenal work on it, Teleport moves where you return, and Kill asks for a second press because it ends your raid. Move orders, Remove and Take control skip it.
+- Fika: Perun keeps working after your character dies. Once Fika's spectator camera is on, the RTS key opens Perun as usual (host, or game master on a headless raid); Fika's spectator camera, its UI and the extract message come back when you close it. You can take control of a bot from there (host, with "Allow take control in Fika" on) and keep playing as it; the raid HUD shows while you control it. Your own character as a unit isn't available while dead.
 - BOTS list: each type shows its attitude toward the selected unit: ally, neutral, warns (only toward players: warns first, then shoots), hostile with a chance, or hostile. "GROUP SIZE" is now "COUNT".
 - Arsenal:
   - Bots given a loadout no longer keep switching weapons without shooting. With SAIN, its weapon list is refreshed after every change.
@@ -21,7 +22,9 @@
 - MoreBotsAPI: bots spawned by Perun no longer throw an error in its hunt manager as they appear. The error cut the game's spawn setup short, so some bots never fully activated and group members were left unattached.
 - Your parked character no longer breathes heavily or grunts in pain as your own voice while you're in RTS mode.
 - One release zip for single player and Fika: the Fika bridge is in it and is only loaded when Fika is installed, so BepInEx no longer reports a missing dependency and other mods no longer log errors about it.
-- Known issue: a leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
+- Known issues:
+  - A leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
+  - Fika: a bot you control after your character died shows no visor, pain or blood effects. Fika removes those camera effects when you die.
 
 ## 0.12.0 (2026-11-19)
 - Verbose logging also writes the game version, plugin list and Perun settings once per session (the password only as set or empty), and each raid's map, Fika role, your character and game time.
