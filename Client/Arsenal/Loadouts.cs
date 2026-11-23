@@ -8,6 +8,7 @@ using EFT;
 using EFT.InventoryLogic;
 using JsonType;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Perun.Client.Arsenal;
 
@@ -28,6 +29,20 @@ internal sealed class SavedSlot
 {
     public string Slot { get; set; }
     public FlatItem[] Items { get; set; }
+}
+
+internal sealed class ContentItem
+{
+    public ContentItem(Item item, string grid, LocationInGrid at)
+    {
+        Item = item;
+        Grid = grid;
+        At = at;
+    }
+
+    public Item Item { get; }
+    public string Grid { get; }
+    public LocationInGrid At { get; }
 }
 
 internal static class Loadouts
@@ -143,7 +158,7 @@ internal static class Loadouts
     {
         public readonly Dictionary<EquipmentSlot, Item> Gear = new();
         public readonly Dictionary<EquipmentSlot, Item> WholeContainers = new();
-        public readonly Dictionary<EquipmentSlot, List<Item>> Contents = new();
+        public readonly Dictionary<EquipmentSlot, List<ContentItem>> Contents = new();
         public readonly List<EquipmentSlot> Unbuildable = new();
         public readonly List<string> Skipped = new();
 
@@ -157,11 +172,11 @@ internal static class Loadouts
             {
                 yield return item;
             }
-            foreach (List<Item> list in Contents.Values)
+            foreach (List<ContentItem> list in Contents.Values)
             {
-                foreach (Item item in list)
+                foreach (ContentItem content in list)
                 {
-                    yield return item;
+                    yield return content.Item;
                 }
             }
         }
@@ -193,7 +208,7 @@ internal static class Loadouts
             {
                 continue;
             }
-            if (ArsenalOps.InSlot(unit, slot) is not CompoundItem)
+            if (unit.IsAI || ArsenalOps.InSlot(unit, slot) is not CompoundItem)
             {
                 Item whole = Instantiate(items, plan.Skipped);
                 if (whole == null)
@@ -206,21 +221,34 @@ internal static class Loadouts
                 }
                 continue;
             }
-            List<Item> contents = new();
-            foreach (FlatItem[] subtree in Contents(items))
+            List<ContentItem> contents = new();
+            foreach ((FlatItem[] subtree, string grid, LocationInGrid at) in Contents(items))
             {
                 Item item = Instantiate(subtree, plan.Skipped);
                 if (item != null)
                 {
-                    contents.Add(item);
+                    contents.Add(new ContentItem(item, grid, at));
                 }
             }
-            plan.Contents[slot] = contents;
+            plan.Contents[slot] = contents.OrderByDescending(c => Area(c.Item)).ToList();
         }
         return plan;
     }
 
     public static async Task<ArsenalResult> Apply(Player unit, Loadout loadout, Action<string> progress)
+    {
+        ArsenalOps.HoldDraws(unit);
+        try
+        {
+            return await ApplyHeld(unit, loadout, progress);
+        }
+        finally
+        {
+            ArsenalOps.ReleaseDraws(unit);
+        }
+    }
+
+    private static async Task<ArsenalResult> ApplyHeld(Player unit, Loadout loadout, Action<string> progress)
     {
         if (loadout == null)
         {
@@ -233,7 +261,12 @@ internal static class Loadouts
             return blocked;
         }
 
+        ArsenalTrace.Log(unit, $"loadout {loadout.Name} start, slots {string.Join(", ", loadout.Slots.Keys)}");
         Plan plan = Prepare(unit, loadout);
+        if (ArsenalTrace.On)
+        {
+            ArsenalTrace.Note(unit, $"plan: gear {string.Join(", ", plan.Gear.Select(g => $"{g.Key}={g.Value.ShortName.Localized()}"))}; whole containers {string.Join(", ", plan.WholeContainers.Keys)}; contents {string.Join(", ", plan.Contents.Select(c => $"{c.Key}: {c.Value.Count} item(s)"))}; unbuildable {string.Join(", ", plan.Unbuildable)}");
+        }
         progress?.Invoke($"{name}: loading gear");
         foreach (Item tree in plan.AllTrees())
         {
@@ -260,7 +293,9 @@ internal static class Loadouts
             async slot =>
             {
                 progress?.Invoke($"{name}: taking off {slot}");
+                ArsenalTrace.Log(unit, $"step: take off {slot}");
                 (ArsenalResult result, ArsenalOps.Held item) = await ArsenalOps.HoldAsync(unit, slot);
+                ArsenalTrace.Log(unit, $"step: take off {slot} -> {result.Status} {result.Message}");
                 if (result.IsOk && item != null)
                 {
                     held[slot] = item;
@@ -270,6 +305,7 @@ internal static class Loadouts
             slot =>
             {
                 progress?.Invoke($"{name}: {slot}");
+                ArsenalTrace.Note(unit, $"step: give {slot}");
                 return ArsenalOps.GiveAsync(unit, plan.Gear[slot], slot, false);
             },
             slot => held.TryGetValue(slot, out ArsenalOps.Held original) ? ArsenalOps.Restore(unit, original) : null);
@@ -278,6 +314,9 @@ internal static class Loadouts
         if (gear.Aborted is ArsenalResult aborted)
         {
             Plugin.Log.LogWarning($"Loadout {loadout.Name} on {name}: stopped, {aborted.Message}");
+            ArsenalOps.ReleaseDraws(unit);
+            await ArsenalOps.EquipBest(unit);
+            ArsenalTrace.Watch(unit, $"stopped loadout {loadout.Name}");
             return aborted;
         }
         List<string> failures = gear.Failures;
@@ -286,17 +325,21 @@ internal static class Loadouts
         foreach (KeyValuePair<EquipmentSlot, Item> whole in plan.WholeContainers)
         {
             progress?.Invoke($"{name}: {whole.Key}");
-            ArsenalResult result = await ArsenalOps.GiveAsync(unit, whole.Value, whole.Key, false);
+            ArsenalResult result = unit.IsAI
+                ? await ArsenalOps.ReplaceRaidLockedAsync(unit, whole.Value, whole.Key)
+                : await ArsenalOps.GiveAsync(unit, whole.Value, whole.Key, false);
             if (!result.IsOk)
             {
                 failures.Add($"{whole.Key}: {result.Message}");
             }
         }
 
-        foreach (KeyValuePair<EquipmentSlot, List<Item>> contents in plan.Contents)
+        foreach (KeyValuePair<EquipmentSlot, List<ContentItem>> contents in plan.Contents)
         {
             progress?.Invoke($"{name}: {contents.Key}");
+            ArsenalTrace.Note(unit, $"filling {contents.Key} with {contents.Value.Count} item(s)");
             ArsenalResult result = await FillContainer(unit, contents.Key, contents.Value);
+            ArsenalTrace.Note(unit, $"filled {contents.Key}: {result.Status} {result.Message}");
             rollbackFailed |= result.Status == ArsenalStatus.RollbackFailed;
             if (!result.IsOk && (result.Status == ArsenalStatus.Cancelled || !ArsenalOps.Blocked(unit).IsOk))
             {
@@ -309,8 +352,18 @@ internal static class Loadouts
             }
         }
 
+        if (unit.IsAI)
+        {
+            progress?.Invoke($"{name}: ammo");
+            await ArsenalOps.TopUpAmmoAsync(unit);
+        }
+
         progress?.Invoke($"{name}: drawing a weapon");
+        ArsenalOps.ReleaseDraws(unit);
+        ArsenalOps.RefreshAi(unit);
         await ArsenalOps.EquipBest(unit);
+        ArsenalTrace.Log(unit, $"loadout {loadout.Name} done, {failures.Count} problem(s)");
+        ArsenalTrace.Watch(unit, $"loadout {loadout.Name}");
 
         foreach (EquipmentSlot slot in plan.Unbuildable)
         {
@@ -337,7 +390,7 @@ internal static class Loadouts
         return rollbackFailed ? ArsenalResult.RollbackFailed(summary) : new ArsenalResult(status, summary);
     }
 
-    private static async Task<ArsenalResult> FillContainer(Player unit, EquipmentSlot slot, List<Item> contents)
+    private static async Task<ArsenalResult> FillContainer(Player unit, EquipmentSlot slot, List<ContentItem> contents)
     {
         if (ArsenalOps.InSlot(unit, slot) is not CompoundItem container)
         {
@@ -345,32 +398,66 @@ internal static class Loadouts
         }
 
         Dictionary<Item, ArsenalOps.HeldContent> held = new();
-        SwapSteps<Item> steps = new(
+        SwapSteps<ContentItem> steps = new(
             () => ArsenalOps.Blocked(unit),
-            async item =>
+            async content =>
             {
-                (ArsenalResult result, ArsenalOps.HeldContent content) = await ArsenalOps.HoldContentAsync(unit, item);
+                (ArsenalResult result, ArsenalOps.HeldContent old) = await ArsenalOps.HoldContentAsync(unit, content.Item);
                 if (result.IsOk)
                 {
-                    held[item] = content;
+                    held[content.Item] = old;
                 }
                 return result;
             },
-            item => ArsenalOps.GiveIntoAsync(unit, item, container),
-            async item => (await ArsenalOps.HoldContentAsync(unit, item)).result,
-            item => ArsenalOps.RestoreContent(unit, held[item], container),
-            item => item.ShortName.Localized());
-        return await ContainerSwap.Run(ArsenalOps.ContentsOf(container), contents, steps);
+            content => ArsenalOps.GiveContentAsync(unit, content.Item, container, content.Grid, content.At),
+            async content => (await ArsenalOps.HoldContentAsync(unit, content.Item)).result,
+            content => ArsenalOps.RestoreContent(unit, held[content.Item], container),
+            content => content.Item.ShortName.Localized());
+        List<ContentItem> old = ArsenalOps.ContentsOf(container).Select(item => new ContentItem(item, null, null)).ToList();
+        return await ContainerSwap.Run(old, contents, steps);
     }
 
-    private static List<FlatItem[]> Contents(FlatItem[] items)
+    private static int Area(Item item)
     {
-        List<FlatItem[]> result = new();
+        try
+        {
+            var size = item.CalculateCellSize();
+            return size.X * size.Y;
+        }
+        catch (Exception)
+        {
+            return 1;
+        }
+    }
+
+    private static LocationInGrid Location(FlatItem item)
+    {
+        try
+        {
+            if (item.location?.JObject is not JObject json || json["x"] == null || json["y"] == null)
+            {
+                return null;
+            }
+            JToken rotation = json["r"];
+            ItemRotation r = rotation == null ? ItemRotation.Horizontal
+                : rotation.Type == JTokenType.Integer ? (ItemRotation)(int)rotation
+                : (ItemRotation)Enum.Parse(typeof(ItemRotation), (string)rotation, true);
+            return new LocationInGrid((int)json["x"], (int)json["y"], r);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private static List<(FlatItem[] items, string grid, LocationInGrid at)> Contents(FlatItem[] items)
+    {
+        List<(FlatItem[], string, LocationInGrid)> result = new();
         foreach (List<FlatItem> subtree in ItemTree.ChildSubtrees(items, item => item._id, item => item.parentId.HasValue ? (string)item.parentId.Value : null))
         {
             FlatItem first = subtree[0];
             subtree[0] = new FlatItem { _id = first._id, _tpl = first._tpl, upd = first.upd };
-            result.Add(subtree.ToArray());
+            result.Add((subtree.ToArray(), first.slotId, Location(first)));
         }
         return result;
     }

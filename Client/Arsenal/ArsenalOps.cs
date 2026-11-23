@@ -6,6 +6,7 @@ using Comfort.Common;
 using Diz.Jobs;
 using EFT;
 using EFT.InventoryLogic;
+using Perun.Client.Compat;
 using Perun.Client.Mode;
 using UnityEngine;
 
@@ -62,6 +63,7 @@ internal static class ArsenalOps
     {
         try
         {
+            ArsenalTrace.Log(target, $"give {ArsenalTrace.Item(tree)} to {(slot.HasValue ? slot.Value.ToString() : "anywhere")}, equip {equip}");
             ArsenalResult result = tree == null ? ArsenalResult.Invalid("unknown item") : Blocked(target);
             if (result.IsOk)
             {
@@ -90,6 +92,11 @@ internal static class ArsenalOps
             {
                 await EquipBest(target);
             }
+            ArsenalTrace.Log(target, $"give {ArsenalTrace.Item(tree)} done: {result.Status} {result.Message}");
+            if (equip)
+            {
+                ArsenalTrace.Watch(target, $"giving {tree?.ShortName.Localized()}");
+            }
             return result;
         }
         catch (OperationCanceledException)
@@ -113,7 +120,9 @@ internal static class ArsenalOps
         try
         {
             ArsenalResult blocked = Blocked(target);
-            return blocked.IsOk ? await RemoveAsync(target, item) : blocked;
+            ArsenalResult result = blocked.IsOk ? await RemoveAsync(target, item) : blocked;
+            ArsenalTrace.Watch(target, $"clearing {slot}");
+            return result;
         }
         catch (OperationCanceledException)
         {
@@ -166,6 +175,7 @@ internal static class ArsenalOps
             return (result, null);
         }
 
+        ArsenalTrace.Log(target, $"holding {ArsenalTrace.Item(item)} from {item.CurrentAddress}");
         InventoryController controller = target.InventoryController;
         Stash stash = Singleton<ItemFactory>.Instance.CreateFakeStash();
         new ItemController(stash, controller.ID, "Perun arsenal hold", false, EOwnerType.Profile);
@@ -278,11 +288,17 @@ internal static class ArsenalOps
         {
             return ArsenalResult.Ok;
         }
+        ArsenalTrace.Log(target, $"emptying hands to take {ArsenalTrace.Item(item)}");
         TaskCompletionSource<bool> emptied = new();
-        target.SetEmptyHands(_ => emptied.TrySetResult(true));
+        target.SetEmptyHands(done =>
+        {
+            ArsenalTrace.Log(target, $"hands emptied: {(done.Failed ? $"FAILED {done.Error}" : "ok")}");
+            emptied.TrySetResult(true);
+        });
         Task finished = await Task.WhenAny(emptied.Task, Task.Delay(4000, RaidScope.Token));
         if (finished != emptied.Task)
         {
+            ArsenalTrace.Log(target, "emptying hands timed out after 4 s");
             return ArsenalResult.Busy("the unit's hands are busy");
         }
         return Blocked(target);
@@ -313,8 +329,10 @@ internal static class ArsenalOps
         }
         if (weapon == null || ReferenceEquals(target.HandsController?.Item, weapon))
         {
+            ArsenalTrace.Log(target, weapon == null ? "equip best: no weapon in any slot" : $"equip best: already holds {ArsenalTrace.Item(weapon)}");
             return;
         }
+        ArsenalTrace.Log(target, $"equip best: drawing {ArsenalTrace.Item(weapon)} from {slot}");
 
         string name = target.Profile?.Nickname;
         TaskCompletionSource<bool> done = new();
@@ -325,7 +343,12 @@ internal static class ArsenalOps
             try
             {
                 bot.WeaponManager.UpdateWeaponsList();
-                started = bot.WeaponManager.Selector.TryChangeToSlot(slot, true, _ => done.TrySetResult(true));
+                started = bot.WeaponManager.Selector.TryChangeToSlot(slot, true, drawn =>
+                {
+                    ArsenalTrace.Log(target, $"equip best: AI draw callback {(drawn.Failed ? $"FAILED {drawn.Error}" : "ok")}");
+                    done.TrySetResult(true);
+                });
+                ArsenalTrace.Note(target, $"equip best: AI TryChangeToSlot({slot}) returned {started}");
             }
             catch (Exception ex)
             {
@@ -334,13 +357,19 @@ internal static class ArsenalOps
         }
         if (!started)
         {
-            target.SetSlotItem(slot, _ => done.TrySetResult(true));
+            ArsenalTrace.Note(target, $"equip best: SetSlotItem({slot})");
+            target.SetSlotItem(slot, drawn =>
+            {
+                ArsenalTrace.Log(target, $"equip best: draw callback {(drawn.Failed ? $"FAILED {drawn.Error}" : "ok")}");
+                done.TrySetResult(true);
+            });
         }
 
         Task finished = await Task.WhenAny(done.Task, Task.Delay(5000, RaidScope.Token));
         if (finished != done.Task)
         {
             Plugin.Log.LogWarning($"Arsenal: {name} didn't finish drawing its {weapon.ShortName.Localized()} in 5 s");
+            ArsenalTrace.Log(target, "equip best: draw timed out");
             return;
         }
         if (bot != null && !bot.IsDead && bot.WeaponManager != null)
@@ -413,7 +442,81 @@ internal static class ArsenalOps
         return ArsenalResult.Ok;
     }
 
-    public static async Task<ArsenalResult> GiveIntoAsync(Player target, Item tree, CompoundItem container)
+    // Secure containers can't leave their slot during a raid (CantRemoveFromSlotsDuringRaid), so normal moves fail.
+    // Only for bots: a human's secure container goes home with them, so theirs only gets new contents.
+    public static async Task<ArsenalResult> ReplaceRaidLockedAsync(Player target, Item tree, EquipmentSlot slot)
+    {
+        try
+        {
+            if (tree == null)
+            {
+                return ArsenalResult.Invalid("unknown item");
+            }
+            if (!target.IsAI)
+            {
+                return ArsenalResult.Invalid("only a bot's secure container can be swapped");
+            }
+            ArsenalResult result = Blocked(target);
+            if (!result.IsOk)
+            {
+                return result;
+            }
+            await Load(tree);
+            result = Blocked(target);
+            Slot place = SlotOf(target, slot);
+            if (!result.IsOk || place == null)
+            {
+                return result.IsOk ? ArsenalResult.Invalid("that unit has no such slot") : result;
+            }
+            if (!place.CheckCompatibility(tree))
+            {
+                return ArsenalResult.Incompatible($"{tree.ShortName.Localized()} doesn't go in that slot");
+            }
+
+            Item old = place.ContainedItem;
+            if (old != null)
+            {
+                result = await EmptyHandsIfHolding(target, old);
+                if (!result.IsOk)
+                {
+                    return result;
+                }
+                var removed = place.RemoveItemWithoutRestrictions();
+                if (removed.Failed)
+                {
+                    return ArsenalResult.Failed($"couldn't take out {old.ShortName.Localized()}: {removed.Error}");
+                }
+            }
+
+            var added = place.AddWithoutRestrictions(tree);
+            if (added.Failed)
+            {
+                string error = $"couldn't put in {tree.ShortName.Localized()}: {added.Error}";
+                if (old != null && place.AddWithoutRestrictions(old).Failed)
+                {
+                    Plugin.Log.LogError($"Arsenal: {target.Profile?.Nickname} lost its {old.ShortName.Localized()}: {error}");
+                    return ArsenalResult.RollbackFailed($"{error}; couldn't put back {old.ShortName.Localized()}");
+                }
+                return ArsenalResult.Failed(error);
+            }
+            AfterChange(target);
+            Plugin.Log.LogInfo($"Arsenal: swapped {target.Profile?.Nickname}'s {slot} {old?.ShortName.Localized() ?? "(none)"} for {tree.ShortName.Localized()} with {tree.GetAllItems().Count() - 1} item(s) inside");
+            return ArsenalResult.Ok;
+        }
+        catch (OperationCanceledException)
+        {
+            return ArsenalResult.Cancelled();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogError($"Arsenal container swap failed: {ex}");
+            return ArsenalResult.Failed("it failed (see log)");
+        }
+    }
+
+    // Tries the item's spot in the source container first (same layout when the containers match), then any free
+    // spot in the container, then the unit's other containers, so a smaller container doesn't lose the overflow.
+    public static async Task<ArsenalResult> GiveContentAsync(Player target, Item tree, CompoundItem container, string gridId, LocationInGrid at)
     {
         try
         {
@@ -428,7 +531,29 @@ internal static class ArsenalOps
             }
             await Load(tree);
             result = Blocked(target);
-            return result.IsOk ? Place(target, tree, controller => FindInContainer(container, tree, controller), ArsenalResult.NoRoom($"no room in {container.ShortName.Localized()}")) : result;
+            if (!result.IsOk)
+            {
+                return result;
+            }
+            string placedBy = null;
+            result = Place(target, tree, controller =>
+            {
+                ItemAddress address = OriginalSpot(container, tree, gridId, at, controller);
+                placedBy = "its original spot";
+                if (address == null)
+                {
+                    address = FindInContainer(container, tree, controller);
+                    placedBy = "a free spot";
+                }
+                if (address == null)
+                {
+                    address = FindInOtherContainers(target, tree, container, controller);
+                    placedBy = "another container (overflow)";
+                }
+                return address;
+            }, ArsenalResult.NoRoom($"no room for it in {container.ShortName.Localized()} or the unit's other containers"));
+            ArsenalTrace.Note(target, result.IsOk ? $"content {ArsenalTrace.Item(tree)} went to {placedBy}" : $"content {ArsenalTrace.Item(tree)} not placed: {result.Message}");
+            return result;
         }
         catch (OperationCanceledException)
         {
@@ -439,6 +564,37 @@ internal static class ArsenalOps
             Plugin.Log.LogError($"Arsenal give into a container failed: {ex}");
             return ArsenalResult.Failed("it failed (see log)");
         }
+    }
+
+    private static ItemAddress OriginalSpot(CompoundItem container, Item tree, string gridId, LocationInGrid at, InventoryController controller)
+    {
+        if (at == null || container.Grids == null)
+        {
+            return null;
+        }
+        Grid grid = container.Grids.FirstOrDefault(g => g.ID == gridId) ?? (container.Grids.Length == 1 ? container.Grids[0] : null);
+        if (grid == null || !grid.LiesWithinGrid(tree, at))
+        {
+            return null;
+        }
+        ItemAddress address = grid.CreateItemAddress(at);
+        return ItemManipulator.Move(tree, address, controller, true).Succeeded ? address : null;
+    }
+
+    private static ItemAddress FindInOtherContainers(Player target, Item tree, CompoundItem except, InventoryController controller)
+    {
+        foreach (EquipmentSlot name in ContainerOrder)
+        {
+            if (SlotOf(target, name)?.ContainedItem is CompoundItem other && !ReferenceEquals(other, except))
+            {
+                ItemAddress address = FindInContainer(other, tree, controller);
+                if (address != null)
+                {
+                    return address;
+                }
+            }
+        }
+        return null;
     }
 
     public static List<Item> ContentsOf(CompoundItem container)
@@ -546,6 +702,7 @@ internal static class ArsenalOps
             {
                 break;
             }
+            ArsenalTrace.Log(target, $"removing {ArsenalTrace.Item(item)} attempt {attempt + 1} failed: {result.Error}");
             await Task.Delay(250, RaidScope.Token);
         }
         if (result == null || result.Failed)
@@ -557,15 +714,136 @@ internal static class ArsenalOps
         return ArsenalResult.Ok;
     }
 
+    // During a loadout every slot change used to make the AI draw its main weapon while the next slot was still being
+    // emptied, and the overlapping hand changes left bots switching weapons. Draws wait until the whole kit is in.
+    private static readonly HashSet<Player> DrawsHeld = new();
+
+    public static void HoldDraws(Player target)
+    {
+        if (target != null)
+        {
+            DrawsHeld.Add(target);
+        }
+    }
+
+    public static void ReleaseDraws(Player target) => DrawsHeld.Remove(target);
+
+    // The AI's weapon list, its cached "no ammo for reload" verdict and SAIN's per-slot weapon infos all still describe
+    // the old guns after a swap; stale entries make the bot keep changing to weapons it no longer has or can't reload.
+    public static void RefreshAi(Player target)
+    {
+        BotOwner bot = target?.AIData?.BotOwner;
+        if (bot == null || bot.IsDead || bot.WeaponManager == null)
+        {
+            return;
+        }
+        try
+        {
+            bot.WeaponManager.UpdateWeaponsList();
+            if (bot.WeaponManager.Reload != null)
+            {
+                bot.WeaponManager.Reload.NoAmmoForReloadCached = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"Arsenal: {target.Profile?.Nickname}'s AI couldn't refresh its weapons: {ex.Message}");
+        }
+        string sain = SainCompat.RefreshWeapons(target);
+        if (sain != null)
+        {
+            ArsenalTrace.Note(target, $"SAIN weapons: {sain}");
+        }
+    }
+
+    private const int BotAmmoStacks = 20;
+
+    // Bots reload from loose rounds in their inventory (the server puts 20 stacks in the secure container). A kit taken
+    // from another unit may have no rounds for its guns, and a bot with nothing to reload with keeps switching weapons.
+    public static async Task TopUpAmmoAsync(Player target)
+    {
+        if (target == null || !target.IsAI || SlotOf(target, EquipmentSlot.SecuredContainer)?.ContainedItem is not CompoundItem container)
+        {
+            return;
+        }
+        HashSet<string> done = new();
+        foreach (EquipmentSlot slot in WeaponSlots)
+        {
+            if (InSlot(target, slot) is not Weapon weapon || string.IsNullOrEmpty(weapon.AmmoCaliber) || !done.Add(weapon.AmmoCaliber))
+            {
+                continue;
+            }
+            string ammo = AmmoFor(weapon);
+            Item sample = ammo != null ? Build(ammo, int.MaxValue) : null;
+            if (sample == null)
+            {
+                ArsenalTrace.Note(target, $"ammo: no ammo type found for {ArsenalTrace.Item(weapon)}");
+                continue;
+            }
+            int stack = Math.Max(1, sample.StackMaxSize);
+            int loose = LooseRounds(target, weapon.AmmoCaliber);
+            int missing = (BotAmmoStacks * stack - loose) / stack;
+            int added = 0;
+            for (int i = 0; i < missing; i++)
+            {
+                Item rounds = i == 0 ? sample : Build(ammo, int.MaxValue);
+                if (!(await GiveContentAsync(target, rounds, container, null, null)).IsOk)
+                {
+                    break;
+                }
+                added++;
+            }
+            if (added > 0 || ArsenalTrace.On)
+            {
+                Plugin.Log.LogInfo($"Arsenal: {target.Profile?.Nickname} had {loose} spare {weapon.AmmoCaliber} round(s) for its {weapon.ShortName.Localized()}, added {added} stack(s) of {sample.ShortName.Localized()}");
+            }
+        }
+    }
+
+    private static string AmmoFor(Weapon weapon)
+    {
+        Item loaded = weapon.GetAllItems().OfType<Ammo>().FirstOrDefault();
+        if (loaded != null)
+        {
+            return loaded.TemplateId;
+        }
+        return weapon.Template is WeaponTemplate template && !string.IsNullOrEmpty(template.defAmmo) ? template.defAmmo : null;
+    }
+
+    private static int LooseRounds(Player target, string caliber)
+    {
+        InventoryEquipment equipment = target.InventoryController?.Inventory?.Equipment;
+        if (equipment == null)
+        {
+            return 0;
+        }
+        int rounds = 0;
+        foreach (Ammo ammo in equipment.GetAllItems().OfType<Ammo>())
+        {
+            Item holder = ammo.Parent?.Container?.ParentItem;
+            if (ammo.Caliber == caliber && holder is not Magazine && holder is not Weapon)
+            {
+                rounds += ammo.StackObjectsCount;
+            }
+        }
+        return rounds;
+    }
+
     private static void AfterChange(Player target)
     {
         BotOwner bot = target.AIData?.BotOwner;
         if (bot != null && !bot.IsDead && bot.WeaponManager != null)
         {
+            if (DrawsHeld.Contains(target))
+            {
+                ArsenalTrace.Log(target, "after change: AI draw held until the loadout is done");
+                return;
+            }
+            RefreshAi(target);
             try
             {
-                bot.WeaponManager.UpdateWeaponsList();
-                bot.WeaponManager.Selector?.TryChangeToMain();
+                bool? changing = bot.WeaponManager.Selector?.TryChangeToMain();
+                ArsenalTrace.Log(target, $"after change: AI TryChangeToMain returned {changing?.ToString() ?? "no selector"}");
             }
             catch (Exception ex)
             {
@@ -576,6 +854,7 @@ internal static class ArsenalOps
 
         if (target.HandsController is Player.EmptyHandsController)
         {
+            ArsenalTrace.Log(target, "after change: empty hands, TrySetLastEquippedWeapon");
             target.TrySetLastEquippedWeapon();
         }
     }

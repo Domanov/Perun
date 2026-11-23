@@ -233,7 +233,7 @@ public class Plugin : BaseUnityPlugin
 
         const string debug = "4. Debug";
         Verbose = Config.Bind(debug, "Verbose logging", false,
-            new ConfigDescription("Log every step of entering and leaving RTS mode, plus the game, plugin list and Perun settings once, and each raid's map and Fika role.", null, new ConfigurationManagerAttributes { Order = 100 }));
+            new ConfigDescription("Log every step of entering and leaving RTS mode, plus the game, plugin list and Perun settings once, and each raid's map and Fika role. Arsenal changes log every step with the unit's hands and animator state, and keep watching the unit's hands for 20 s afterwards.", null, new ConfigurationManagerAttributes { Order = 100 }));
     }
 }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using BepInEx.Bootstrap;
 using HarmonyLib;
@@ -118,6 +119,87 @@ internal static class SainCompat
         }
         catch (Exception)
         {
+            return null;
+        }
+    }
+
+    private static bool _weaponsResolved;
+    private static Type _playerComponentType;
+    private static PropertyInfo _equipmentProperty;
+    private static PropertyInfo _weaponInfosProperty;
+    private static MethodInfo _getAllWeapons;
+    private static MethodInfo _recalcPower;
+
+    // SAIN fills its per-slot weapon infos when the bot spawns; Perun's arsenal swaps guns afterwards.
+    public static string RefreshWeapons(EFT.Player player)
+    {
+        if (_componentType == null || player == null)
+        {
+            return null;
+        }
+        if (!_weaponsResolved)
+        {
+            _weaponsResolved = true;
+            _playerComponentType = AccessTools.TypeByName("SAIN.Components.PlayerComponentSpace.PlayerComponent");
+            _equipmentProperty = _playerComponentType != null ? AccessTools.Property(_playerComponentType, "Equipment") : null;
+            Type equipment = _equipmentProperty?.PropertyType;
+            _weaponInfosProperty = equipment != null ? AccessTools.Property(equipment, "WeaponInfos") : null;
+            _getAllWeapons = equipment != null ? AccessTools.Method(equipment, "getAllWeapons") : null;
+            _recalcPower = equipment != null ? AccessTools.Method(equipment, "ReCalcPowerOfEquipment") : null;
+            if (_weaponInfosProperty == null || _getAllWeapons == null)
+            {
+                Plugin.Log.LogWarning("SAIN: its weapon list wasn't found, bots given new guns by the arsenal may keep switching weapons");
+            }
+        }
+        if (_weaponInfosProperty == null || _getAllWeapons == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            object component = player.GetComponent(_playerComponentType) ?? player.GetComponentInChildren(_playerComponentType);
+            object equipment = component != null ? _equipmentProperty.GetValue(component) : null;
+            if (equipment == null)
+            {
+                return "no SAIN component";
+            }
+            // getAllWeapons replaces an entry whose slot holds a different gun but never drops one whose slot is now
+            // empty. SAIN's distance-based weapon choice then keeps asking for the removed gun (it still has a round
+            // chambered), so those entries are disposed and removed here first.
+            int dropped = 0;
+            if (_weaponInfosProperty.GetValue(equipment) is System.Collections.IDictionary infos)
+            {
+                EFT.InventoryLogic.InventoryEquipment gear = player.InventoryController?.Inventory?.Equipment;
+                List<object> stale = new();
+                foreach (System.Collections.DictionaryEntry entry in infos)
+                {
+                    object held = entry.Value != null ? AccessTools.Property(entry.Value.GetType(), "Weapon")?.GetValue(entry.Value) : null;
+                    object inSlot = gear?.GetSlot((EFT.InventoryLogic.EquipmentSlot)entry.Key)?.ContainedItem;
+                    if (held == null || !ReferenceEquals(held, inSlot))
+                    {
+                        stale.Add(entry.Key);
+                    }
+                }
+                foreach (object slot in stale)
+                {
+                    object info = infos[slot];
+                    if (info != null)
+                    {
+                        AccessTools.Method(info.GetType(), "Dispose")?.Invoke(info, null);
+                    }
+                    infos.Remove(slot);
+                    dropped++;
+                }
+            }
+            _getAllWeapons.Invoke(equipment, null);
+            _recalcPower?.Invoke(equipment, null);
+            int count = _weaponInfosProperty.GetValue(equipment) is System.Collections.IDictionary refreshed ? refreshed.Count : -1;
+            return $"dropped {dropped} stale, now {count} weapon(s)";
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"SAIN: couldn't refresh {player.Profile?.Nickname}'s weapons: {ex.GetBaseException().Message}");
             return null;
         }
     }
