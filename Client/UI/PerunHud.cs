@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Comfort.Common;
@@ -58,9 +59,20 @@ internal sealed class PerunHud
     {
         public int Key = -1;
         public string Text;
+        public float Width;
+        public int RelationVersion = -1;
+        public Attitude Relation;
     }
 
+    private const float RelationRefresh = 1f;
+    private static readonly Color[] AttitudeColors = BuildAttitudeColors();
+
     private readonly Dictionary<Player, LabelCache> _labels = new();
+    private readonly GUIContent _measure = new();
+    private Player _relationSubject;
+    private int _relationHostility = -1;
+    private int _relationVersion;
+    private float _nextRelation;
     private readonly List<Player> _labelGone = new();
     private readonly StringBuilder _builder = new(512);
     private readonly PerunMode _mode;
@@ -948,6 +960,16 @@ internal sealed class PerunHud
         int colorVersion = BotKinds.ColorVersion & 0xFFFF;
         List<Player> players = world.AllAlivePlayersList;
 
+        // Group membership changes after spawning (followers attach once active), so relations are refreshed on a timer too.
+        Player subject = picker.Selected;
+        if (subject != _relationSubject || Hostility.Version != _relationHostility || now >= _nextRelation)
+        {
+            _relationSubject = subject;
+            _relationHostility = Hostility.Version;
+            _nextRelation = now + RelationRefresh;
+            _relationVersion++;
+        }
+
         for (int i = 0; i < players.Count; i++)
         {
             Player player = players[i];
@@ -978,10 +1000,78 @@ internal sealed class PerunHud
             {
                 cache.Key = key;
                 cache.Text = BuildLabel(player, selected, hovered, ordered, ours, health);
+                _measure.text = cache.Text;
+                cache.Width = _label.CalcSize(_measure).x;
+            }
+            if (cache.RelationVersion != _relationVersion)
+            {
+                cache.RelationVersion = _relationVersion;
+                cache.Relation = Relation(subject, player);
             }
 
             GUI.Label(new Rect(screen.x - 150f, screen.y - 22f, 300f, 22f), cache.Text, _label);
+            if (cache.Relation != Attitude.Unknown)
+            {
+                DrawRelation(new Vector2(screen.x - cache.Width / 2f - 9f, screen.y - 9f), AttitudeColors[(int)cache.Relation]);
+            }
         }
+    }
+
+    // How the unit is set toward the selected one, as in the BOTS list badges. Bots of one group are always allies;
+    // a bot whose group has already taken the other as an enemy (a neutral USEC that was shot at) shows hostile.
+    private static Attitude Relation(Player subject, Player other)
+    {
+        if (subject == null || other == subject || subject.Profile == null || other.Profile == null)
+        {
+            return Attitude.Unknown;
+        }
+        BotsGroup subjectGroup = subject.AIData?.BotOwner?.BotsGroup;
+        BotsGroup otherGroup = other.AIData?.BotOwner?.BotsGroup;
+        if (subjectGroup != null && subjectGroup == otherGroup)
+        {
+            return Attitude.Ally;
+        }
+        if ((subjectGroup != null && subjectGroup.Enemies.ContainsKey(other)) || (otherGroup != null && otherGroup.Enemies.ContainsKey(subject)))
+        {
+            return Attitude.Enemy;
+        }
+
+        bool subjectBot = Bots.IsBot(subject);
+        bool otherBot = Bots.IsBot(other);
+        WildSpawnType subjectRole = subject.Profile.Info.Settings.Role;
+        WildSpawnType otherRole = other.Profile.Info.Settings.Role;
+        if (subjectBot && otherBot)
+        {
+            return Hostility.Between(subjectRole, subject.Side, otherRole, other.Side).Kind;
+        }
+        if (subjectBot)
+        {
+            return Hostility.TowardPlayer(subjectRole, other.Side).Kind;
+        }
+        return otherBot ? Hostility.TowardPlayer(otherRole, subject.Side).Kind : Attitude.Unknown;
+    }
+
+    private static void DrawRelation(Vector2 center, Color color)
+    {
+        _dot ??= Dot(32);
+        const float size = 9f;
+        Color previous = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.7f);
+        GUI.DrawTexture(new Rect(center.x - size / 2f - 1.5f, center.y - size / 2f - 1.5f, size + 3f, size + 3f), _dot);
+        GUI.color = color;
+        GUI.DrawTexture(new Rect(center.x - size / 2f, center.y - size / 2f, size, size), _dot);
+        GUI.color = previous;
+    }
+
+    private static Color[] BuildAttitudeColors()
+    {
+        Array kinds = Enum.GetValues(typeof(Attitude));
+        Color[] colors = new Color[kinds.Length];
+        foreach (Attitude kind in kinds)
+        {
+            colors[(int)kind] = ColorUtility.TryParseHtmlString(HostilityRules.Hex(kind) ?? "", out Color color) ? color : Color.clear;
+        }
+        return colors;
     }
 
     private static readonly Color ReturnColor = new(1f, 0.2f, 1f, 1f);

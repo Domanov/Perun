@@ -231,13 +231,25 @@ internal static class HostilityRules
         _ => EPlayerSide.Savage
     };
 
+    public static string Hex(Attitude kind) => kind switch
+    {
+        Attitude.Ally => "#8be38b",
+        Attitude.Neutral => "#9fb4c8",
+        Attitude.Warns => "#ffd36f",
+        Attitude.Chance => "#ffa04d",
+        Attitude.Enemy => "#ff8080",
+        _ => null
+    };
+
     public static string Badge(Stance stance) => stance.Kind switch
     {
-        Attitude.Ally => "<color=#8be38b>ally</color>",
-        Attitude.Neutral => "<color=#9fb4c8>neutral</color>",
-        Attitude.Warns => "<color=#ffd36f>warns</color>",
-        Attitude.Chance => "<color=#ffa04d>hostile " + stance.Chance + "%</color>",
-        Attitude.Enemy => "<color=#ff8080>hostile</color>",
+        Attitude.Ally => Tint(stance.Kind, "ally"),
+        Attitude.Neutral => Tint(stance.Kind, "neutral"),
+        Attitude.Warns => Tint(stance.Kind, "warns"),
+        Attitude.Chance => Tint(stance.Kind, "hostile " + stance.Chance + "%"),
+        Attitude.Enemy => Tint(stance.Kind, "hostile"),
         _ => ""
     };
+
+    private static string Tint(Attitude kind, string text) => "<color=" + Hex(kind) + ">" + text + "</color>";
 }
