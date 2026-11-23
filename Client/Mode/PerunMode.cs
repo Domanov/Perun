@@ -99,6 +99,10 @@ internal sealed class PerunMode
         if (Hud != null)
         {
             Hud.Hidden = !Hud.Hidden;
+            if (Hud.Hidden)
+            {
+                Notify("Interface hidden · H shows it again");
+            }
         }
     }
 
@@ -1092,6 +1096,10 @@ internal sealed class PerunMode
         _graceUntil = -1f;
         OwnsCamera = true;
         Active = true;
+        if (Hud != null)
+        {
+            Hud.Hidden = false;
+        }
         ShowCursor(true);
         Log(Commands.IsRemote ? "entered RTS mode as remote game master" : "entered RTS mode");
         return true;
