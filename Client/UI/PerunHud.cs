@@ -82,6 +82,9 @@ internal sealed class PerunHud
     private int _ghostCount = -1;
     private bool _ghostReady;
     private string _ghost;
+    private GroupPlan _ghostGroup;
+    private bool _ghostGroupReady;
+    private string _groupGhost;
 
     private bool _dockOpen = true;
     private AssetTab _tab = AssetTab.Units;
@@ -249,7 +252,7 @@ internal sealed class PerunHud
             DrawBanners(false);
             MouseOverUi = Over(current.mousePosition);
             string focused = GUIUtility.keyboardControl != 0 ? GUI.GetNameOfFocusedControl() : null;
-            Typing = focused == SpawnPanel.SearchControl || focused == ArsenalPanel.SearchControl || focused == ArsenalPanel.NameControl;
+            Typing = focused == SpawnPanel.SearchControl || focused == GroupsPanel.SearchControl || focused == ArsenalPanel.SearchControl || focused == ArsenalPanel.NameControl;
         }
     }
 
@@ -661,8 +664,17 @@ internal sealed class PerunHud
         if (_spawn.Armed && !MouseOverUi)
         {
             Vector3 cursorPosition = Input.mousePosition;
-            bool ready = Commands.ReadyCount(_spawn.Role, _spawn.Difficulty) >= _spawn.Count;
-            string ghost = picker.HasNavPoint ? Ghost(_spawn.RoleName, _spawn.Role, _spawn.Count, ready) : CantPlace;
+            string ghost;
+            GroupPlan group = _spawn.Group;
+            if (group != null)
+            {
+                ghost = picker.HasNavPoint ? GroupGhost(group, _spawn.GroupReady) : CantPlace;
+            }
+            else
+            {
+                bool ready = Commands.ReadyCount(_spawn.Role, _spawn.Difficulty) >= _spawn.Count;
+                ghost = picker.HasNavPoint ? Ghost(_spawn.RoleName, _spawn.Role, _spawn.Count, ready) : CantPlace;
+            }
             GUI.Label(new Rect(cursorPosition.x + 14f, Screen.height - cursorPosition.y - 8f, 300f, 22f), ghost, _label2);
         }
     }
@@ -677,6 +689,19 @@ internal sealed class PerunHud
             _ghost = ready ? $"+ {name} ×{count}  <color=#8be38b>ready</color>" : $"+ {name} ×{count}  <color=#ffc847>needs loading first</color>";
         }
         return _ghost;
+    }
+
+    private string GroupGhost(GroupPlan group, bool ready)
+    {
+        if (!ReferenceEquals(group, _ghostGroup) || ready != _ghostGroupReady || _groupGhost == null)
+        {
+            _ghostGroup = group;
+            _ghostGroupReady = ready;
+            _groupGhost = ready
+                ? $"+ {group.Name} ({group.CountText})  <color=#8be38b>ready</color>"
+                : $"+ {group.Name} ({group.CountText})  <color=#ffc847>needs loading first</color>";
+        }
+        return _groupGhost;
     }
 
     private void BuildStatus(CursorPicker picker)

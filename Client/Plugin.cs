@@ -116,6 +116,7 @@ public class Plugin : BaseUnityPlugin
             Diagnostics.Tick(Config);
             WorldPause.Tick();
             Orders.OrderService.Tick();
+            Units.GroupLeadership.Tick();
             _mode.Tick();
             View.RtsVision.Tick();
         }

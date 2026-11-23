@@ -80,6 +80,27 @@ internal static class Commands
         SpawnService.TrySpawn(role, difficulty, count, position, yaw);
     }
 
+    public static bool SpawnGroup(GroupPlan plan, BotDifficulty? difficulty, Vector3 position, float yaw)
+    {
+        if (Remote != null)
+        {
+            return false;
+        }
+        SpawnService.TrySpawnGroup(plan, difficulty, position, yaw);
+        return true;
+    }
+
+    public static void PrewarmGroup(GroupPlan plan, BotDifficulty? difficulty)
+    {
+        if (Remote == null)
+        {
+            SpawnService.PrewarmGroup(plan, difficulty);
+        }
+    }
+
+    public static int GroupReadyCount(GroupPlan plan, BotDifficulty? difficulty) =>
+        Remote != null ? 0 : SpawnService.GroupReadyCount(plan, difficulty);
+
     public static int Move(IReadOnlyList<Player> units, Vector3 point, bool run, bool forced)
     {
         if (Remote != null)

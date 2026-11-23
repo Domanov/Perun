@@ -24,6 +24,7 @@ internal sealed class SpawnPanel
 
     private static readonly string[] DifficultyNames = { "Easy", "Normal", "Hard", "Impossible" };
     private static readonly BotDifficulty[] Difficulties = { BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
+    private static readonly string[] SubTabs = { "BOTS", "GROUPS" };
     private static readonly string[] CountNames = { "1", "2", "3", "4", "5", "6", "8", "10" };
     private static readonly int[] CountValues = { 1, 2, 3, 4, 5, 6, 8, 10 };
 
@@ -34,6 +35,8 @@ internal sealed class SpawnPanel
     private readonly VirtualList _list = new(RowHeight);
 
     private const float StatusRefresh = 0.25f;
+    private const int BotsTab = 0;
+    private const int GroupsTab = 1;
 
     private readonly List<WildSpawnType>[] _roles;
     private readonly string[][] _roleNames;
@@ -57,11 +60,18 @@ internal sealed class SpawnPanel
     private readonly Dictionary<WildSpawnType, string> _badges = new();
     private (WildSpawnType role, EPlayerSide side, bool bot, int version)? _badgeKey;
     private string _badgeNote = "";
+    private readonly GroupsPanel _groups = new();
+    private int _sub = BotsTab;
+    private int _pendingSub = -1;
 
     public Player BadgeTarget { get; set; }
 
     public bool Visible { get; set; }
-    public bool Armed => Visible && _selected.HasValue;
+
+    public bool Armed => Visible && (_sub == BotsTab ? _selected.HasValue : _groups.Armed);
+    public GroupPlan Group => Visible && _sub == GroupsTab && _groups.Armed ? _groups.Selected : null;
+    public BotDifficulty? GroupDifficulty => _groups.Difficulty;
+    public bool GroupReady => _groups.Ready;
     public WildSpawnType Role => _selected ?? WildSpawnType.assault;
     public string RoleName => _selectedName;
     public WildSpawnType? Chosen => _selected;
@@ -125,10 +135,37 @@ internal sealed class SpawnPanel
     public void Disarm()
     {
         _selected = null;
+        _groups.Disarm();
         _nextStatus = 0f;
     }
 
     public void DrawContent()
+    {
+        if (Event.current.type == EventType.Layout && _pendingSub >= 0)
+        {
+            _sub = _pendingSub;
+            _pendingSub = -1;
+            _selected = null;
+            _groups.Disarm();
+            _nextStatus = 0f;
+        }
+
+        int sub = GUILayout.Toolbar(_sub, SubTabs, Theme.Tab);
+        if (sub != _sub && Event.current.type != EventType.Layout)
+        {
+            _pendingSub = sub;
+        }
+        GUILayout.Space(4f);
+
+        if (_sub == GroupsTab)
+        {
+            _groups.DrawContent();
+            return;
+        }
+        DrawBots();
+    }
+
+    private void DrawBots()
     {
         if (Event.current.type == EventType.Layout)
         {
@@ -220,7 +257,7 @@ internal sealed class SpawnPanel
         GUILayout.Space(6f);
         GUILayout.Label(_difficultyLabel, Theme.Header);
         int difficulty = GUILayout.Toolbar(_difficulty, DifficultyNames, Theme.Tab);
-        GUILayout.Label("GROUP SIZE", Theme.Header);
+        GUILayout.Label("COUNT", Theme.Header);
         int countIndex = GUILayout.Toolbar(_countIndex, CountNames, Theme.Tab);
 
         if ((difficulty != _difficulty || countIndex != _countIndex) && Event.current.type != EventType.Layout)

@@ -741,6 +741,15 @@ internal sealed class PerunMode
             return false;
         }
 
+        if (spawn.Group != null)
+        {
+            if (!Commands.SpawnGroup(spawn.Group, spawn.GroupDifficulty, point, Camera.Yaw))
+            {
+                Notify("Group spawning works on the host for now");
+            }
+            return true;
+        }
+
         Commands.Spawn(spawn.Role, spawn.Difficulty, spawn.Count, point, Camera.Yaw);
         return true;
     }

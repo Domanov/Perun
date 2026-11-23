@@ -14,7 +14,7 @@ using UnityEngine.AI;
 
 namespace Perun.Client.Units;
 
-internal static class SpawnService
+internal static partial class SpawnService
 {
     private const float LoadingSpeed = 3f;
 
@@ -288,6 +288,7 @@ internal static class SpawnService
             Book.Reset();
             RetryAfter.Clear();
             ActiveJobs.Clear();
+            GroupLeadership.Clear();
             if (_forcedByUs && _scheduler != null)
             {
                 _scheduler.SetForceMode(false);
