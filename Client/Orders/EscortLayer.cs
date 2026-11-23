@@ -17,17 +17,6 @@ public class PerunEscortLayer : CustomLayer
     {
     }
 
-    public static BotOwner LeaderOf(BotOwner bot)
-    {
-        BotFollower follower = bot?.BotFollower;
-        if (follower == null || !follower.HaveBoss || follower.BossToFollow is not BotBoss boss)
-        {
-            return null;
-        }
-        BotOwner leader = boss.Owner;
-        return leader != null && leader != bot && !leader.IsDead ? leader : null;
-    }
-
     public override string GetName() => "PerunEscort";
 
     public override bool IsActive()
@@ -36,7 +25,7 @@ public class PerunEscortLayer : CustomLayer
         {
             return false;
         }
-        BotOwner leader = LeaderOf(BotOwner);
+        BotOwner leader = Bots.LeaderOf(BotOwner);
         return leader != null && OrderService.TryGet(leader, out MoveOrder order) && (order.Forced || !PerunOrderLayer.InCombat(BotOwner));
     }
 
@@ -46,7 +35,7 @@ public class PerunEscortLayer : CustomLayer
 
     public override void BuildDebugText(StringBuilder stringBuilder)
     {
-        BotOwner leader = LeaderOf(BotOwner);
+        BotOwner leader = Bots.LeaderOf(BotOwner);
         if (leader != null)
         {
             stringBuilder.AppendLine($"Perun escort of {leader.Profile?.Nickname}");
@@ -94,7 +83,7 @@ public class PerunEscortLogic : CustomLogic
 
     public override void Update(CustomLayer.ActionData data)
     {
-        BotOwner leader = PerunEscortLayer.LeaderOf(BotOwner);
+        BotOwner leader = Bots.LeaderOf(BotOwner);
         if (leader == null || !OrderService.TryGet(leader, out MoveOrder order))
         {
             return;

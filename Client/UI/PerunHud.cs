@@ -672,6 +672,7 @@ internal sealed class PerunHud
 
         CursorPicker picker = _mode.Picker;
         DrawSelectionBrackets(camera, picker);
+        DrawLeaders(camera, picker);
 
         DrawReturnPoint(camera);
 
@@ -1135,6 +1136,34 @@ internal sealed class PerunHud
         if (hovered != null && !picker.IsSelected(hovered))
         {
             DrawBrackets(camera, hovered, new Color(1f, 1f, 1f, 0.55f), 1f);
+        }
+    }
+
+    private static readonly Color LeaderColor = new(1f, 0.78f, 0.28f, 0.9f);
+    private readonly HashSet<BotOwner> _leadersShown = new();
+
+    // Each selected follower's leader gets gold brackets and a crown; a selected leader gets the crown himself.
+    private void DrawLeaders(Camera camera, CursorPicker picker)
+    {
+        _leadersShown.Clear();
+        IReadOnlyList<Player> selection = picker.Selection;
+        for (int i = 0; i < selection.Count; i++)
+        {
+            BotOwner bot = selection[i]?.AIData?.BotOwner;
+            BotOwner leader = Bots.LeaderOf(bot) ?? (Bots.IsLeader(bot) ? bot : null);
+            Player body = leader?.GetPlayer;
+            if (body == null || !_leadersShown.Add(leader))
+            {
+                continue;
+            }
+            if (!picker.IsSelected(body))
+            {
+                DrawBrackets(camera, body, LeaderColor, 1.5f);
+            }
+            if (CursorPicker.ToScreen(camera, body.Position + Vector3.up * 2.5f, out Vector2 crown))
+            {
+                GUI.Label(new Rect(crown.x - 20f, crown.y - 20f, 40f, 40f), "♛", _marker);
+            }
         }
     }
 

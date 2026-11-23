@@ -10,6 +10,19 @@ internal static class Bots
     // The BTR's gunner is part of the vehicle; ordering or removing it breaks the BTR.
     public static bool IsProtected(Player player) => player?.Profile?.Info?.Settings?.Role == WildSpawnType.shooterBTR;
 
+    public static BotOwner LeaderOf(BotOwner bot)
+    {
+        BotFollower follower = bot?.BotFollower;
+        if (follower == null || !follower.HaveBoss || follower.BossToFollow is not BotBoss boss)
+        {
+            return null;
+        }
+        BotOwner leader = boss.Owner;
+        return leader != null && leader != bot && !leader.IsDead ? leader : null;
+    }
+
+    public static bool IsLeader(BotOwner bot) => bot != null && !bot.IsDead && bot.Boss != null && bot.Boss.IamBoss;
+
     public static bool IsBot(Player player)
     {
         if (player == null)
