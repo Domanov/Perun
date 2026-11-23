@@ -16,7 +16,7 @@ internal static class GroupLeadership
     {
         public BotOwner Leader;
         public string Name;
-        public List<BotOwner> Orphans;
+        public readonly List<BotOwner> Members = new();
     }
 
     private sealed class PendingAttach
@@ -35,6 +35,7 @@ internal static class GroupLeadership
     public static Handle Track(BotOwner leader, string name)
     {
         Handle handle = new() { Leader = leader, Name = name };
+        handle.Members.Add(leader);
         Subscribe(handle);
         return handle;
     }
@@ -44,6 +45,10 @@ internal static class GroupLeadership
     {
         if (group != null && member != null)
         {
+            if (!group.Members.Contains(member))
+            {
+                group.Members.Add(member);
+            }
             Attaches.Add(new PendingAttach { Group = group, Member = member, Until = Time.time + AttachTimeout });
         }
     }
@@ -73,7 +78,7 @@ internal static class GroupLeadership
                 Attaches.RemoveAt(i);
                 try
                 {
-                    Attach(leader, attach.Member);
+                    Attach(attach.Group, attach.Member);
                 }
                 catch (Exception ex)
                 {
@@ -109,8 +114,9 @@ internal static class GroupLeadership
     private static bool Alive(BotOwner bot) =>
         bot != null && bot.BotState != EBotState.Disposed && bot.HealthController != null && bot.HealthController.IsAlive;
 
-    private static void Attach(BotOwner leader, BotOwner member)
+    private static void Attach(Handle group, BotOwner member)
     {
+        BotOwner leader = group.Leader;
         if (leader == member || leader.Boss == null || member.BotFollower == null)
         {
             return;
@@ -123,25 +129,43 @@ internal static class GroupLeadership
         if (!followers.Contains(member))
         {
             leader.Boss._followers.AddFollower(member);
-            StatusChange(leader.Boss)?.Invoke(member, FollowerStatusChange.Add);
+            NotifyAdded(leader, member);
+        }
+        // SetToFollow keeps an existing boss unless forced; after a succession that is the dead leader.
+        if (!ReferenceEquals(member.BotFollower.BossToFollow, leader.Boss))
+        {
+            member.BotFollower.BossToFollow = null;
         }
         member.BotFollower.SetToFollow(leader.Boss, followers.IndexOf(member), false);
         StandByGuard.Join(leader, member);
         Plugin.Log.LogInfo($"Group: {member.Profile.Nickname} ({member.Profile.Info.Settings.Role}) follows {leader.Profile.Nickname}");
     }
 
+    // A promoted follower's current patrol point can have no sub-points; the game's patrol then throws while picking the
+    // new follower's first point (PatrolPoint.GetSubPoint(-1)), after it has already registered him. He still follows.
+    private static void NotifyAdded(BotOwner leader, BotOwner member)
+    {
+        try
+        {
+            StatusChange(leader.Boss)?.Invoke(member, FollowerStatusChange.Add);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            Plugin.Log.LogWarning($"Group: {leader.Profile.Nickname}'s patrol couldn't give {member.Profile.Nickname} a first point ({ex.Message}); attached anyway");
+        }
+    }
+
+    // The successor comes from the group's own members: the game's follower list leaves out bots it dropped on its own
+    // (one taken over and given back) and members still waiting to attach.
     private static void Subscribe(Handle handle)
     {
-        handle.Leader.Boss.OnBossDead += (_, followers) =>
-        {
-            handle.Orphans = followers != null ? new List<BotOwner>(followers) : new List<BotOwner>();
-            Dead.Add(handle);
-        };
+        handle.Leader.Boss.OnBossDead += (_, _) => Dead.Add(handle);
     }
 
     private static void Promote(Handle handle)
     {
-        List<BotOwner> alive = handle.Orphans.FindAll(Alive);
+        handle.Members.RemoveAll(m => !Alive(m));
+        List<BotOwner> alive = new(handle.Members);
         if (alive.Count == 0)
         {
             return;
