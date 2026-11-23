@@ -138,7 +138,7 @@ public class BossPresetsTests
     [Fact]
     public void FactionWavesOfOneLeaderMergeByRole()
     {
-        static string Faction(WildSpawnType role) => role is WildSpawnType.pmcBot or WildSpawnType.exUsec ? "Raiders" : null;
+        static string? Faction(WildSpawnType role) => role is WildSpawnType.pmcBot or WildSpawnType.exUsec ? "Raiders" : null;
 
         List<GroupPlan> plans = BossPresets.Build(new[]
         {
