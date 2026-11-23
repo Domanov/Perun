@@ -33,7 +33,7 @@ public class PerunOrderLayer : CustomLayer
             return false;
         }
 
-        return order.Forced || !InCombat();
+        return order.Forced || !InCombat(BotOwner);
     }
 
     public override Action GetNextAction() => new(typeof(PerunMoveLogic), "Perun order");
@@ -48,9 +48,9 @@ public class PerunOrderLayer : CustomLayer
         }
     }
 
-    private bool InCombat()
+    internal static bool InCombat(BotOwner bot)
     {
-        BotMemory memory = BotOwner.Memory;
+        BotMemory memory = bot.Memory;
         if (memory == null)
         {
             return false;

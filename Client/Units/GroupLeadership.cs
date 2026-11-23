@@ -126,6 +126,7 @@ internal static class GroupLeadership
             StatusChange(leader.Boss)?.Invoke(member, FollowerStatusChange.Add);
         }
         member.BotFollower.SetToFollow(leader.Boss, followers.IndexOf(member), false);
+        StandByGuard.Join(leader, member);
         Plugin.Log.LogInfo($"Group: {member.Profile.Nickname} ({member.Profile.Info.Settings.Role}) follows {leader.Profile.Nickname}");
     }
 

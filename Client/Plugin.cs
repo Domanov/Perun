@@ -85,6 +85,7 @@ public class Plugin : BaseUnityPlugin
         Compat.SmoothieControl.Enable();
         HealthPatches.Enable();
         DrakiaXYZ.BigBrain.Brains.BrainManager.AddCustomLayer(typeof(Orders.PerunOrderLayer), Orders.PerunOrderLayer.Brains, Orders.PerunOrderLayer.LayerPriority);
+        DrakiaXYZ.BigBrain.Brains.BrainManager.AddCustomLayer(typeof(Orders.PerunEscortLayer), Orders.PerunOrderLayer.Brains, Orders.PerunEscortLayer.LayerPriority);
 
         _mode = new PerunMode();
         Mode = _mode;
