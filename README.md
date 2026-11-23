@@ -23,7 +23,7 @@ ZEUS (game master) mode for Tushonka.
 **Compatibility**: 
 Checked with:
    - SAIN,
-   - MoreBotsAPI factions (own tabs),
+   - MoreBotsAPI factions (own tabs), including RUAF Come Home, UNTAR Go Home! and Black Division (their patrols and hunts are group presets),
    - Smoothie (its object hiding is paused in RTS mode, and a controlled bot is never slowed down or hidden),
    - ORBIT,
    - Realism and FOV Fix by Fontaine (though integration of bots stances was a nightmare).

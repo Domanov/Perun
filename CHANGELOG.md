@@ -1,7 +1,27 @@
 # Changelog
 
+## 0.12.1 (unreleased)
+- Groups: the Units tab (B) now has BOTS and GROUPS. A group spawns as one squad: the leader first, every member following him, sharing one group and its enemies.
+  - SPT presets: every boss group in the server's map data (Reshala and guards, Goons, Kaban, Kollontay, Raiders, Rogues, Cultists, …), with the counts the maps use; a range like 2–4 is rolled on each placement. The summary lists the members, their attitude toward the leader and the maps they come from.
+  - Faction mods (MoreBotsAPI, e.g. RUAF Come Home, UNTAR Go Home, Black Division): their patrols, checkpoints and hunts are listed in a section per faction. All waves of one leader become one preset, so each placement rolls a make-up the mod could have spawned.
+  - Custom groups: New group, Edit, or Edit copy of a preset opens the group editor next to the dock. Pick member types from the same faction list as BOTS, set each one's difficulty and count, and choose the leader yourself or let Perun pick (a boss if there is one, otherwise the first member). Members that are hostile to the leader are flagged; inside one group they still fight as allies. Saved groups are kept in `BepInEx\config\com.dmnv.perun.groups.json`. Esc closes the editor and asks first about unsaved changes.
+  - New F12 option "Refuse hostile group members" (off by default) keeps hostile types out of the editor's list.
+  - Difficulty per placement: as set in the group, or one for everyone.
+  - Placing: groups stand in a wedge with the leader at the point, facing away from the camera. Hold the mouse button and drag to turn it (this also works for single bots), Ctrl+wheel changes the spacing (0.8–4 m). Dots show where each member will stand.
+  - When a group's leader dies, Perun picks the next one (another boss if there is one) and the rest follow him.
+  - Host and single player only for now; a Fika game master sees a notice.
+- Moving a group's leader now brings his followers along: they wake up with him and walk to his destination in a wedge, keeping pace with him. Followers fight on their own again when they meet enemies, unless the order was forced (Ctrl+right-click).
+- BOTS list: each type shows its attitude toward the selected unit: ally, neutral, warns (only toward players: warns first, then shoots), hostile with a chance, or hostile. "GROUP SIZE" is now "COUNT".
+- Arsenal:
+  - Bots given a loadout no longer keep switching weapons without shooting. With SAIN, its weapon list is refreshed after every change.
+  - Bots get spare rounds for their new guns in their secure container after a loadout.
+  - The secure container's contents are copied too. Bots get the whole container; players keep their own and the items are placed in it, then in the rig, pockets or backpack if it's full.
+  - With Verbose logging, each loadout writes a step-by-step trace of the unit's hands and weapons.
+- MoreBotsAPI: bots spawned by Perun no longer throw an error in its hunt manager as they appear. The error cut the game's spawn setup short, so some bots never fully activated and group members were left unattached.
+- One release zip for single player and Fika: the Fika bridge is in it and is only loaded when Fika is installed, so BepInEx no longer reports a missing dependency and other mods no longer log errors about it.
+- Known issue: a leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
+
 ## 0.12.0 (2026-11-19)
-- One release zip for single player and Fika: the Fika bridge is in it and stays off when Fika isn't installed, instead of BepInEx reporting a missing dependency.
 - Verbose logging also writes the game version, plugin list and Perun settings once per session (the password only as set or empty), and each raid's map, Fika role, your character and game time.
 - Edge scrolling: moving the cursor to the screen edge pans the view, now on by default ("Edge scrolling" in F12; it replaces "Edge pan"). The cursor stays inside the game window in RTS mode, also in windowed mode.
 - When the bot you control dies, the camera pulls back over its body instead of flying back to where you took control.
