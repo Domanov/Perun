@@ -71,6 +71,7 @@ public class Plugin : BaseUnityPlugin
         new BotShootPausePatch().Enable();
         new PossessedWeaponDirectionPatch().Enable();
         new PossessedMoverSnapPatch().Enable();
+        new PossessedMalfunctionPatch().Enable();
         new PossessedInputScopePatch().Enable();
         new PossessedRotatePatch().Enable();
         new PossessedMovePatch().Enable();

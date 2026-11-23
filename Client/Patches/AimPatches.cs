@@ -26,6 +26,27 @@ public class PossessedWeaponDirectionPatch : ModulePatch
     }
 }
 
+// A bot's weapons check malfunctions through its brain's layers; with you in control the brain it reads can be missing
+// and the check throws on every trigger pull (seen on Shturman), so the gun never fires. A player's weapon has no check.
+public class PossessedMalfunctionPatch : ModulePatch
+{
+    private static readonly AccessTools.FieldRef<BotData, BotOwner> Owner = AccessTools.FieldRefAccess<BotData, BotOwner>("_owner");
+
+    protected override MethodBase GetTargetMethod() =>
+        AccessTools.Method(typeof(BotMalfunctionData), nameof(BotMalfunctionData.ValidateMalfunction));
+
+    [PatchPrefix]
+    public static bool PatchPrefix(BotMalfunctionData __instance, ref bool __result)
+    {
+        if (!Possession.IsPossessed(Owner(__instance)))
+        {
+            return true;
+        }
+        __result = true;
+        return false;
+    }
+}
+
 public class PossessedMoverSnapPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod() =>
