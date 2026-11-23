@@ -22,6 +22,7 @@ internal sealed class GroupsPanel
     private sealed class Row
     {
         public GroupPlan Plan;
+        public string Section;
         public string Text;
         public string Count;
     }
@@ -30,6 +31,8 @@ internal sealed class GroupsPanel
     private readonly List<Row> _rows = new();
     private IReadOnlyList<GroupPlan> _plans;
     private int _customVersion = -1;
+    private readonly HashSet<string> _collapsed = new();
+    private string _toggleSection;
     private float _lastClick;
     private string _search = "";
     private string _activeSearch;
@@ -71,8 +74,15 @@ internal sealed class GroupsPanel
     {
         if (Event.current.type == EventType.Layout)
         {
+            bool toggled = _toggleSection != null;
+            if (toggled && !_collapsed.Remove(_toggleSection))
+            {
+                _collapsed.Add(_toggleSection);
+            }
+            _toggleSection = null;
+
             IReadOnlyList<GroupPlan> plans = BossPresets.All;
-            if (!ReferenceEquals(plans, _plans) || _customVersion != CustomGroups.Version || _activeSearch != _search)
+            if (toggled || !ReferenceEquals(plans, _plans) || _customVersion != CustomGroups.Version || _activeSearch != _search)
             {
                 if (_activeSearch != _search)
                 {
@@ -107,7 +117,10 @@ internal sealed class GroupsPanel
             Row row = _rows[i];
             if (row.Plan == null)
             {
-                GUILayout.Label(row.Text, Theme.Group, GUILayout.Height(RowHeight));
+                if (GUILayout.Button(row.Text, Theme.Group, GUILayout.Height(RowHeight)))
+                {
+                    _toggleSection = row.Section;
+                }
                 continue;
             }
 
@@ -211,6 +224,7 @@ internal sealed class GroupsPanel
         AddSection("CUSTOM", CustomGroups.All, needle);
     }
 
+    // A search shows every match, so collapsed sections open while it lasts.
     private void AddSection(string title, IEnumerable<GroupPlan> plans, string needle)
     {
         int header = _rows.Count;
@@ -222,10 +236,16 @@ internal sealed class GroupsPanel
             }
         }
         int found = _rows.Count - header;
-        if (found > 0)
+        if (found == 0)
         {
-            _rows.Insert(header, new Row { Text = $"{title} ({found})" });
+            return;
         }
+        bool collapsed = needle.Length == 0 && _collapsed.Contains(title);
+        if (collapsed)
+        {
+            _rows.RemoveRange(header, found);
+        }
+        _rows.Insert(header, new Row { Section = title, Text = $"{(collapsed ? "▸" : "▾")} {title}  <color=#7f8a95>{found}</color>" });
     }
 
     private static bool Matches(GroupPlan plan, string needle)
