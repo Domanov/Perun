@@ -87,6 +87,7 @@ internal sealed class PerunMode
         };
 
         Picker.PlaceHandler = PlaceUnits;
+        Camera.WheelHandler = SpreadGroup;
         Picker.CancelHandler = CancelPlacing;
         Picker.IsPlacing = IsPlacing;
         Picker.ScreenClickHandler = ClickOnScreen;
@@ -110,6 +111,18 @@ internal sealed class PerunMode
     }
 
     private bool IsPlacing() => _teleportArmed || _returnArmed || (Hud != null && Hud.Spawn.Armed);
+
+    public float GroupSpacing { get; private set; } = SpawnService.DefaultGroupSpacing;
+
+    private bool SpreadGroup(float wheel)
+    {
+        if (Hud?.Spawn.Group == null || !(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+        {
+            return false;
+        }
+        GroupSpacing = Mathf.Clamp(Mathf.Round((GroupSpacing + wheel * 0.1f) * 10f) / 10f, SpawnService.MinGroupSpacing, SpawnService.MaxGroupSpacing);
+        return true;
+    }
 
     public bool ReturnArmed => _returnArmed;
 
@@ -715,7 +728,7 @@ internal sealed class PerunMode
         Picker.ClearSelection();
     }
 
-    private bool PlaceUnits(Vector3 point)
+    private bool PlaceUnits(Vector3 point, float? yaw)
     {
         if (_returnArmed)
         {
@@ -745,14 +758,14 @@ internal sealed class PerunMode
 
         if (spawn.Group != null)
         {
-            if (!Commands.SpawnGroup(spawn.Group, spawn.GroupDifficulty, point, Camera.Yaw))
+            if (!Commands.SpawnGroup(spawn.Group, spawn.GroupDifficulty, point, yaw ?? Camera.Yaw, GroupSpacing))
             {
                 Notify("Group spawning works on the host for now");
             }
             return true;
         }
 
-        Commands.Spawn(spawn.Role, spawn.Difficulty, spawn.Count, point, Camera.Yaw);
+        Commands.Spawn(spawn.Role, spawn.Difficulty, spawn.Count, point, yaw ?? Camera.Yaw);
         return true;
     }
 

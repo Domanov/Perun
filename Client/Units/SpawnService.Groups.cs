@@ -8,6 +8,7 @@ using Comfort.Common;
 using EFT;
 using Perun.Client.Mode;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Perun.Client.Units;
 
@@ -15,7 +16,11 @@ internal static partial class SpawnService
 {
     private static readonly System.Random GroupRandom = new();
 
-    public static bool TrySpawnGroup(GroupPlan plan, BotDifficulty? difficulty, Vector3 position, float yaw)
+    public const float DefaultGroupSpacing = 1.3f;
+    public const float MinGroupSpacing = 0.8f;
+    public const float MaxGroupSpacing = 4f;
+
+    public static bool TrySpawnGroup(GroupPlan plan, BotDifficulty? difficulty, Vector3 position, float yaw, float spacing)
     {
         if (plan == null || plan.Members.Count == 0)
         {
@@ -38,7 +43,7 @@ internal static partial class SpawnService
         List<(WildSpawnType role, BotDifficulty difficulty, int count)> parts = plan.Roll(GroupRandom, budget, difficulty)
             .Select(p => (p.role, AllowedDifficulty(p.role, p.difficulty), p.count))
             .ToList();
-        _ = SpawnGroupAsync(plan.Name, parts, position, yaw);
+        _ = SpawnGroupAsync(plan.Name, parts, position, Formation.Heading(yaw), Mathf.Clamp(spacing, MinGroupSpacing, MaxGroupSpacing));
         return true;
     }
 
@@ -73,7 +78,7 @@ internal static partial class SpawnService
         return ready;
     }
 
-    private static async Task SpawnGroupAsync(string name, List<(WildSpawnType role, BotDifficulty difficulty, int count)> parts, Vector3 position, float yaw)
+    private static async Task SpawnGroupAsync(string name, List<(WildSpawnType role, BotDifficulty difficulty, int count)> parts, Vector3 position, Vector3 heading, float spacing)
     {
         int total = parts.Sum(p => p.count);
         Pending += total;
@@ -151,12 +156,12 @@ internal static partial class SpawnService
 
             int corePointId = NearestCorePoint(controller, position);
             int slot = 0;
-            leaderData.AddPosition(Slot(position, slot++), corePointId);
+            leaderData.AddPosition(WedgeSlot(position, slot++, heading, spacing), corePointId);
             foreach (BotCreationData data in memberDatas)
             {
                 for (int i = 0; i < data.Count; i++)
                 {
-                    data.AddPosition(Slot(position, slot++), corePointId);
+                    data.AddPosition(WedgeSlot(position, slot++, heading, spacing), corePointId);
                 }
             }
 
@@ -254,6 +259,16 @@ internal static partial class SpawnService
             ActiveJobs.Remove(job);
             EndBusy(lease);
         }
+    }
+
+    private static Vector3 WedgeSlot(Vector3 point, int index, Vector3 heading, float spacing)
+    {
+        if (index == 0)
+        {
+            return point;
+        }
+        Vector3 candidate = point + Formation.Wedge(index, spacing, heading);
+        return NavMesh.SamplePosition(candidate, out NavMeshHit hit, 1.5f, NavMesh.AllAreas) ? hit.position : point;
     }
 
     // Mirrors the boss branch of BotSpawner.GetGroupAndSetEnemies, but always makes a fresh group so a Perun group

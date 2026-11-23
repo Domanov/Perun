@@ -20,6 +20,7 @@ internal sealed class CursorPicker
     private Quaternion _lastCameraRotation;
     private bool _leftDown;
     private Vector2 _dragStart;
+    private bool _pressOnNavMesh;
 
     public bool HasGround { get; private set; }
     public Vector3 Ground { get; private set; }
@@ -31,7 +32,12 @@ internal sealed class CursorPicker
     public bool Dragging { get; private set; }
     public Rect DragRect { get; private set; }
 
-    public Func<Vector3, bool> PlaceHandler { get; set; }
+    // A drag while placing keeps the press point and turns the placement towards the cursor.
+    public bool Turning { get; private set; }
+    public Vector3 TurnAnchor { get; private set; }
+    public float TurnYaw { get; private set; }
+
+    public Func<Vector3, float?, bool> PlaceHandler { get; set; }
     public Func<bool> IsPlacing { get; set; }
 
     public Func<Vector2, bool> ScreenClickHandler { get; set; }
@@ -49,6 +55,7 @@ internal sealed class CursorPicker
         _lastMouse = new Vector3(float.NaN, 0f, 0f);
         _leftDown = false;
         Dragging = false;
+        Turning = false;
     }
 
     public void Tick(Camera camera)
@@ -80,13 +87,32 @@ internal sealed class CursorPicker
             _leftDown = true;
             _dragStart = cursor;
             Dragging = false;
+            Turning = false;
+            _pressOnNavMesh = HasNavPoint;
+            TurnAnchor = NavPoint;
         }
 
         if (_leftDown)
         {
-            if (!Dragging && (cursor - _dragStart).sqrMagnitude > DragThreshold * DragThreshold && IsPlacing?.Invoke() != true)
+            if (!Dragging && !Turning && (cursor - _dragStart).sqrMagnitude > DragThreshold * DragThreshold)
             {
-                Dragging = true;
+                if (IsPlacing?.Invoke() != true)
+                {
+                    Dragging = true;
+                }
+                else if (_pressOnNavMesh)
+                {
+                    Turning = true;
+                }
+            }
+
+            if (Turning && HasGround)
+            {
+                Vector3 direction = Ground - TurnAnchor;
+                if (direction.x * direction.x + direction.z * direction.z > 0.25f)
+                {
+                    TurnYaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                }
             }
 
             if (Dragging)
@@ -101,6 +127,11 @@ internal sealed class CursorPicker
                 {
                     Dragging = false;
                     BoxSelect(camera, DragRect, shift);
+                }
+                else if (Turning)
+                {
+                    Turning = false;
+                    PlaceHandler?.Invoke(TurnAnchor, TurnYaw);
                 }
                 else if (ScreenClickHandler == null || !ScreenClickHandler(_dragStart))
                 {
@@ -208,7 +239,7 @@ internal sealed class CursorPicker
 
     private void Click(bool shift)
     {
-        if (HasNavPoint && PlaceHandler != null && PlaceHandler(NavPoint))
+        if (HasNavPoint && PlaceHandler != null && PlaceHandler(NavPoint, null))
         {
             return;
         }

@@ -41,4 +41,41 @@ public class FormationTests
             }
         }
     }
+
+    [Fact]
+    public void HeadingFollowsTheYaw()
+    {
+        Assert.Equal(0f, Vector3.Distance(Vector3.forward, Formation.Heading(0f)), 3);
+        Assert.Equal(0f, Vector3.Distance(Vector3.right, Formation.Heading(90f)), 3);
+    }
+
+    [Fact]
+    public void WedgePairsStandBehindThePointLeftThenRight()
+    {
+        Vector3 heading = Formation.Heading(90f);
+        Assert.Equal(Vector3.zero, Formation.Wedge(0, Spacing, heading));
+
+        for (int i = 1; i < 12; i++)
+        {
+            Vector3 offset = Formation.Wedge(i, Spacing, heading);
+            int row = (i + 1) / 2;
+            Assert.Equal(-Spacing * row, Vector3.Dot(offset, heading), 3);
+            float side = Vector3.Dot(offset, new Vector3(heading.z, 0f, -heading.x));
+            Assert.True(i % 2 == 1 ? side < 0f : side > 0f, $"unit {i} is on the wrong side");
+        }
+    }
+
+    [Fact]
+    public void WedgeUnitsDontStandOnEachOther()
+    {
+        Vector3 heading = Formation.Heading(30f);
+        for (int a = 0; a < 15; a++)
+        {
+            for (int b = a + 1; b < 15; b++)
+            {
+                float distance = (Formation.Wedge(a, Spacing, heading) - Formation.Wedge(b, Spacing, heading)).magnitude;
+                Assert.True(distance > Spacing * 0.8f, $"units {a} and {b} are {distance:0.00} m apart");
+            }
+        }
+    }
 }

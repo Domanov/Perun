@@ -1,6 +1,7 @@
 using System.Text;
 using DrakiaXYZ.BigBrain.Brains;
 using EFT;
+using Perun.Client.Units;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -58,7 +59,6 @@ public class PerunEscortLayer : CustomLayer
 public class PerunEscortLogic : CustomLogic
 {
     private const float Spacing = 1.8f;
-    private const float WedgeWidth = 0.75f;
     private const float Arrive = 1f;
     private const float AheadSlack = 1f;
     private const float BehindSlack = 6f;
@@ -145,13 +145,10 @@ public class PerunEscortLogic : CustomLogic
             _heading = heading.normalized;
         }
 
-        int index = Mathf.Max(BotOwner.BotFollower.Index, 0);
-        int row = index / 2 + 1;
-        float side = index % 2 == 0 ? -1f : 1f;
-        Vector3 right = new(_heading.z, 0f, -_heading.x);
-        Vector3 slot = destination - _heading * (Spacing * row) + right * (side * Spacing * row * WedgeWidth);
+        Vector3 offset = Formation.Wedge(Mathf.Max(BotOwner.BotFollower.Index, 0) + 1, Spacing, _heading);
+        Vector3 slot = destination + offset;
         _target = NavMesh.SamplePosition(slot, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : destination;
-        _lag = Spacing * row;
+        _lag = -Vector3.Dot(offset, _heading);
 
         _planned = true;
         _arrived = false;

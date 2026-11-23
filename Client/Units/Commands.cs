@@ -80,13 +80,13 @@ internal static class Commands
         SpawnService.TrySpawn(role, difficulty, count, position, yaw);
     }
 
-    public static bool SpawnGroup(GroupPlan plan, BotDifficulty? difficulty, Vector3 position, float yaw)
+    public static bool SpawnGroup(GroupPlan plan, BotDifficulty? difficulty, Vector3 position, float yaw, float spacing)
     {
         if (Remote != null)
         {
             return false;
         }
-        SpawnService.TrySpawnGroup(plan, difficulty, position, yaw);
+        SpawnService.TrySpawnGroup(plan, difficulty, position, yaw, spacing);
         return true;
     }
 

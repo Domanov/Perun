@@ -92,7 +92,11 @@ internal sealed class PerunHud
     private string _ghost;
     private GroupPlan _ghostGroup;
     private bool _ghostGroupReady;
+    private float _ghostSpacing;
     private string _groupGhost;
+    private GroupPlan _previewPlan;
+    private int _previewColorVersion = -1;
+    private readonly List<Color> _previewColors = new();
 
     private bool _dockOpen = true;
     private AssetTab _tab = AssetTab.Units;
@@ -701,7 +705,11 @@ internal sealed class PerunHud
             GroupPlan group = _spawn.Group;
             if (group != null)
             {
-                ghost = picker.HasNavPoint ? GroupGhost(group, _spawn.GroupReady) : CantPlace;
+                ghost = picker.HasNavPoint || picker.Turning ? GroupGhost(group, _spawn.GroupReady) : CantPlace;
+                if (picker.HasNavPoint || picker.Turning)
+                {
+                    DrawGroupPreview(camera, picker, group);
+                }
             }
             else
             {
@@ -726,16 +734,64 @@ internal sealed class PerunHud
 
     private string GroupGhost(GroupPlan group, bool ready)
     {
-        if (!ReferenceEquals(group, _ghostGroup) || ready != _ghostGroupReady || _groupGhost == null)
+        float spacing = _mode.GroupSpacing;
+        if (!ReferenceEquals(group, _ghostGroup) || ready != _ghostGroupReady || spacing != _ghostSpacing || _groupGhost == null)
         {
             _ghostGroup = group;
             _ghostGroupReady = ready;
+            _ghostSpacing = spacing;
             _groupGhost = ready
-                ? $"+ {group.Name} ({group.CountText})  <color=#8be38b>ready</color>"
-                : $"+ {group.Name} ({group.CountText})  <color=#ffc847>needs loading first</color>";
+                ? $"+ {group.Name} ({group.CountText}) · {spacing:0.0} m  <color=#8be38b>ready</color>"
+                : $"+ {group.Name} ({group.CountText}) · {spacing:0.0} m  <color=#ffc847>needs loading first</color>";
         }
         return _groupGhost;
     }
+
+    // One dot per member at most, where the wedge would put it; navmesh snapping is left to the spawn.
+    private void DrawGroupPreview(Camera camera, CursorPicker picker, GroupPlan group)
+    {
+        if (!ReferenceEquals(group, _previewPlan) || _previewColorVersion != BotKinds.ColorVersion)
+        {
+            _previewPlan = group;
+            _previewColorVersion = BotKinds.ColorVersion;
+            _previewColors.Clear();
+            for (int n = 0; n < group.Members.Count; n++)
+            {
+                GroupMember member = group.InSpawnOrder(n);
+                Color color = ColorOf(member.Role);
+                for (int i = n == 0 ? Mathf.Max(member.Max, 1) : member.Max; i > 0; i--)
+                {
+                    _previewColors.Add(color);
+                }
+            }
+        }
+
+        _dot ??= Dot(32);
+        Vector3 anchor = picker.Turning ? picker.TurnAnchor : picker.NavPoint;
+        Vector3 heading = Formation.Heading(picker.Turning ? picker.TurnYaw : _mode.Camera.Yaw);
+        Color previous = GUI.color;
+        for (int i = 0; i < _previewColors.Count; i++)
+        {
+            if (!CursorPicker.ToScreen(camera, anchor + Formation.Wedge(i, _mode.GroupSpacing, heading), out Vector2 screen))
+            {
+                continue;
+            }
+            float size = i == 0 ? 16f : 10f;
+            GUI.color = new Color(0f, 0f, 0f, 0.6f);
+            GUI.DrawTexture(new Rect(screen.x - size / 2f - 2f, screen.y - size / 2f - 2f, size + 4f, size + 4f), _dot);
+            GUI.color = _previewColors[i];
+            GUI.DrawTexture(new Rect(screen.x - size / 2f, screen.y - size / 2f, size, size), _dot);
+            if (i == 0)
+            {
+                GUI.color = previous;
+                GUI.Label(new Rect(screen.x - 20f, screen.y - size - 14f, 40f, 20f), "<color=#ffc847>♛</color>", _label);
+            }
+        }
+        GUI.color = previous;
+    }
+
+    private static Color ColorOf(WildSpawnType role) =>
+        Plugin.KindColors.TryGetValue(BotKinds.Classify(role, HostilityRules.SideOf(role)), out var entry) ? entry.Value : Color.white;
 
     private void BuildStatus(CursorPicker picker)
     {
@@ -777,9 +833,11 @@ internal sealed class PerunHud
         }
         _statusLeft = b.ToString();
 
-        _statusRight = _spawn.Armed
-            ? "<color=#ffc847>Placing: click the map · RMB cancels</color>"
-            : _hint;
+        _statusRight = _spawn.Group != null
+            ? "<color=#ffc847>Placing group: click · drag to turn · Ctrl+wheel spread · RMB cancels</color>"
+            : _spawn.Armed
+                ? "<color=#ffc847>Placing: click the map · drag to turn · RMB cancels</color>"
+                : _hint;
 
         b.Clear();
         if (Singleton<GameWorld>.Instantiated && Singleton<GameWorld>.Instance.GameDateTime != null)

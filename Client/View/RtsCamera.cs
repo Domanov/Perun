@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -30,6 +31,9 @@ internal sealed class RtsCamera
     public Vector3 Pivot => _targetPivot;
 
     public float Yaw => _targetYaw;
+
+    // Gets the wheel first; returning true keeps it from zooming or tilting.
+    public Func<float, bool> WheelHandler { get; set; }
 
     public EFT.Player Following { get; private set; }
 
@@ -155,7 +159,7 @@ internal sealed class RtsCamera
         }
 
         float wheel = Input.mouseScrollDelta.y;
-        if (Mathf.Abs(wheel) > 0.01f && !overUi)
+        if (Mathf.Abs(wheel) > 0.01f && !overUi && (WheelHandler == null || !WheelHandler(wheel)))
         {
             if (Input.GetKey(Plugin.TiltKey.Value))
             {
