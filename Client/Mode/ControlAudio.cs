@@ -58,6 +58,20 @@ internal static class ControlAudio
         }
     }
 
+    private static readonly FieldInfo StepSourceField = Reflect.Field(Feature.ControlScreenEffects, typeof(Player), "NestedStepSoundSource");
+
+    // The step sound source is set up once at spawn for the body's point of view: a third-person body gets the observed
+    // mixer and occlusion from the listener, which muffles its steps once the camera sits in its own head.
+    public static void MatchSteps(Player player)
+    {
+        if (StepSourceField == null)
+        {
+            return;
+        }
+        (StepSourceField.GetValue(player) as BetterSource)?.Release();
+        player.InitAudioSources();
+    }
+
     // Headset and helmet hearing is one global template, and the listener drives the game's hearing checks; both are
     // only set for "your player" when it spawns or changes gear, so a takeover has to switch them itself.
     public static void MatchHearing(Player player)

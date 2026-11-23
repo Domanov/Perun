@@ -123,6 +123,7 @@ internal sealed class Takeover
             main.IsYourPlayer = false;
             bot.IsYourPlayer = true;
             bot.PointOfView = EPointOfView.FirstPerson;
+            ControlAudio.MatchSteps(bot);
             bot.ChangeSpeed(1f);
             DisableOptics(bot);
 
@@ -352,6 +353,7 @@ internal sealed class Takeover
             if (bot != null && bot.HealthController != null && bot.HealthController.IsAlive)
             {
                 bot.PointOfView = EPointOfView.ThirdPerson;
+                ControlAudio.MatchSteps(bot);
             }
             else if (bot != null && bot.PlayerBody != null)
             {
