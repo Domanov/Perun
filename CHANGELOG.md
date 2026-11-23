@@ -11,6 +11,7 @@
   - When a group's leader dies, Perun picks the next one (another boss if there is one) and the rest follow him.
   - Host and single player only for now; a Fika game master sees a notice.
 - Moving a group's leader now brings his followers along: they wake up with him and walk to his destination in a wedge, keeping pace with him. Followers fight on their own again when they meet enemies, unless the order was forced (Ctrl+right-click).
+- Your own character is a unit: click the magenta dot (where you return) or "You" in the unit list to select it. Heal and the Arsenal work on it, Teleport moves where you return, and Kill asks for a second press because it ends your raid. Move orders, Remove and Take control skip it.
 - BOTS list: each type shows its attitude toward the selected unit: ally, neutral, warns (only toward players: warns first, then shoots), hostile with a chance, or hostile. "GROUP SIZE" is now "COUNT".
 - Arsenal:
   - Bots given a loadout no longer keep switching weapons without shooting. With SAIN, its weapon list is refreshed after every change.

@@ -44,7 +44,7 @@ internal sealed class PerunHud
     private const string HelpText =
         "<b><color=#ffc847>CAMERA</color></b>\n" +
         "WASD pan · Shift faster · Q/E or middle-drag rotate · wheel zoom · {0}+wheel tilt · R/F floor up/down\n" +
-        "Home back to your body · click the magenta dot, then the map, to change where you return · L lock camera on the selected unit · Ctrl+F fly to the selection\n\n" +
+        "Home back to your body · click the magenta dot to select yourself (Heal, Kill with a confirm), then the map to change where you return · L lock camera on the selected unit · Ctrl+F fly to the selection\n\n" +
         "<b><color=#ffc847>UNITS</color></b>\n" +
         "LMB select · drag a box · Shift adds · click empty ground clears\n" +
         "RMB move · Shift+RMB run · Ctrl+RMB forced move (ignores enemies) · X halt\n" +
@@ -683,7 +683,7 @@ internal sealed class PerunHud
         }
 
         CursorPicker picker = _mode.Picker;
-        DrawSelectionBrackets(camera, picker);
+        DrawSelectionBrackets(camera, picker, _mode);
         DrawLeaders(camera, picker);
 
         DrawReturnPoint(camera);
@@ -1085,15 +1085,28 @@ internal sealed class PerunHud
         }
         _dot ??= Dot(32);
         bool moving = _mode.ReturnArmed;
+        CursorPicker picker = _mode.Picker;
         if (CursorPicker.ToScreen(camera, _mode.ReturnPoint, out Vector2 screen))
         {
+            if (picker.IsSelected(_mode.Player))
+            {
+                DrawSelectedRing(screen);
+            }
             DrawDot(screen, moving ? 0.45f : 1f, moving ? null : "you return here");
         }
-        CursorPicker picker = _mode.Picker;
         if (moving && picker.HasNavPoint && CursorPicker.ToScreen(camera, picker.NavPoint, out Vector2 preview))
         {
             DrawDot(preview, 1f, "return here");
         }
+    }
+
+    private static void DrawSelectedRing(Vector2 screen)
+    {
+        const float size = 28f;
+        Color previous = GUI.color;
+        GUI.color = Plugin.SelectionColor.Value;
+        GUI.DrawTexture(new Rect(screen.x - size / 2f, screen.y - size / 2f, size, size), _dot);
+        GUI.color = previous;
     }
 
     private void DrawDot(Vector2 screen, float alpha, string caption)
@@ -1213,13 +1226,17 @@ internal sealed class PerunHud
     }
 
 
-    private static void DrawSelectionBrackets(Camera camera, CursorPicker picker)
+    // Your parked character is under the map; the return dot shows its selection instead.
+    private static void DrawSelectionBrackets(Camera camera, CursorPicker picker, PerunMode mode)
     {
         Color tint = Plugin.SelectionColor.Value;
         IReadOnlyList<Player> selection = picker.Selection;
         for (int i = 0; i < selection.Count; i++)
         {
-            DrawBrackets(camera, selection[i], tint, 2f);
+            if (!mode.IsParked(selection[i]))
+            {
+                DrawBrackets(camera, selection[i], tint, 2f);
+            }
         }
 
         Player hovered = picker.Hovered;

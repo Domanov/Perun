@@ -127,12 +127,24 @@ internal sealed class PerunMode
     public bool ReturnArmed => _returnArmed;
 
     private const float DotRadius = 14f;
+    private const float KillSelfConfirmSeconds = 3f;
+    private float _killSelfUntil;
+    private bool _killSelfRequested;
 
+    // The dot stands for your parked character: clicking it selects you and arms moving where you return.
     private bool ClickOnScreen(Vector2 cursor)
     {
         if (_returnArmed || _camera == null || !CursorPicker.ToScreen(_camera, ReturnPoint, out Vector2 dot) || (dot - cursor).sqrMagnitude > DotRadius * DotRadius)
         {
             return false;
+        }
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        {
+            Picker.Toggle(_player);
+        }
+        else
+        {
+            Picker.SelectOnly(_player);
         }
         _teleportArmed = false;
         Hud?.Spawn.Disarm();
@@ -166,8 +178,13 @@ internal sealed class PerunMode
             Notify("Can't teleport there");
             return;
         }
-        int count = Commands.Teleport(Picker.Selection, point);
-        Notify(count == 0 ? "Nothing to teleport" : $"Teleported {count} unit(s){Skipped}");
+        bool self = Picker.IsSelected(_player);
+        if (self)
+        {
+            _parking.MoveReturn(point);
+        }
+        int count = Commands.Teleport(WithoutSelf(), point);
+        Notify(count == 0 && self ? "Your character will return here" : count == 0 ? "Nothing to teleport" : $"Teleported {count} unit(s){Skipped}");
     }
 
     public PerunHud Hud { get; set; }
@@ -227,6 +244,13 @@ internal sealed class PerunMode
         {
             _exitRequested = false;
             Exit();
+            return;
+        }
+
+        if (_killSelfRequested)
+        {
+            _killSelfRequested = false;
+            KillSelf();
             return;
         }
 
@@ -659,7 +683,7 @@ internal sealed class PerunMode
         }
 
         Camera.Follow(null);
-        Camera.Focus(player.Position);
+        Camera.Focus(IsParked(player) ? ReturnPoint : player.Position);
     }
 
     public void ToggleLock()
@@ -667,6 +691,10 @@ internal sealed class PerunMode
         if (Camera.Following != null)
         {
             Camera.Follow(null);
+        }
+        else if (IsParked(Picker.Selected))
+        {
+            BackToBody();
         }
         else if (Picker.Selected != null)
         {
@@ -724,8 +752,43 @@ internal sealed class PerunMode
             return;
         }
 
-        Commands.Remove(Picker.Selection, kill);
+        bool self = Picker.IsSelected(_player);
+        if (self && kill && Time.time > _killSelfUntil)
+        {
+            _killSelfUntil = Time.time + KillSelfConfirmSeconds;
+            Notify("Kill your own character? Press Kill again to confirm · it ends your raid");
+            return;
+        }
+        if (self && !kill && Picker.Selection.Count == 1)
+        {
+            Notify("Your character can't be removed");
+            return;
+        }
+
+        Commands.Remove(WithoutSelf(), kill);
         Picker.ClearSelection();
+        _killSelfRequested = self && kill;
+    }
+
+    private List<Player> WithoutSelf()
+    {
+        List<Player> units = new(Picker.Selection);
+        units.Remove(_player);
+        return units;
+    }
+
+    // Your character is parked under the map and protected while RTS mode runs, so it leaves RTS mode first. Runs from
+    // Tick: the Kill button is drawn by the HUD, which can't have RTS mode torn down mid-frame.
+    private void KillSelf()
+    {
+        Player player = _player;
+        _killSelfUntil = 0f;
+        Exit();
+        _graceUntil = -1f;
+        GodMode.Disable();
+        AiIgnore.Disable();
+        Log("protection off, killing your character");
+        player.ActiveHealthController?.Kill(EDamageType.Undefined);
     }
 
     private bool PlaceUnits(Vector3 point, float? yaw)
@@ -1105,6 +1168,8 @@ internal sealed class PerunMode
         _player = null;
         _graceUntil = -1f;
         _exitRequested = false;
+        _killSelfRequested = false;
+        _killSelfUntil = 0f;
         _claimPending = false;
         _controlRequested = false;
         _teleportArmed = false;

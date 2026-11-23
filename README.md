@@ -57,7 +57,7 @@ To uninstall, delete `BepInEx\plugins\DMNV-Perun\`. Saved weather lives in `BepI
 | K | while controlling: open the bot's inventory with the arsenal crate |
 | Del / Ctrl+Del | remove / kill selected |
 | L, Ctrl+F, Home | lock camera, fly to selection, back to your body |
-| Click the magenta dot, then the map | change where your character returns (right-click cancels) |
+| Click the magenta dot, then the map | select your character and change where it returns (right-click cancels) |
 | B, T, I | units browser, environment, arsenal |
 | N | night vision / thermal (cycles, then off) |
 | P | pause the world |

@@ -190,7 +190,7 @@ internal sealed class EntityPanel
             for (int i = 0; i < players.Count; i++)
             {
                 Player player = players[i];
-                if (player == null || player.IsYourPlayer || player.HealthController == null || !player.HealthController.IsAlive)
+                if (player == null || player.HealthController == null || !player.HealthController.IsAlive)
                 {
                     continue;
                 }
@@ -276,6 +276,10 @@ internal sealed class EntityPanel
         if (profile != null && Bots.IsBot(player))
         {
             b.Append("  <color=#7f8a95>").Append(SpawnNames.Of(profile.Info.Settings.Role)).Append("</color>");
+        }
+        else if (player.IsYourPlayer)
+        {
+            b.Append("  <color=#7f8a95>(you)</color>");
         }
         if (ordered)
         {

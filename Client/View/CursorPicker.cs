@@ -248,19 +248,11 @@ internal sealed class CursorPicker
         {
             if (shift)
             {
-                if (_selected.Contains(Hovered))
-                {
-                    Deselect(Hovered);
-                }
-                else
-                {
-                    Select(Hovered);
-                }
+                Toggle(Hovered);
             }
             else
             {
-                ClearSelection();
-                Select(Hovered);
+                SelectOnly(Hovered);
             }
             return;
         }
