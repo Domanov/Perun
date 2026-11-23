@@ -19,6 +19,7 @@
   - The secure container's contents are copied too. Bots get the whole container; players keep their own and the items are placed in it, then in the rig, pockets or backpack if it's full.
   - With Verbose logging, each loadout writes a step-by-step trace of the unit's hands and weapons.
 - MoreBotsAPI: bots spawned by Perun no longer throw an error in its hunt manager as they appear. The error cut the game's spawn setup short, so some bots never fully activated and group members were left unattached.
+- Your parked character no longer breathes heavily or grunts in pain as your own voice while you're in RTS mode.
 - One release zip for single player and Fika: the Fika bridge is in it and is only loaded when Fika is installed, so BepInEx no longer reports a missing dependency and other mods no longer log errors about it.
 - Known issue: a leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
 

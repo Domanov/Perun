@@ -63,6 +63,7 @@ public class Plugin : BaseUnityPlugin
         new PlayerCameraLateUpdatePatch().Enable();
         new AddEnemyPatch().Enable();
         new ParkedBreathPatch().Enable();
+        new ParkedVoicePatch().Enable();
         new BotUpdatePausePatch().Enable();
         new BotFixedUpdatePausePatch().Enable();
         new BotBrainPausePatch().Enable();
