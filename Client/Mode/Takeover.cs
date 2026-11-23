@@ -42,10 +42,12 @@ internal sealed class Takeover
     private GamePlayerOwner _reshowOwner;
     private int _reshowFrame;
     private GameObject _shownBattleScreen;
+    private object _tracedHands;
 
     public void Tick()
     {
         _weapon.Tick();
+        TraceHands();
         if (_reshowOwner == null || Time.frameCount < _reshowFrame)
         {
             return;
@@ -59,6 +61,23 @@ internal sealed class Takeover
         catch (Exception ex)
         {
             Plugin.Log.LogWarning($"Control: couldn't show your HUD again: {ex.Message}");
+        }
+    }
+
+    // Verbose only: hands the bot gets while you play it (a weapon taken from a body, a melee swap) are watched like
+    // the arsenal's, since a broken weapon setup shows up as spinning arms.
+    private void TraceHands()
+    {
+        object hands = _bot != null ? _bot.HandsController : null;
+        if (hands == _tracedHands)
+        {
+            return;
+        }
+        bool first = _tracedHands == null;
+        _tracedHands = hands;
+        if (hands != null && !first)
+        {
+            Arsenal.ArsenalTrace.Watch(_bot, "new hands while controlled");
         }
     }
 
@@ -276,6 +295,7 @@ internal sealed class Takeover
         EftGamePlayerOwner botOwner = _botOwner;
         EftGamePlayerOwner mainOwner = _mainOwner;
         _bot = null;
+        _tracedHands = null;
         _main = null;
         Parked = null;
         _botOwner = null;

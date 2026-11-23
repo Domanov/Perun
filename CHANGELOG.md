@@ -30,6 +30,7 @@
 - Known issues:
   - A leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
   - Fika: a bot you control after your character died shows no visor, pain or blood effects. Fika removes those camera effects when you die.
+  - A weapon picked up and equipped while you control a bot (for example taken from a body) can leave its arms spinning. Give the bot back (Y) and take control again.
 
 ## 0.12.0 (2026-11-19)
 - Verbose logging also writes the game version, plugin list and Perun settings once per session (the password only as set or empty), and each raid's map, Fika role, your character and game time.
