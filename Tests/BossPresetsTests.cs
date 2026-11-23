@@ -109,11 +109,11 @@ public class BossPresetsTests
     [Fact]
     public void RollKeepsTheLeaderAndRespectsTheBudget()
     {
-        GroupPlan plan = new("Test", new[]
+        GroupPlan plan = new(GroupSource.Spt, "Test", new[]
         {
             new GroupMember(WildSpawnType.bossBully, BotDifficulty.normal, new[] { 1 }),
             new GroupMember(WildSpawnType.followerBully, BotDifficulty.normal, new[] { 4 })
-        }, null);
+        }, null, null);
 
         var parts = plan.Roll(new Random(1), 3, BotDifficulty.hard);
 
@@ -126,12 +126,13 @@ public class BossPresetsTests
     [Fact]
     public void RollSkipsMembersThatRolledZero()
     {
-        GroupPlan plan = new("Test", new[]
+        GroupPlan plan = new(GroupSource.Spt, "Test", new[]
         {
             new GroupMember(WildSpawnType.exUsec, BotDifficulty.normal, new[] { 1 }),
             new GroupMember(WildSpawnType.exUsec, BotDifficulty.normal, new[] { 0 })
-        }, null);
+        }, null, null);
 
         Assert.Single(plan.Roll(new Random(1), 10, null));
     }
+
 }

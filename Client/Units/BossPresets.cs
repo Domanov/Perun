@@ -181,7 +181,7 @@ internal static class BossPresets
         }
 
         return list
-            .Select(e => new GroupPlan(e.Name, e.Members.Select(m => new GroupMember(m.role, m.difficulty, m.counts)).ToList(), e.Maps))
+            .Select(e => new GroupPlan(GroupSource.Spt, e.Name, e.Members.Select(m => new GroupMember(m.role, m.difficulty, m.counts)).ToList(), e.Maps, null))
             .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }

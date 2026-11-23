@@ -13,6 +13,7 @@ internal sealed class GroupsPanel
 
     private const float RowHeight = 22f;
     private const float StatusRefresh = 0.25f;
+    private const float DoubleClick = 0.35f;
 
     private static readonly string[] DifficultyNames = { "As set", "Easy", "Normal", "Hard", "Imposs." };
     private static readonly BotDifficulty?[] Difficulties = { null, BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
@@ -27,6 +28,8 @@ internal sealed class GroupsPanel
     private readonly VirtualList _list = new(RowHeight);
     private readonly List<Row> _rows = new();
     private IReadOnlyList<GroupPlan> _plans;
+    private int _customVersion = -1;
+    private float _lastClick;
     private string _search = "";
     private string _activeSearch;
     private Vector2 _scroll;
@@ -41,8 +44,19 @@ internal sealed class GroupsPanel
     private GroupPlan _summaryFor;
     private int _summaryDifficulty = -1;
 
+    public GroupsPanel()
+    {
+        Editor.Placed = plan =>
+        {
+            _selected = plan;
+            _armed = true;
+            _nextStatus = 0f;
+        };
+    }
+
+    public GroupEditor Editor { get; } = new();
     public GroupPlan Selected => _selected;
-    public bool Armed => _armed && _selected != null;
+    public bool Armed => _armed && _selected != null && !Editor.IsOpen;
     public bool Ready { get; private set; }
     public BotDifficulty? Difficulty => Difficulties[_difficulty];
 
@@ -57,11 +71,20 @@ internal sealed class GroupsPanel
         if (Event.current.type == EventType.Layout)
         {
             IReadOnlyList<GroupPlan> plans = BossPresets.All;
-            if (!ReferenceEquals(plans, _plans) || _activeSearch != _search)
+            if (!ReferenceEquals(plans, _plans) || _customVersion != CustomGroups.Version || _activeSearch != _search)
             {
+                if (_activeSearch != _search)
+                {
+                    _scroll = Vector2.zero;
+                }
                 _plans = plans;
+                _customVersion = CustomGroups.Version;
                 _activeSearch = _search;
-                _scroll = Vector2.zero;
+                if (_selected is { Source: GroupSource.Custom })
+                {
+                    _selected = CustomGroups.Find(_selected.Name);
+                    _armed &= _selected != null;
+                }
                 BuildRows();
             }
             RefreshStatus();
@@ -90,7 +113,12 @@ internal sealed class GroupsPanel
             bool isSelected = ReferenceEquals(_selected, row.Plan);
             if (GUILayout.Button(row.Text, isSelected ? Theme.RowSelectedBadged : Theme.RowBadged, GUILayout.Height(RowHeight)))
             {
-                if (isSelected)
+                float now = Time.unscaledTime;
+                if (isSelected && now - _lastClick < DoubleClick && !Editor.IsOpen)
+                {
+                    OpenEditor(row.Plan);
+                }
+                else if (isSelected)
                 {
                     _selected = null;
                     _armed = false;
@@ -100,6 +128,7 @@ internal sealed class GroupsPanel
                     _selected = row.Plan;
                     _armed = true;
                 }
+                _lastClick = now;
                 _nextStatus = 0f;
             }
             if (Event.current.type == EventType.Repaint)
@@ -110,7 +139,7 @@ internal sealed class GroupsPanel
         _list.SpaceAfter();
         if (_rows.Count == 0)
         {
-            GUILayout.Label(_plans == null || _plans.Count == 0 ? "No boss groups found in the server's map data." : "Nothing matches.", Theme.Small);
+            GUILayout.Label(string.IsNullOrEmpty(_activeSearch) ? "No groups: the server sent no boss data and nothing is saved." : "Nothing matches.", Theme.Small);
         }
         GUILayout.EndScrollView();
         _list.MeasureView();
@@ -128,41 +157,70 @@ internal sealed class GroupsPanel
         }
 
         GUILayout.Space(4f);
-        GUI.enabled = _selected != null;
+        GUI.enabled = _selected != null && !Editor.IsOpen;
         bool armed = Armed;
         if (GUILayout.Toggle(armed, "PLACE GROUP", Theme.Tab) != armed)
         {
             _armed = !armed;
             _nextStatus = 0f;
         }
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button(_selected is { Source: GroupSource.Custom } ? "Edit" : "Edit copy", Theme.Button))
+        {
+            OpenEditor(_selected);
+        }
+        GUI.enabled = !Editor.IsOpen;
+        if (GUILayout.Button("New group", Theme.Button))
+        {
+            _armed = false;
+            Editor.Open(new GroupDraft(), null);
+        }
         GUI.enabled = true;
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(6f);
         GUILayout.Label(_prompt, Theme.Label);
         GUILayout.Label(_status, Theme.Label);
     }
 
+    private void OpenEditor(GroupPlan plan)
+    {
+        _armed = false;
+        if (plan.Source == GroupSource.Custom)
+        {
+            Editor.Open(GroupDraft.From(plan, plan.Name), plan.Name);
+            return;
+        }
+        string name = plan.Name + " (copy)";
+        Editor.Open(GroupDraft.From(plan, name.Length > CustomGroups.MaxNameLength ? name.Substring(0, CustomGroups.MaxNameLength) : name), null);
+    }
+
     private void BuildRows()
     {
         _rows.Clear();
-        if (_plans == null)
+        string needle = (_activeSearch ?? "").Trim();
+        AddSection("SPT PRESETS", _plans, needle);
+        AddSection("CUSTOM", CustomGroups.All, needle);
+    }
+
+    private void AddSection(string title, IReadOnlyList<GroupPlan> plans, string needle)
+    {
+        if (plans == null)
         {
             return;
         }
-        string needle = (_activeSearch ?? "").Trim();
-        List<Row> found = new();
-        foreach (GroupPlan plan in _plans)
+        int header = _rows.Count;
+        foreach (GroupPlan plan in plans)
         {
-            if (needle.Length > 0 && !Matches(plan, needle))
+            if (needle.Length == 0 || Matches(plan, needle))
             {
-                continue;
+                _rows.Add(new Row { Plan = plan, Text = RowText(plan), Count = $"<color=#7f8a95>{plan.CountText}</color>" });
             }
-            found.Add(new Row { Plan = plan, Text = RowText(plan), Count = $"<color=#7f8a95>{plan.CountText}</color>" });
         }
-        if (found.Count > 0)
+        int found = _rows.Count - header;
+        if (found > 0)
         {
-            _rows.Add(new Row { Text = $"SPT PRESETS ({found.Count})" });
-            _rows.AddRange(found);
+            _rows.Insert(header, new Row { Text = $"{title} ({found})" });
         }
     }
 
@@ -194,7 +252,7 @@ internal sealed class GroupsPanel
     {
         string color = Hex(plan.Leader.Role);
         int others = plan.Members.Count - 1;
-        string tail = others == 0 ? "alone" : others == 1 ? "+ " + SpawnNames.Of(plan.Members[1].Role) : $"+ {others} kinds";
+        string tail = others == 0 ? "alone" : others == 1 ? "+ " + SpawnNames.Of(plan.Members[plan.LeaderIndex == 0 ? 1 : 0].Role) : $"+ {others} kinds";
         return $"<color={color}>{plan.Name}</color>  <color=#7f8a95>{tail}</color>";
     }
 
@@ -220,6 +278,13 @@ internal sealed class GroupsPanel
         string pending = Commands.Pending > 0 ? $" · spawning {Commands.Pending}" : "";
         string units = $"Perun units {Commands.AliveCount}/{Commands.MaxUnits}{pending}";
         string result = string.IsNullOrEmpty(Commands.LastResult) ? "" : "\n" + Commands.LastResult;
+
+        if (Editor.IsOpen)
+        {
+            _prompt = "<color=#9fb4c8>Place the group from the editor, or close it to place from here.</color>";
+            _status = units + result;
+            return;
+        }
 
         if (Commands.IsRemote)
         {
@@ -265,21 +330,21 @@ internal sealed class GroupsPanel
         WildSpawnType leader = plan.Leader.Role;
         EPlayerSide leaderSide = HostilityRules.SideOf(leader);
         BotDifficulty? forced = Difficulty;
-        for (int i = 0; i < plan.Members.Count; i++)
+        for (int n = 0; n < plan.Members.Count; n++)
         {
-            GroupMember member = plan.Members[i];
-            if (i > 0)
+            GroupMember member = plan.InSpawnOrder(n);
+            if (n > 0)
             {
                 b.Append('\n');
             }
-            b.Append(i == 0 ? "<color=#ffc847>♛</color> " : "   ");
+            b.Append(n == 0 ? "<color=#ffc847>♛</color> " : "   ");
             b.Append("<color=").Append(Hex(member.Role)).Append('>').Append(SpawnNames.Of(member.Role)).Append("</color>");
-            if (i > 0 || member.Max > 1)
+            if (n > 0 || member.Max > 1)
             {
                 b.Append(" ×").Append(member.CountText);
             }
             b.Append("  <color=#7f8a95>").Append(forced ?? member.Difficulty).Append("</color>");
-            if (i > 0 && member.Role != leader)
+            if (n > 0 && member.Role != leader)
             {
                 string badge = HostilityRules.Badge(Hostility.Between(leader, leaderSide, member.Role, HostilityRules.SideOf(member.Role)));
                 if (badge.Length > 0)
@@ -288,7 +353,11 @@ internal sealed class GroupsPanel
                 }
             }
         }
-        if (plan.Maps.Count > 0)
+        if (plan.Source == GroupSource.Custom)
+        {
+            b.Append(plan.LeaderChoice.HasValue ? "\n<color=#7f8a95>Custom · leader picked by hand</color>" : "\n<color=#7f8a95>Custom</color>");
+        }
+        else if (plan.Maps.Count > 0)
         {
             b.Append("\n<color=#7f8a95>SPT · ").Append(string.Join(", ", plan.Maps)).Append("</color>");
         }

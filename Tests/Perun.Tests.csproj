@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Fika\Perun.Fika.csproj" />
     <Reference Include="Assembly-CSharp" HintPath="$(HollowedPath)" Private="True" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedPath)\UnityEngine.CoreModule.dll" Private="True" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(ManagedPath)\Newtonsoft.Json.dll" Private="True" />
     <Reference Include="Fika.Core" HintPath="$(FikaPluginsPath)\Fika\Fika.Core.dll" Private="True" />
   </ItemGroup>
 </Project>

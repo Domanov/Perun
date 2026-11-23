@@ -39,6 +39,7 @@ public class Plugin : BaseUnityPlugin
 
     internal static ConfigEntry<int> MaxUnits;
     internal static ConfigEntry<bool> PrewarmProfiles;
+    internal static ConfigEntry<bool> BlockHostileMembers;
     internal static ConfigEntry<bool> ShowLabels;
     internal static readonly System.Collections.Generic.Dictionary<BotKind, ConfigEntry<Color>> KindColors = new();
     internal static ConfigEntry<Color> SelectionColor;
@@ -193,6 +194,9 @@ public class Plugin : BaseUnityPlugin
 
         PrewarmProfiles = Config.Bind(general, "Prepare bots in advance", true,
             new ConfigDescription("When you pick a bot type in the spawn panel, ask the server for its profiles and load its gear right away, so the click spawns them almost instantly.", null, new ConfigurationManagerAttributes { Order = 60 }));
+
+        BlockHostileMembers = Config.Bind(general, "Refuse hostile group members", false,
+            new ConfigDescription("In the group editor, don't offer bot types that are hostile to the group's leader. Off: they can be added, with a warning; inside one group they fight as allies.", null, new ConfigurationManagerAttributes { Order = 55 }));
 
         const string display = "3. Display";
         ShowLabels = Config.Bind(display, "Unit labels", true,

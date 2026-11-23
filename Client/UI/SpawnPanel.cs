@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using EFT;
-using Perun.Client.Compat;
 using Perun.Client.Units;
 using UnityEngine;
 
@@ -10,18 +7,6 @@ namespace Perun.Client.UI;
 
 internal sealed class SpawnPanel
 {
-    private static readonly (string name, Func<WildSpawnType, string, bool> match)[] Categories =
-    {
-        ("Scavs", (t, n) => t is WildSpawnType.assault or WildSpawnType.marksman or WildSpawnType.cursedAssault or WildSpawnType.crazyAssaultEvent),
-        ("PMC", (t, n) => t is WildSpawnType.pmcUSEC or WildSpawnType.pmcBEAR),
-        ("Raiders", (t, n) => t is WildSpawnType.pmcBot or WildSpawnType.exUsec or WildSpawnType.arenaFighter or WildSpawnType.arenaFighterEvent),
-        ("Bosses", (t, n) => n.StartsWith("boss", StringComparison.Ordinal)),
-        ("Followers", (t, n) => n.StartsWith("follower", StringComparison.Ordinal) || n == "tagillaHelperAgro"),
-        ("Cultists", (t, n) => n.StartsWith("sectant", StringComparison.Ordinal) || n == "sectactPriestEvent"),
-        ("Infected", (t, n) => n.StartsWith("infected", StringComparison.Ordinal)),
-        ("Other", null)
-    };
-
     private static readonly string[] DifficultyNames = { "Easy", "Normal", "Hard", "Impossible" };
     private static readonly BotDifficulty[] Difficulties = { BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
     private static readonly string[] SubTabs = { "BOTS", "GROUPS" };
@@ -38,9 +23,7 @@ internal sealed class SpawnPanel
     private const int BotsTab = 0;
     private const int GroupsTab = 1;
 
-    private readonly List<WildSpawnType>[] _roles;
-    private readonly string[][] _roleNames;
-    private readonly string[] _categoryNames;
+    private readonly RoleCatalog _catalog = RoleCatalog.Shared;
     private readonly List<WildSpawnType> _found = new();
     private readonly List<string> _foundNames = new();
     private string _search = "";
@@ -68,6 +51,9 @@ internal sealed class SpawnPanel
 
     public bool Visible { get; set; }
 
+    public bool GroupsVisible => Visible && _sub == GroupsTab;
+    public GroupEditor Editor => _groups.Editor;
+
     public bool Armed => Visible && (_sub == BotsTab ? _selected.HasValue : _groups.Armed);
     public GroupPlan Group => Visible && _sub == GroupsTab && _groups.Armed ? _groups.Selected : null;
     public BotDifficulty? GroupDifficulty => _groups.Difficulty;
@@ -77,60 +63,6 @@ internal sealed class SpawnPanel
     public WildSpawnType? Chosen => _selected;
     public BotDifficulty Difficulty => _selected.HasValue ? SpawnService.AllowedDifficulty(_selected.Value, Difficulties[_difficulty]) : Difficulties[_difficulty];
     public int Count => CountValues[_countIndex];
-
-    public SpawnPanel()
-    {
-        List<string> names = Categories.Select(c => c.name).ToList();
-        List<List<WildSpawnType>> roles = names.Select(_ => new List<WildSpawnType>()).ToList();
-        int other = Categories.Length - 1;
-
-        foreach (WildSpawnType type in Enum.GetValues(typeof(WildSpawnType)).Cast<WildSpawnType>().Distinct())
-        {
-            if (PerunRules.IsHiddenRole(type))
-            {
-                continue;
-            }
-
-            if (MoreBotsCompat.TryGetFaction((int)type, out string faction))
-            {
-                int factionIndex = names.IndexOf(faction);
-                if (factionIndex < 0)
-                {
-                    names.Insert(other, faction);
-                    roles.Insert(other, new List<WildSpawnType>());
-                    factionIndex = other;
-                    other++;
-                }
-                roles[factionIndex].Add(type);
-                continue;
-            }
-
-            string name = SpawnNames.Id(type);
-            int index = other;
-            for (int i = 0; i < Categories.Length - 1; i++)
-            {
-                if (Categories[i].match(type, name))
-                {
-                    index = i;
-                    break;
-                }
-            }
-            roles[index].Add(type);
-        }
-
-        foreach (List<WildSpawnType> list in roles)
-        {
-            list.Sort((a, b) => string.CompareOrdinal(SpawnNames.Id(a), SpawnNames.Id(b)));
-        }
-
-        _categoryNames = names.ToArray();
-        _roles = roles.ToArray();
-        _roleNames = new string[_roles.Length][];
-        for (int i = 0; i < _roles.Length; i++)
-        {
-            _roleNames[i] = _roles[i].Select(SpawnNames.Of).ToArray();
-        }
-    }
 
     public void Disarm()
     {
@@ -186,7 +118,7 @@ internal sealed class SpawnPanel
         }
 
         GUILayout.Label("FACTION", Theme.Header);
-        int category = GUILayout.SelectionGrid(_category, _categoryNames, 3, Theme.Tab);
+        int category = GUILayout.SelectionGrid(_category, _catalog.CategoryNames, 3, Theme.Tab);
         if (category != _category)
         {
             _pendingCategory = category;
@@ -204,8 +136,8 @@ internal sealed class SpawnPanel
         IList<string> names;
         if (string.IsNullOrEmpty(_activeSearch))
         {
-            roles = _roles[_category];
-            names = _roleNames[_category];
+            roles = _catalog.Roles[_category];
+            names = _catalog.Names[_category];
         }
         else
         {
@@ -274,26 +206,10 @@ internal sealed class SpawnPanel
 
     private void Filter()
     {
-        if (_searched == _activeSearch)
+        if (_searched != _activeSearch)
         {
-            return;
-        }
-
-        _searched = _activeSearch;
-        _found.Clear();
-        _foundNames.Clear();
-        string needle = _activeSearch.Trim();
-        for (int c = 0; c < _roles.Length; c++)
-        {
-            for (int i = 0; i < _roles[c].Count; i++)
-            {
-                string name = _roleNames[c][i];
-                if (name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0 || SpawnNames.Id(_roles[c][i]).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    _found.Add(_roles[c][i]);
-                    _foundNames.Add(name + "  <color=#7f8a95>" + _categoryNames[c] + "</color>");
-                }
-            }
+            _searched = _activeSearch;
+            _catalog.Search(_activeSearch, _found, _foundNames);
         }
     }
 

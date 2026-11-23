@@ -33,6 +33,8 @@ internal sealed class PerunHud
     private const float CardHeight = 176f;
     private const int MaxJobsShown = 3;
     private const float JobHeight = 44f;
+    private const float EditorWidth = 640f;
+    private const float EditorMinWidth = 480f;
     private static readonly string[] Spinner = { "◐", "◓", "◑", "◒" };
 
     private const string PausedHost = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>P to resume</color>";
@@ -68,6 +70,12 @@ internal sealed class PerunHud
     private readonly ArsenalPanel _arsenal = new();
     private readonly List<Rect> _uiRects = new();
 
+    private static readonly HashSet<string> TextControls = new()
+    {
+        SpawnPanel.SearchControl, GroupsPanel.SearchControl, ArsenalPanel.SearchControl, ArsenalPanel.NameControl,
+        GroupEditor.NameControl, GroupEditor.SearchControl
+    };
+
     private float _nextLabelPrune;
     private float _nextStatus;
     private string _statusLeft = "";
@@ -92,6 +100,7 @@ internal sealed class PerunHud
     private bool _pendingClose;
     private bool _pendingHelp;
     private bool _cardShown;
+    private bool _editorShown;
     private float _loadingHeight;
     private readonly string[] _jobText = new string[MaxJobsShown];
     private readonly int[] _jobKey = new int[MaxJobsShown];
@@ -220,8 +229,13 @@ internal sealed class PerunHud
             GUIUtility.keyboardControl = 0;
             current.Use();
         }
+        else if (_editorShown && current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape)
+        {
+            _spawn.Editor.RequestClose();
+            current.Use();
+        }
 
-        Layout(out Rect top, out Rect left, out Rect card, out Rect right, out Rect status, out Rect help);
+        Layout(out Rect top, out Rect left, out Rect card, out Rect right, out Rect status, out Rect help, out Rect editor);
 
         if (Typing && current.type == EventType.MouseDown && !Over(current.mousePosition))
         {
@@ -240,6 +254,10 @@ internal sealed class PerunHud
             DrawCard(card);
         }
         DrawDock(right);
+        if (_editorShown)
+        {
+            _spawn.Editor.Draw(editor);
+        }
         DrawStatus(status);
         if (HelpVisible)
         {
@@ -252,7 +270,7 @@ internal sealed class PerunHud
             DrawBanners(false);
             MouseOverUi = Over(current.mousePosition);
             string focused = GUIUtility.keyboardControl != 0 ? GUI.GetNameOfFocusedControl() : null;
-            Typing = focused == SpawnPanel.SearchControl || focused == GroupsPanel.SearchControl || focused == ArsenalPanel.SearchControl || focused == ArsenalPanel.NameControl;
+            Typing = focused != null && TextControls.Contains(focused);
         }
     }
 
@@ -277,9 +295,12 @@ internal sealed class PerunHud
         _cardShown = _mode.Picker.Selection.Count > 0;
         _spawn.Visible = _dockOpen && _tab == AssetTab.Units;
         _spawn.BadgeTarget = _mode.Picker.Selected;
+        _spawn.Editor.ApplyPending();
+        // Decided once per frame: the dock switches its own sub-tab later in this Layout pass.
+        _editorShown = _spawn.GroupsVisible && _spawn.Editor.IsOpen;
     }
 
-    private void Layout(out Rect top, out Rect left, out Rect card, out Rect right, out Rect status, out Rect help)
+    private void Layout(out Rect top, out Rect left, out Rect card, out Rect right, out Rect status, out Rect help, out Rect editor)
     {
         float width = Screen.width;
         float height = Screen.height;
@@ -299,6 +320,14 @@ internal sealed class PerunHud
 
         help = new Rect(width / 2f - 330f, height / 2f - 180f, 660f, 360f);
 
+        float editorRight = right.x - Gap;
+        float editorWidth = Mathf.Min(EditorWidth, editorRight - (Gap + LeftWidth + Gap));
+        if (editorWidth < EditorMinWidth)
+        {
+            editorWidth = Mathf.Min(EditorWidth, editorRight - Gap);
+        }
+        editor = new Rect(editorRight - editorWidth, body, editorWidth, Mathf.Min(right.height, EditorWidth));
+
         _uiRects.Clear();
         _uiRects.Add(top);
         _uiRects.Add(left);
@@ -307,6 +336,10 @@ internal sealed class PerunHud
             _uiRects.Add(card);
         }
         _uiRects.Add(right);
+        if (_editorShown)
+        {
+            _uiRects.Add(editor);
+        }
         _uiRects.Add(status);
         if (HelpVisible)
         {

@@ -5,6 +5,12 @@ using EFT;
 
 namespace Perun.Client.Units;
 
+internal enum GroupSource
+{
+    Spt,
+    Custom
+}
+
 internal sealed class GroupMember
 {
     private readonly int[] _counts;
@@ -30,36 +36,60 @@ internal sealed class GroupMember
 
 internal sealed class GroupPlan
 {
-    public GroupPlan(string name, IReadOnlyList<GroupMember> members, IReadOnlyList<string> maps)
+    public GroupPlan(GroupSource source, string name, IReadOnlyList<GroupMember> members, IReadOnlyList<string> maps, int? leaderChoice)
     {
+        Source = source;
         Name = name;
         Members = members;
         Maps = maps ?? Array.Empty<string>();
+        LeaderChoice = leaderChoice is { } index && index >= 0 && index < members.Count ? index : null;
+        LeaderIndex = LeaderChoice ?? AutoLeader(members.Select(m => m.Role).ToList());
         Min = members.Sum(m => m.Min);
         Max = members.Sum(m => m.Max);
         CountText = Range(Min, Max);
     }
 
+    public GroupSource Source { get; }
     public string Name { get; }
     public IReadOnlyList<GroupMember> Members { get; }
     public IReadOnlyList<string> Maps { get; }
+    public int? LeaderChoice { get; }
+    public int LeaderIndex { get; }
     public int Min { get; }
     public int Max { get; }
     public string CountText { get; }
 
-    public GroupMember Leader => Members[0];
+    public GroupMember Leader => Members[LeaderIndex];
 
     internal static string Range(int min, int max) => min == max ? min.ToString() : $"{min}–{max}";
 
-    // The leader always comes first and spawns at least once, even if its counts allow zero.
+    // Same pick as the game's own boss spawns and SAIN: a boss role leads, otherwise whoever is listed first.
+    internal static int AutoLeader(IReadOnlyList<WildSpawnType> roles)
+    {
+        for (int i = 0; i < roles.Count; i++)
+        {
+            if (IsBossRole(roles[i]))
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    internal static bool IsBossRole(WildSpawnType role) => SpawnNames.Id(role).StartsWith("boss", StringComparison.Ordinal);
+
+    // The n-th member in spawn order: the leader first, the others as listed.
+    public GroupMember InSpawnOrder(int n) => Members[n == 0 ? LeaderIndex : n <= LeaderIndex ? n - 1 : n];
+
+    // The leader comes first in the result and spawns at least once, even if its counts allow zero.
     public List<(WildSpawnType role, BotDifficulty difficulty, int count)> Roll(Random random, int budget, BotDifficulty? overrideDifficulty)
     {
         List<(WildSpawnType, BotDifficulty, int)> result = new();
         int left = budget;
-        for (int i = 0; i < Members.Count && left > 0; i++)
+        for (int n = 0; n < Members.Count && left > 0; n++)
         {
-            GroupMember member = Members[i];
-            int count = Math.Min(Math.Max(i == 0 ? 1 : 0, member.Roll(random)), left);
+            GroupMember member = InSpawnOrder(n);
+            int count = Math.Min(Math.Max(n == 0 ? 1 : 0, member.Roll(random)), left);
             if (count > 0)
             {
                 result.Add((member.Role, overrideDifficulty ?? member.Difficulty, count));
