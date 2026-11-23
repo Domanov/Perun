@@ -99,7 +99,6 @@ internal sealed class Takeover
         _mainOwner = eftOwner;
         _main = main;
         Parked = main;
-        main.HeavyBreath = false;
         main.Speaker?.Shut();
         _bot = bot;
         _mainCamera = mainCamera;
@@ -371,8 +370,6 @@ internal sealed class Takeover
             ControlAudio.MatchHearing(main);
             ControlAudio.StopTinnitus();
             ControlAudio.ResumeTinnitus(main);
-            main.HeavyBreath = false;
-            main.UpdateBreathStatus();
         });
 
         _mainCamera = null;

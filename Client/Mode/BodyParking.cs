@@ -14,8 +14,13 @@ internal sealed class BodyParking
 
     public Vector3 SavedPosition => _savedPosition;
 
+    public Player Body { get; private set; }
+
     public void Park(Player player)
     {
+        Body = player;
+        player.HeavyBreath = false;
+        player.Speaker?.Shut();
         _savedPosition = player.Position;
         _savedRotation = player.Rotation;
         _parkPosition = _savedPosition + Vector3.down * ParkDepth;
@@ -52,16 +57,19 @@ internal sealed class BodyParking
         }
 
         _parked = false;
+        Body = null;
         MovementContext movement = player.MovementContext;
         movement.FreefallTime = 0f;
         player.Teleport(dropAt ?? _savedPosition);
         movement.IsGrounded = true;
         movement.FreefallTime = 0f;
         player.Rotation = _savedRotation;
+        player.UpdateBreathStatus();
     }
 
     public void Forget()
     {
         _parked = false;
+        Body = null;
     }
 }

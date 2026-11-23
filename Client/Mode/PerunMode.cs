@@ -25,6 +25,8 @@ internal sealed class PerunMode
     public RtsCamera Camera { get; } = new();
 
     public Vector3 ReturnPoint => _parking.SavedPosition;
+
+    public bool IsParked(Player player) => player != null && ReferenceEquals(_parking.Body, player);
     public CursorPicker Picker { get; } = new();
     public bool Controlling => Active && _takeover.Active;
     public Player ControlledBot => _takeover.Bot;
