@@ -29,6 +29,7 @@ internal static class GroupLeadership
     private static readonly AccessTools.FieldRef<BotBoss, Action<BotOwner, FollowerStatusChange>> StatusChange =
         AccessTools.FieldRefAccess<BotBoss, Action<BotOwner, FollowerStatusChange>>("OnFollowerStatusChange");
 
+    private static readonly List<Handle> Groups = new();
     private static readonly List<Handle> Dead = new();
     private static readonly List<PendingAttach> Attaches = new();
 
@@ -37,7 +38,24 @@ internal static class GroupLeadership
         Handle handle = new() { Leader = leader, Name = name };
         handle.Members.Add(leader);
         Subscribe(handle);
+        Groups.Add(handle);
         return handle;
+    }
+
+    public static BotOwner LeaderOf(BotsGroup group)
+    {
+        if (group == null)
+        {
+            return null;
+        }
+        foreach (Handle handle in Groups)
+        {
+            if (Alive(handle.Leader) && ReferenceEquals(handle.Leader.BotsGroup, group))
+            {
+                return handle.Leader;
+            }
+        }
+        return null;
     }
 
     // The spawn callback runs right after PreActivate; the bot's tactic and patrol data only exist once it is Active.
@@ -107,6 +125,7 @@ internal static class GroupLeadership
 
     public static void Clear()
     {
+        Groups.Clear();
         Dead.Clear();
         Attaches.Clear();
     }
@@ -138,6 +157,7 @@ internal static class GroupLeadership
         }
         member.BotFollower.SetToFollow(leader.Boss, followers.IndexOf(member), false);
         StandByGuard.Join(leader, member);
+        Compat.SainCompat.MatchLeader(leader);
         Plugin.Log.LogInfo($"Group: {member.Profile.Nickname} ({member.Profile.Info.Settings.Role}) follows {leader.Profile.Nickname}");
     }
 
@@ -182,6 +202,7 @@ internal static class GroupLeadership
         }
         handle.Leader = next;
         Subscribe(handle);
+        Compat.SainCompat.MatchLeader(next);
 
         foreach (BotOwner bot in alive)
         {

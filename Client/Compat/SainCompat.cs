@@ -30,8 +30,10 @@ internal static class SainCompat
                 return;
             }
 
-            new Harmony(Plugin.Guid + ".sain").Patch(update, prefix: new HarmonyMethod(typeof(SainCompat), nameof(UpdatePrefix)));
+            Harmony harmony = new(Plugin.Guid + ".sain");
+            harmony.Patch(update, prefix: new HarmonyMethod(typeof(SainCompat), nameof(UpdatePrefix)));
             Plugin.Log.LogInfo("SAIN: bots pause with the world");
+            HookSquadLeader(harmony);
         }
         catch (Exception ex)
         {
@@ -40,6 +42,83 @@ internal static class SainCompat
     }
 
     private static Type _componentType;
+
+    private static MethodInfo _assignLeader;
+    private static PropertyInfo _squadBotsGroup;
+    private static PropertyInfo _squadLeader;
+    private static PropertyInfo _squadMembers;
+    private static PropertyInfo _botSquad;
+    private static PropertyInfo _squadInfo;
+    private static PropertyInfo _componentBotOwner;
+    private static bool _assigning;
+
+    private static void HookSquadLeader(Harmony harmony)
+    {
+        Type squad = AccessTools.TypeByName("SAIN.BotController.Classes.Squad");
+        MethodInfo assign = squad != null ? AccessTools.Method(squad, "assignSquadLeader") : null;
+        _squadBotsGroup = squad != null ? AccessTools.Property(squad, "BotsGroup") : null;
+        _squadLeader = squad != null ? AccessTools.Property(squad, "LeaderComponent") : null;
+        _squadMembers = squad != null ? AccessTools.Property(squad, "Members") : null;
+        _botSquad = AccessTools.Property(_componentType, "Squad");
+        _squadInfo = _botSquad != null ? AccessTools.Property(_botSquad.PropertyType, "SquadInfo") : null;
+        _componentBotOwner = AccessTools.Property(_componentType, "BotOwner");
+        if (assign == null || _squadBotsGroup == null || _squadLeader == null || _squadMembers == null || _squadInfo == null || _componentBotOwner == null)
+        {
+            Plugin.Log.LogWarning("SAIN: its squad leader wasn't found; SAIN may lead Perun's groups with another member");
+            return;
+        }
+
+        harmony.Patch(assign, postfix: new HarmonyMethod(typeof(SainCompat), nameof(AssignLeaderPostfix)));
+        _assignLeader = assign;
+        Plugin.Log.LogInfo("SAIN: Perun's group leaders lead their SAIN squads");
+    }
+
+    // SAIN picks its own squad leader (a boss, else the strongest member) when the squad forms, when a stronger member
+    // joins and after the leader dies; for Perun's groups the leader Perun chose is put back.
+    private static void AssignLeaderPostfix(object __instance) => Redirect(__instance);
+
+    public static void MatchLeader(EFT.BotOwner leader)
+    {
+        if (_assignLeader == null)
+        {
+            return;
+        }
+        object component = ComponentOf(leader);
+        object container = component != null ? _botSquad.GetValue(component) : null;
+        Redirect(container != null ? _squadInfo.GetValue(container) : null);
+    }
+
+    private static void Redirect(object squad)
+    {
+        if (_assigning || squad == null)
+        {
+            return;
+        }
+        try
+        {
+            EFT.BotOwner wanted = Units.GroupLeadership.LeaderOf(_squadBotsGroup.GetValue(squad) as BotsGroup);
+            object current = _squadLeader.GetValue(squad);
+            if (wanted == null || (current != null && ReferenceEquals(_componentBotOwner.GetValue(current), wanted)))
+            {
+                return;
+            }
+            if (_squadMembers.GetValue(squad) is not System.Collections.IDictionary members || !members.Contains(wanted.ProfileId))
+            {
+                return;
+            }
+            _assigning = true;
+            _assignLeader.Invoke(squad, new[] { members[wanted.ProfileId] });
+            Plugin.Log.LogInfo($"SAIN: {wanted.Profile.Nickname} leads the squad");
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"SAIN: couldn't set the squad leader: {ex.GetBaseException().Message}");
+        }
+        finally
+        {
+            _assigning = false;
+        }
+    }
 
     private static bool UpdatePrefix(object __instance) => !WorldPause.Paused && (Possession.SainComponent == null || !ReferenceEquals(__instance, Possession.SainComponent));
 

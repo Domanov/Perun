@@ -9,6 +9,7 @@
   - Difficulty per placement: as set in the group, or one for everyone.
   - Placing: groups stand in a wedge with the leader at the point, facing away from the camera. Hold the mouse button and drag to turn it (this also works for single bots), Ctrl+wheel changes the spacing (0.8–4 m). Dots show where each member will stand.
   - When a group's leader dies, Perun picks the next one (another boss if there is one) and the rest follow him.
+  - With SAIN, the group's leader also leads its SAIN squad. SAIN would otherwise pick a boss or its strongest member, also after a leader dies.
   - Host and single player only for now; a Fika game master sees a notice.
 - Moving a group's leader now brings his followers along: they wake up with him and walk to his destination in a wedge, keeping pace with him. Followers fight on their own again when they meet enemies, unless the order was forced (Ctrl+right-click).
 - Your own character is a unit: click the magenta dot (where you return) or "You" in the unit list to select it. Heal and the Arsenal work on it, Teleport moves where you return, and Kill asks for a second press because it ends your raid. Move orders, Remove and Take control skip it.
