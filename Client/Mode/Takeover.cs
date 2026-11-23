@@ -25,6 +25,7 @@ internal sealed class Takeover
     private static readonly FieldInfo LocationField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), "_location");
     private static readonly FieldInfo BattleScreenField = Reflect.Field(Feature.ControlScreenEffects, typeof(GamePlayerOwner), "BattleUIScreenController");
     private static readonly FieldInfo RemoveItemField = Reflect.Field(Feature.Control, typeof(ItemController), "_removeItemEvent");
+    private static readonly FieldInfo VisorActionField = Reflect.Field(Feature.ControlScreenEffects, typeof(HysteresisFilter), "_action");
 
     public static bool KeepCamera;
 
@@ -215,12 +216,20 @@ internal sealed class Takeover
         {
             return;
         }
+        // OnDestroy also clears the camera's shared visor switcher, which would leave the face shield effect dead for
+        // your character and every later takeover; its action is put back.
+        HysteresisFilter visor = CameraManager.Exist ? CameraManager.Instance.VisorSwitcher : null;
+        object visorAction = visor != null ? VisorActionField?.GetValue(visor) : null;
         try
         {
             // DestroyImmediate on purpose: PlayerCameraController.OnDestroy releases whatever controller is the
             // current singleton and resets the audio listener. Deferred to the end of the frame, it would release
             // the main controller created right after this and leave the listener under the map (no sound).
             Object.DestroyImmediate(camera);
+            if (visorAction != null && visor != null)
+            {
+                VisorActionField.SetValue(visor, visorAction);
+            }
         }
         catch (Exception ex)
         {
