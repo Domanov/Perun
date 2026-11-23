@@ -1017,39 +1017,43 @@ internal sealed class PerunHud
         }
     }
 
-    // How the unit is set toward the selected one, as in the BOTS list badges. Bots of one group are always allies;
-    // a bot whose group has already taken the other as an enemy (a neutral USEC that was shot at) shows hostile.
+    // How the unit is set toward the selected one, as in the BOTS list badges. A bot that has already taken the other as
+    // an enemy (a neutral USEC that was shot at, a squadmate shot by the bot you control) shows hostile; otherwise bots
+    // of one group are allies.
     private static Attitude Relation(Player subject, Player other)
     {
         if (subject == null || other == subject || subject.Profile == null || other.Profile == null)
         {
             return Attitude.Unknown;
         }
-        BotsGroup subjectGroup = subject.AIData?.BotOwner?.BotsGroup;
-        BotsGroup otherGroup = other.AIData?.BotOwner?.BotsGroup;
-        if (subjectGroup != null && subjectGroup == otherGroup)
-        {
-            return Attitude.Ally;
-        }
-        if ((subjectGroup != null && subjectGroup.Enemies.ContainsKey(other)) || (otherGroup != null && otherGroup.Enemies.ContainsKey(subject)))
+        BotOwner subjectBot = subject.AIData?.BotOwner;
+        BotOwner otherBot = other.AIData?.BotOwner;
+        if (HasEnemy(subjectBot, other) || HasEnemy(otherBot, subject))
         {
             return Attitude.Enemy;
         }
+        if (subjectBot?.BotsGroup != null && subjectBot.BotsGroup == otherBot?.BotsGroup)
+        {
+            return Attitude.Ally;
+        }
 
-        bool subjectBot = Bots.IsBot(subject);
-        bool otherBot = Bots.IsBot(other);
+        bool subjectIsBot = Bots.IsBot(subject);
+        bool otherIsBot = Bots.IsBot(other);
         WildSpawnType subjectRole = subject.Profile.Info.Settings.Role;
         WildSpawnType otherRole = other.Profile.Info.Settings.Role;
-        if (subjectBot && otherBot)
+        if (subjectIsBot && otherIsBot)
         {
             return Hostility.Between(subjectRole, subject.Side, otherRole, other.Side).Kind;
         }
-        if (subjectBot)
+        if (subjectIsBot)
         {
             return Hostility.TowardPlayer(subjectRole, other.Side).Kind;
         }
-        return otherBot ? Hostility.TowardPlayer(otherRole, subject.Side).Kind : Attitude.Unknown;
+        return otherIsBot ? Hostility.TowardPlayer(otherRole, subject.Side).Kind : Attitude.Unknown;
     }
+
+    private static bool HasEnemy(BotOwner bot, Player other) =>
+        bot != null && ((bot.BotsGroup != null && bot.BotsGroup.Enemies.ContainsKey(other)) || (bot.EnemiesController?.EnemyInfos != null && bot.EnemiesController.EnemyInfos.ContainsKey(other)));
 
     private static void DrawRelation(Vector2 center, Color color)
     {

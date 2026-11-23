@@ -24,6 +24,7 @@
 - Your parked character no longer breathes heavily or grunts in pain as your own voice while you're in RTS mode.
 - The bot you control no longer hears its own footsteps muffled, as if from behind a wall.
 - Face shield visors work again for your character and every bot you control after the first bot you gave back. Giving a bot back switched the camera's visor effect off for the rest of the session.
+- The attitude dot turns red for a bot that has taken the other as an enemy even when both are in one group (a squadmate shot by the bot you control).
 - One release zip for single player and Fika: the Fika bridge is in it and is only loaded when Fika is installed, so BepInEx no longer reports a missing dependency and other mods no longer log errors about it.
 - Known issues:
   - A leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
