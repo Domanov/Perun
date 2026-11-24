@@ -420,6 +420,7 @@ internal static partial class SpawnService
 
             int total = data.Count;
             int spawned = 0;
+            List<BotOwner> created = new();
             spawner._inSpawnProcess += total;
             await spawner._botCreator.ActivateBot(data, zone, shallBeGroup, spawner.GetGroupAndSetEnemies, bot =>
             {
@@ -437,6 +438,7 @@ internal static partial class SpawnService
                 }
 
                 UnitRegistry.Add(bot);
+                created.Add(bot);
                 spawned++;
                 job.Spawned();
                 LastResult = $"Spawned {role} {spawned}/{total}";
@@ -453,6 +455,7 @@ internal static partial class SpawnService
                 LastResult = $"Only {spawned}/{total} {role} spawned (see log)";
                 Plugin.Log.LogWarning($"Spawn {label}: only {spawned}/{total} created");
             }
+            GroupLeadership.Form(created, label);
         }
         catch (Exception ex)
         {

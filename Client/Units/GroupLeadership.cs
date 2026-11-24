@@ -26,6 +26,12 @@ internal static class GroupLeadership
         public float Until;
     }
 
+    private sealed class PendingForm
+    {
+        public List<BotOwner> Bots;
+        public string Name;
+        public float Until;
+    }
 
     private static readonly AccessTools.FieldRef<BotBoss, Action<BotOwner, FollowerStatusChange>> StatusChange =
         AccessTools.FieldRefAccess<BotBoss, Action<BotOwner, FollowerStatusChange>>("OnFollowerStatusChange");
@@ -35,6 +41,7 @@ internal static class GroupLeadership
     private static readonly List<Handle> Groups = new();
     private static readonly List<Handle> Dead = new();
     private static readonly List<PendingAttach> Attaches = new();
+    private static readonly List<PendingForm> Forms = new();
 
     public static Handle Track(BotOwner leader, string name)
     {
@@ -74,8 +81,37 @@ internal static class GroupLeadership
         }
     }
 
+    // Several bots spawned as one unit: the game links only bots whose roles suit each other, so once all are active they
+    // are put under one leader.
+    public static void Form(List<BotOwner> bots, string name)
+    {
+        if (bots.Count > 1)
+        {
+            Forms.Add(new PendingForm { Bots = bots, Name = name, Until = Time.time + AttachTimeout });
+        }
+    }
+
     public static void Tick()
     {
+        for (int i = Forms.Count - 1; i >= 0; i--)
+        {
+            PendingForm form = Forms[i];
+            form.Bots.RemoveAll(b => !Alive(b));
+            if (form.Bots.Exists(b => b.BotState != EBotState.Active) && Time.time <= form.Until)
+            {
+                continue;
+            }
+            Forms.RemoveAt(i);
+            try
+            {
+                FormNow(form.Name, form.Bots.FindAll(b => b.BotState == EBotState.Active));
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError($"Group {form.Name}: forming the group failed: {ex}");
+            }
+        }
+
         if (Attaches.Count > 0)
         {
             for (int i = Attaches.Count - 1; i >= 0; i--)
@@ -159,6 +195,43 @@ internal static class GroupLeadership
         Compat.SainCompat.MatchLeader(leader);
         Plugin.Log.LogInfo($"Group: {member.Profile.Nickname} joins {leader.Profile.Nickname}'s group");
         return null;
+    }
+
+    // A boss role leads, else the bot the game already made boss, else the best equipped.
+    private static void FormNow(string name, List<BotOwner> bots)
+    {
+        if (bots.Count < 2)
+        {
+            return;
+        }
+        BotOwner leader = bots.Find(b => b.Profile.Info.Settings.Role.IsBoss()) ?? bots.Find(b => b.Boss.IamBoss);
+        if (leader == null)
+        {
+            leader = bots[0];
+            foreach (BotOwner bot in bots)
+            {
+                if (bot.GetPlayer.AIData.PowerOfEquipment > leader.GetPlayer.AIData.PowerOfEquipment)
+                {
+                    leader = bot;
+                }
+            }
+        }
+
+        Handle handle = HandleOf(leader) ?? Track(leader, name);
+        foreach (BotOwner bot in bots)
+        {
+            if (bot == leader)
+            {
+                continue;
+            }
+            MoveGroup(bot, leader.BotsGroup);
+            if (bot.Boss.IamBoss)
+            {
+                DropFollowers(bot);
+            }
+            QueueAttach(handle, bot);
+        }
+        Plugin.Log.LogInfo($"Group {name}: {leader.Profile.Nickname} leads {bots.Count - 1} follower(s)");
     }
 
     // Takes a bot out of its group into a new one of its own (link view: dropped on the ground).
@@ -301,6 +374,7 @@ internal static class GroupLeadership
         Groups.Clear();
         Dead.Clear();
         Attaches.Clear();
+        Forms.Clear();
     }
 
     private static bool Alive(BotOwner bot) =>
