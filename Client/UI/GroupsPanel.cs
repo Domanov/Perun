@@ -133,7 +133,7 @@ internal sealed class GroupsPanel
             }
 
             bool isSelected = ReferenceEquals(_selected, row.Plan);
-            if (GUILayout.Button(row.Text, isSelected ? Theme.RowSelectedBadged : Theme.RowBadged, GUILayout.Height(RowHeight)))
+            if (GUILayout.Button(row.Text, isSelected ? Theme.SectionRowSelected : Theme.SectionRow, GUILayout.Height(RowHeight)))
             {
                 float now = Time.unscaledTime;
                 if (isSelected && now - _lastClick < DoubleClick && !Editor.IsOpen)
