@@ -660,9 +660,10 @@ internal sealed class PerunMode
         if (bot != null && _camera != null)
         {
             Pose eyes = EyePose(bot);
-            if (died)
+            Camera.JumpTo(bot.Position, eyes.rotation.eulerAngles.y);
+            if (!died)
             {
-                Camera.JumpTo(bot.Position, eyes.rotation.eulerAngles.y);
+                Picker.SelectOnly(bot);
             }
             _flyingBack = true;
             _flight.Start(_camera.transform, eyes, Camera.CurrentPose, Time.unscaledTime, ZoomOut);
