@@ -3,6 +3,8 @@
 ## Unreleased
 - Your parked character no longer grunts in pain in RTS mode when something hits it: the game plays the hurt sound for any hit before god mode cancels the damage.
 - Followers keep walking to their places in the wedge after their leader arrives. Before, a follower still on the way (one that started behind him, or went round an obstacle) dropped back to the game's own follower behaviour the moment the leader reached the destination.
+- Known issues: those of 0.13.1, and:
+  - Moving bots sometimes rubber-band slightly.
 
 ## 0.13.1 (2026-11-24)
 - Groups: LINK LEADERS (Units › GROUPS) shows a line from every bot to its leader. Drag from a bot onto another and the second one leads the first: the bot leaves its old group (its followers get a new leader) and joins the new one, with SAIN's squad too. Dropping on a follower joins that follower's leader; dropping on the ground takes the bot out of its group into one of its own. Host and single player.
