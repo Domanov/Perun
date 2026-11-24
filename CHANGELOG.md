@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Your parked character no longer grunts in pain in RTS mode when something hits it: the game plays the hurt sound for any hit before god mode cancels the damage.
 - Followers keep walking to their places in the wedge after their leader arrives. Before, a follower still on the way (one that started behind him, or went round an obstacle) dropped back to the game's own follower behaviour the moment the leader reached the destination.
 
 ## 0.13.1 (2026-11-24)

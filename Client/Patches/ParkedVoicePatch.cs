@@ -14,3 +14,13 @@ public class ParkedVoicePatch : ModulePatch
     [PatchPrefix]
     public static bool PatchPrefix(Player __instance) => Plugin.Mode?.IsParked(__instance) != true;
 }
+
+// Damage reaching your parked character (before god mode zeroes it) plays the hurt grunt straight on its speaker, not
+// through Say; the hit's slowdown doesn't matter under the map either.
+public class ParkedHitPatch : ModulePatch
+{
+    protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), "ApplyHitDebuff");
+
+    [PatchPrefix]
+    public static bool PatchPrefix(Player __instance) => Plugin.Mode?.IsParked(__instance) != true;
+}

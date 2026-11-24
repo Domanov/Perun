@@ -65,6 +65,7 @@ public class Plugin : BaseUnityPlugin
         AsBotPatch.Enable();
         new ParkedBreathPatch().Enable();
         new ParkedVoicePatch().Enable();
+        new ParkedHitPatch().Enable();
         new BotUpdatePausePatch().Enable();
         new BotFixedUpdatePausePatch().Enable();
         new BotBrainPausePatch().Enable();
