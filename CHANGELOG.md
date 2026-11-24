@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Buildings no longer go missing (only their shadows left) after leaving RTS mode, for example after picking a return point where you had been looking. Perun switched the level chunks it had shown back off, and the game's culler didn't always switch the visible ones on again.
 - Your parked character no longer grunts in pain in RTS mode when something hits it: the game plays the hurt sound for any hit before god mode cancels the damage.
 - Followers keep walking to their places in the wedge after their leader arrives. Before, a follower still on the way (one that started behind him, or went round an obstacle) dropped back to the game's own follower behaviour the moment the leader reached the destination.
 - Known issues: those of 0.13.1, and:

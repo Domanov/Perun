@@ -9,7 +9,7 @@ namespace Perun.Client.Compat;
 internal sealed class GameCulling
 {
     private readonly List<DisablerCullingObjectBase> _enabledObjects = new();
-    private readonly List<PerfectCullingBakeGroup> _enabledGroups = new();
+    private int _shownGroups;
     private readonly List<PerfectCullingCrossSceneGroup> _disabledSceneGroups = new();
     private bool? _occlusion;
     private bool _applied;
@@ -26,6 +26,7 @@ internal sealed class GameCulling
 
         _allZones.Clear();
         _cursor = 0;
+        _shownGroups = 0;
         foreach (DisablerCullingObjectBase culling in Object.FindObjectsOfType<DisablerCullingObjectBase>())
         {
             _allZones.Add(culling);
@@ -46,7 +47,7 @@ internal sealed class GameCulling
                     if (!bakeGroup.IsEnabled)
                     {
                         bakeGroup.IsEnabled = true;
-                        _enabledGroups.Add(bakeGroup);
+                        _shownGroups++;
                     }
                 }
 
@@ -61,7 +62,7 @@ internal sealed class GameCulling
         SmoothieControl.ResyncLodCulling();
         if (Plugin.Verbose.Value)
         {
-            Plugin.Log.LogInfo($"Culling: {_enabledObjects.Count} zone objects, {_enabledGroups.Count} bake groups shown");
+            Plugin.Log.LogInfo($"Culling: {_enabledObjects.Count} zone objects, {_shownGroups} bake groups shown");
         }
     }
 
@@ -120,14 +121,9 @@ internal sealed class GameCulling
             }
         }
 
-        foreach (PerfectCullingBakeGroup bakeGroup in _enabledGroups)
-        {
-            if (bakeGroup != null)
-            {
-                bakeGroup.IsEnabled = false;
-            }
-        }
-
+        // The shown chunks are left on for the culler to hide: it corrects chunk states only when it next recomputes
+        // visibility, which may not happen soon after leaving (same culling cell), so chunks switched off here could
+        // leave buildings missing at your character's spot.
         foreach (DisablerCullingObjectBase culling in _enabledObjects)
         {
             if (culling != null && !culling.HasEntered)
@@ -143,7 +139,6 @@ internal sealed class GameCulling
 
         _enabledObjects.Clear();
         _allZones.Clear();
-        _enabledGroups.Clear();
         _disabledSceneGroups.Clear();
         SmoothieControl.ResyncLodCulling();
     }
