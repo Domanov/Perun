@@ -6,7 +6,7 @@
   <Import Project="$(PerunParentProps)" Condition="'$(PerunParentProps)' != '' And Exists('$(PerunParentProps)')" />
 
   <PropertyGroup>
-    <PerunVersion>0.13.0</PerunVersion>
+    <PerunVersion>0.13.1</PerunVersion>
     <SPTPath Condition="'$(SPTPath)' == ''">C:\Games\SPT</SPTPath>
     <ManagedPath Condition="'$(ManagedPath)' == ''">$(SPTPath)\EscapeFromTarkov_Data\Managed</ManagedPath>
     <BepInExPath Condition="'$(BepInExPath)' == ''">$(SPTPath)\BepInEx</BepInExPath>
