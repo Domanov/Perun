@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using BepInEx.Bootstrap;
+using HarmonyLib;
+using Perun.Client.Patches;
 
 namespace Perun.Client.Compat;
 
@@ -18,6 +20,41 @@ internal static class MoreBotsCompat
     public static IReadOnlyDictionary<int, string> Factions => _factions ??= Load();
 
     public static bool TryGetFaction(int type, out string faction) => Factions.TryGetValue(type, out faction);
+
+    // MoreBots hunts and takes revenge on players that aren't AI; a controlled bot must still count as a bot there.
+    private static readonly (string type, string method)[] HumanChecks =
+    {
+        ("MoreBotsAPI.Components.HuntManager", "FindFirstHuntTarget"),
+        ("MoreBotsAPI.Components.HuntManager", "FindNewHuntTarget"),
+        ("MoreBotsAPI.Components.FactionManager", "OnKill"),
+    };
+
+    public static void Enable()
+    {
+        if (!Present)
+        {
+            return;
+        }
+        Harmony harmony = new(Plugin.Guid + ".morebots");
+        foreach ((string type, string method) in HumanChecks)
+        {
+            try
+            {
+                Type owner = FindType(type);
+                MethodInfo target = owner != null ? AccessTools.Method(owner, method) : null;
+                if (target == null)
+                {
+                    Plugin.Log.LogWarning($"MoreBotsAPI: {type}.{method} not found; its bots may treat a bot you control as a human player");
+                    continue;
+                }
+                AsBotPatch.Apply(harmony, target);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"MoreBotsAPI: could not hook {method}: {ex.Message}");
+            }
+        }
+    }
 
     private static Dictionary<int, string> Load()
     {

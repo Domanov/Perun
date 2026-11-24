@@ -62,6 +62,7 @@ public class Plugin : BaseUnityPlugin
 
         new PlayerCameraLateUpdatePatch().Enable();
         new AddEnemyPatch().Enable();
+        AsBotPatch.Enable();
         new ParkedBreathPatch().Enable();
         new ParkedVoicePatch().Enable();
         new BotUpdatePausePatch().Enable();
@@ -85,6 +86,7 @@ public class Plugin : BaseUnityPlugin
         new KeepCameraVisorPatch().Enable();
         Compat.SainCompat.Enable();
         Compat.BigBrainCompat.Enable();
+        Compat.MoreBotsCompat.Enable();
         Compat.SmoothieControl.Enable();
         HealthPatches.Enable();
         DrakiaXYZ.BigBrain.Brains.BrainManager.AddCustomLayer(typeof(Orders.PerunOrderLayer), Orders.PerunOrderLayer.Brains, Orders.PerunOrderLayer.LayerPriority);

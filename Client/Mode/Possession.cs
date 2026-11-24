@@ -24,6 +24,26 @@ internal static class Possession
 
     public static bool IsPossessedShooter(ShootData shootData) => Bot != null && shootData != null && ReferenceEquals(Bot.ShootData, shootData);
 
+    // Taking control clears the bot's IsAI; checks that tell bots from human players flip it back for their duration
+    // (AsBotPatch), so friends by role (Black Division and the like) don't take the controlled bot for a hostile human.
+    public static bool ShowAsBot()
+    {
+        if (Body != null && Body.AIData is AIData data && !data.IsAI)
+        {
+            data.IsAI = true;
+            return true;
+        }
+        return false;
+    }
+
+    public static void EndShowAsBot(bool shown)
+    {
+        if (shown && Body != null && Body.AIData is AIData data)
+        {
+            data.IsAI = false;
+        }
+    }
+
     public static bool Begin(Player player)
     {
         End();
