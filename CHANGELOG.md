@@ -6,6 +6,7 @@
 - Followers keep walking to their places in the wedge after their leader arrives. Before, a follower still on the way (one that started behind him, or went round an obstacle) dropped back to the game's own follower behaviour the moment the leader reached the destination.
 - Groups: a bot that joins a group is taken off the group's enemy lists however the game keyed it. With Fika the entry could sit under another object for the same player, so SAIN kept copying it back and Shturman shot a controlled PMC or Boar sniper that had joined his group. While you control a bot, Perun also keeps it off its group's lists (the game's and SAIN's) and logs any bot that had it.
 - Unit labels: the colour between two live bots comes from their groups' own hostility check, so faction mods that change hostility at runtime show correctly. Before, Remnants showed red next to RUAF, which never fight them.
+- Groups: a follower taken out of Shturman's group can join it again. The game's Shturman logic kept part of the old follower's record, so adding him back failed with an error and left him without his place in Shturman's behaviour.
 - Known issues: those of 0.13.1, and:
   - Moving bots sometimes rubber-band slightly.
 

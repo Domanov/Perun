@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using EFT;
 using HarmonyLib;
 using UnityEngine;
@@ -460,13 +462,48 @@ internal static class GroupLeadership
     // new follower's first point (PatrolPoint.GetSubPoint(-1)), after it has already registered him. He still follows.
     private static void NotifyAdded(BotOwner leader, BotOwner member)
     {
+        Action<BotOwner, FollowerStatusChange> handlers = StatusChange(leader.Boss);
+        if (handlers == null)
+        {
+            return;
+        }
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            ForgetStaleCover(handler.Target, member);
+        }
         try
         {
-            StatusChange(leader.Boss)?.Invoke(member, FollowerStatusChange.Add);
+            handlers.Invoke(member, FollowerStatusChange.Add);
         }
         catch (ArgumentOutOfRangeException ex)
         {
             Plugin.Log.LogWarning($"Group: {leader.Profile.Nickname}'s patrol couldn't give {member.Profile.Nickname} a first point ({ex.Message}); attached anyway");
+        }
+    }
+
+    // Shturman's boss logic (BossWithStayFollowersPosition) drops a removed follower from its positions but not from
+    // HaveGoodCovers, so adding the same follower again threw and left him without his place in the boss's logic.
+    private static void ForgetStaleCover(object logic, BotOwner member)
+    {
+        if (logic == null)
+        {
+            return;
+        }
+        Type type = logic.GetType();
+        while (type != null && !type.Name.StartsWith("BossWithStayFollowersPosition", StringComparison.Ordinal))
+        {
+            type = type.BaseType;
+        }
+        if (type == null)
+        {
+            return;
+        }
+        const BindingFlags fields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        if (type.GetField("HaveGoodCovers", fields)?.GetValue(logic) is IDictionary covers
+            && type.GetField("_followersPositions", fields)?.GetValue(logic) is IDictionary positions
+            && covers.Contains(member) && !positions.Contains(member))
+        {
+            covers.Remove(member);
         }
     }
 
