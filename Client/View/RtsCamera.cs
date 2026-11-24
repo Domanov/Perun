@@ -35,6 +35,8 @@ internal sealed class RtsCamera
     // Gets the wheel first; returning true keeps it from zooming or tilting.
     public Func<float, bool> WheelHandler { get; set; }
 
+    private const float MaxInputStep = 0.3f;
+
     public EFT.Player Following { get; private set; }
 
     public void Follow(EFT.Player target)
@@ -88,7 +90,9 @@ internal sealed class RtsCamera
             return;
         }
 
-        float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        // Capped only against one long hitch: a tighter cap slows panning and Q/E turning whenever the game runs below it
+        // (a wide zoomed-out view can drop under 10 fps).
+        float dt = Mathf.Min(Time.unscaledDeltaTime, MaxInputStep);
         Quaternion heading = Quaternion.Euler(0f, _targetYaw, 0f);
         Vector3 forward = heading * Vector3.forward;
         Vector3 right = heading * Vector3.right;
@@ -158,12 +162,14 @@ internal sealed class RtsCamera
             _targetPitch = Mathf.Clamp(_targetPitch - delta.y * 0.2f * Plugin.RotateSpeed.Value, MinPitch, MaxPitch);
         }
 
-        float wheel = Input.mouseScrollDelta.y;
+        // Some mice report several notches in one frame for a quick flick; at most one per frame keeps each zoom step the
+        // same size.
+        float wheel = Mathf.Clamp(Input.mouseScrollDelta.y, -1f, 1f);
         if (Mathf.Abs(wheel) > 0.01f && !overUi && (WheelHandler == null || !WheelHandler(wheel)))
         {
             if (Input.GetKey(Plugin.TiltKey.Value))
             {
-                _targetPitch = Mathf.Clamp(_targetPitch - wheel * 6f * Plugin.RotateSpeed.Value, MinPitch, MaxPitch);
+                _targetPitch = Mathf.Clamp(_targetPitch - wheel * 3f * Plugin.RotateSpeed.Value, MinPitch, MaxPitch);
             }
             else
             {
