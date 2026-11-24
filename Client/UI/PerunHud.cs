@@ -1047,7 +1047,17 @@ internal sealed class PerunHud
         WildSpawnType otherRole = other.Profile.Info.Settings.Role;
         if (subjectIsBot && otherIsBot)
         {
-            return Hostility.Between(subjectRole, subject.Side, otherRole, other.Side).Kind;
+            Attitude listed = Hostility.Between(subjectRole, subject.Side, otherRole, other.Side).Kind;
+            if (subjectBot?.BotsGroup == null || otherBot?.BotsGroup == null || listed == Attitude.Chance)
+            {
+                return listed;
+            }
+            // Faction mods change hostility at runtime, so the group's own check decides; it rolls chances anew on each call.
+            if (subjectBot.BotsGroup.IsPlayerEnemy(other) || otherBot.BotsGroup.IsPlayerEnemy(subject))
+            {
+                return Attitude.Enemy;
+            }
+            return listed == Attitude.Enemy ? Attitude.Neutral : listed;
         }
         if (subjectIsBot)
         {
