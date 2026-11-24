@@ -49,6 +49,7 @@ internal sealed class PerunMode
     private bool _claimPending;
     private bool _controlRequested;
     private float _cullingRefreshAt;
+    private float _friendlyCheckAt;
     private Task _handsLoad;
     private Player _handsFor;
     private float _claimUntil;
@@ -637,6 +638,12 @@ internal sealed class PerunMode
         {
             StopControl("Control ended: the bot died", died: true);
             return;
+        }
+
+        if (Time.time >= _friendlyCheckAt && Possession.Bot != null)
+        {
+            _friendlyCheckAt = Time.time + 0.5f;
+            GroupLeadership.KeepFriendly(Possession.Bot);
         }
 
         if (Input.GetKeyDown(Plugin.CrateKey.Value) && !PerunHud.InputBlocked && !ArsenalCrate.IsOpen)

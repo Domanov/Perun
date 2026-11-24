@@ -79,16 +79,17 @@ internal static class SainCompat
 
     private static MethodInfo _addMember;
     private static PropertyInfo _enemyController;
+    private static MethodInfo _isEnemy;
     private static MethodInfo _removeEnemy;
 
     // SAIN keeps its own enemy list per bot and drops an entry only when the bot's original BotsGroup removes that enemy,
     // so a bot moved into a group it used to fight keeps shooting its new squad.
-    public static void ForgetEnemy(EFT.BotOwner bot, EFT.Player enemy)
+    public static bool ForgetEnemy(EFT.BotOwner bot, EFT.Player enemy)
     {
         object component = ComponentOf(bot);
         if (component == null)
         {
-            return;
+            return false;
         }
         try
         {
@@ -96,14 +97,22 @@ internal static class SainCompat
             object controller = _enemyController?.GetValue(component);
             if (controller == null)
             {
-                return;
+                return false;
             }
+            _isEnemy ??= AccessTools.Method(controller.GetType(), "IsPlayerAnEnemy", new[] { typeof(string) });
             _removeEnemy ??= AccessTools.Method(controller.GetType(), "RemoveEnemy", new[] { typeof(string) });
-            _removeEnemy?.Invoke(controller, new object[] { enemy.ProfileId });
+            object[] args = { enemy.ProfileId };
+            if (_isEnemy == null || _removeEnemy == null || !(bool)_isEnemy.Invoke(controller, args))
+            {
+                return false;
+            }
+            _removeEnemy.Invoke(controller, args);
+            return true;
         }
         catch (Exception ex)
         {
             Plugin.Log.LogWarning($"SAIN: couldn't clear {enemy.Profile?.Nickname} from {bot.Profile?.Nickname}'s enemies: {ex.GetBaseException().Message}");
+            return false;
         }
     }
 

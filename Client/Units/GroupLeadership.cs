@@ -40,6 +40,8 @@ internal static class GroupLeadership
 
     private static readonly List<Handle> Groups = new();
     private static readonly List<Handle> Dead = new();
+    private static readonly Dictionary<BotOwner, int> Cleared = new();
+    private static BotOwner _keptFriendly;
     private static readonly List<PendingAttach> Attaches = new();
     private static readonly List<PendingForm> Forms = new();
 
@@ -341,7 +343,13 @@ internal static class GroupLeadership
         old?.RemoveAlly(bot);
 
         Player body = bot.GetPlayer;
-        group.RemoveEnemy(body);
+        if (body != null)
+        {
+            foreach (IPlayer key in EnemyTables.KeysOf(group.Enemies, body.ProfileId))
+            {
+                group.RemoveEnemy(key);
+            }
+        }
         for (int i = 0; i < group.MembersCount; i++)
         {
             BotOwner other = group.Member(i);
@@ -355,24 +363,67 @@ internal static class GroupLeadership
     }
 
     // The game's Remove indexes its enemy table without checking, so a bot that never saw the other throws.
-    private static void Forget(BotOwner bot, Player enemy)
+    private static bool Forget(BotOwner bot, Player enemy)
     {
         if (enemy == null)
         {
+            return false;
+        }
+        bool known = false;
+        BotEnemiesController enemies = bot.EnemiesController;
+        if (enemies != null)
+        {
+            foreach (IPlayer key in EnemyTables.KeysOf(enemies.EnemyInfos, enemy.ProfileId))
+            {
+                enemies.Remove(key);
+                known = true;
+            }
+        }
+        return Compat.SainCompat.ForgetEnemy(bot, enemy) | known;
+    }
+
+    // Backstop while a bot is controlled: it counts as a human, which no group-member check covers, so anything that
+    // lists it in its own group again is cleared here and logged.
+    public static void KeepFriendly(BotOwner bot)
+    {
+        if (bot != _keptFriendly)
+        {
+            _keptFriendly = bot;
+            Cleared.Clear();
+        }
+        BotsGroup group = bot.BotsGroup;
+        Player body = bot.GetPlayer;
+        if (group == null || body == null)
+        {
             return;
         }
-        BotEnemiesController enemies = bot.EnemiesController;
-        if (enemies != null && enemies.EnemyInfos.ContainsKey(enemy))
+        foreach (IPlayer key in EnemyTables.KeysOf(group.Enemies, body.ProfileId))
         {
-            enemies.Remove(enemy);
+            group.RemoveEnemy(key);
+            Plugin.Log.LogInfo($"Control: {body.Profile.Nickname}'s group had it as an enemy, cleared");
         }
-        Compat.SainCompat.ForgetEnemy(bot, enemy);
+        for (int i = 0; i < group.MembersCount; i++)
+        {
+            BotOwner other = group.Member(i);
+            if (other == null || other == bot || !Forget(other, body))
+            {
+                continue;
+            }
+            Cleared.TryGetValue(other, out int count);
+            Cleared[other] = ++count;
+            if (count == 1 || count % 20 == 0)
+            {
+                Plugin.Log.LogInfo($"Control: {other.Profile.Nickname} had {body.Profile.Nickname} as an enemy, cleared ×{count}");
+            }
+        }
     }
 
     public static void Clear()
     {
         Groups.Clear();
         Dead.Clear();
+        Cleared.Clear();
+        _keptFriendly = null;
         Attaches.Clear();
         Forms.Clear();
     }

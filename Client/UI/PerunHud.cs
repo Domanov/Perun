@@ -1057,7 +1057,7 @@ internal sealed class PerunHud
     }
 
     private static bool HasEnemy(BotOwner bot, Player other) =>
-        bot != null && ((bot.BotsGroup != null && bot.BotsGroup.Enemies.ContainsKey(other)) || (bot.EnemiesController?.EnemyInfos != null && bot.EnemiesController.EnemyInfos.ContainsKey(other)));
+        bot != null && ((bot.BotsGroup != null && EnemyTables.Lists(bot.BotsGroup.Enemies, other.ProfileId)) || (bot.EnemiesController?.EnemyInfos != null && EnemyTables.Lists(bot.EnemiesController.EnemyInfos, other.ProfileId)));
 
     private static void DrawRelation(Vector2 center, Color color)
     {
