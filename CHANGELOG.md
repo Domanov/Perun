@@ -9,7 +9,7 @@
 - Groups: a follower taken out of Shturman's group can join it again. The game's Shturman logic kept part of the old follower's record, so adding him back failed with an error and left him without his place in Shturman's behaviour.
 - Known issues: those of 0.13.1, and:
   - Moving bots sometimes rubber-band slightly.
-  - With ORBIT's AI limiter on, bots spawned more than its wake distance (200 m by default) from every human player can stay dormant: no label, head and weapon spinning. In RTS mode your parked character doesn't count as near the camera.
+  - With ORBIT, a spawned bot sometimes never activates (no label, head and weapon spinning): ORBIT holds back its activation.
 
 ## 0.13.1 (2026-11-24)
 - Groups: LINK LEADERS (Units › GROUPS) shows a line from every bot to its leader. Drag from a bot onto another and the second one leads the first: the bot leaves its old group (its followers get a new leader) and joins the new one, with SAIN's squad too. Dropping on a follower joins that follower's leader; dropping on the ground takes the bot out of its group into one of its own. Host and single player.
