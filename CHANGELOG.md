@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- Groups: LINK LEADERS (Units › GROUPS) shows a line from every bot to its leader. Drag from a bot onto another and the second one leads the first: the bot leaves its old group (its followers get a new leader) and joins the new one, with SAIN's squad too. Dropping on a follower joins that follower's leader; dropping on the ground takes the bot out of its group into one of its own. Host and single player.
+- Units: several bots spawned at once from the BOTS list now form one group under one leader once they're active: a boss if there is one, else the bot the game made boss, else the best equipped. Before, the game linked only bots whose roles suit each other, so 4 scavs could end up as two pairs.
+- Camera: WASD panning follows the distance the camera is really at. When collision pulled it in close (walls, roofs, trees), it panned as fast as at the full zoom.
+- Control: a bot you control is still judged as a bot by other groups' hostility checks and warnings, and by MoreBotsAPI's hunts and revenge. Before, a Black Division bot taken out of its group and then controlled was attacked by its old teammates as if it were a human player.
+
 ## 0.13.0 (2026-11-23)
 - Groups: the Units tab (B) now has BOTS and GROUPS. A group spawns as one squad: the leader first, every member following him, sharing one group and its enemies.
   - SPT presets: every boss group in the server's map data (Reshala and guards, Goons, Kaban, Kollontay, Raiders, Rogues, Cultists, …), with the counts the maps use; a range like 2–4 is rolled on each placement. The summary lists the members, their attitude toward the leader and the maps they come from.
@@ -10,7 +16,7 @@
   - Placing: groups stand in a wedge with the leader at the point, facing away from the camera. Hold the mouse button and drag to turn it (this also works for single bots), Ctrl+wheel changes the spacing (0.8–4 m). Dots show where each member will stand.
   - When a group's leader dies, Perun picks the next one (another boss if there is one) and the rest follow him.
   - With SAIN, the group's leader also leads its SAIN squad. SAIN would otherwise pick a boss or its strongest member, also after a leader dies.
-  - Fika: a game master can place groups too; the host rolls the counts and spawns them (bridge protocol 7, the host needs Perun 0.13.0).
+  - Fika: a game master can place groups too; the host rolls the counts and spawns them (bridge protocol 7, the host needs Perun 0.13.0). Untested, see the known issues.
 - Moving a group's leader now brings his followers along: they wake up with him and walk to his destination in a wedge, keeping pace with him. Followers fight on their own again when they meet enemies, unless the order was forced (Ctrl+right-click).
 - Your own character is a unit: click the magenta dot (where you return) or "You" in the unit list to select it. Heal and the Arsenal work on it, Teleport moves where you return, and Kill asks for a second press because it ends your raid. Move orders, Remove and Take control skip it.
 - Fika: Perun keeps working after your character dies. Once Fika's spectator camera is on, the RTS key opens Perun as usual (host, or game master on a headless raid); Fika's spectator camera, its UI and the extract message come back when you close it. You can take control of a bot from there (host, with "Allow take control in Fika" on) and keep playing as it; the raid HUD shows while you control it. Your own character as a unit isn't available while dead.
@@ -23,6 +29,11 @@
 - MoreBotsAPI: bots spawned by Perun no longer throw an error in its hunt manager as they appear. The error cut the game's spawn setup short, so some bots never fully activated and group members were left unattached.
 - Your parked character no longer breathes heavily or grunts in pain as your own voice while you're in RTS mode.
 - The bot you control no longer hears its own footsteps muffled, as if from behind a wall.
+- The bot you control hears other sounds (gunshots, steps, voices) from its own room: the game's indoor/outdoor listener stayed where your character stood until the bot passed a room trigger, which muffled sounds as if through walls.
+- Giving a bot back leaves the RTS camera over it with the bot selected (over its body if it died), instead of flying back to where you took control.
+- Mouse wheel zoom moves at most one step per frame, so a quick flick no longer jumps much further than slow scrolling.
+- Tilting with Alt+wheel moves half as far per notch.
+- Panning and Q/E turning keep their speed down to about 3 fps; below 10 fps (a wide zoomed-out view) they used to slow down.
 - Face shield visors work again for your character and every bot you control after the first bot you gave back. Giving a bot back switched the camera's visor effect off for the rest of the session.
 - Bots whose weapon runs the game's bot malfunction check (Shturman) can shoot while you control them; the check threw on every trigger pull.
 - The attitude dot turns red for a bot that has taken the other as an enemy even when both are in one group (a squadmate shot by the bot you control).
@@ -31,6 +42,10 @@
   - A leader escorted by his followers sometimes jumps about a metre, a few times per walk, mostly right after the order.
   - Fika: a bot you control after your character died shows no visor, pain or blood effects. Fika removes those camera effects when you die.
   - A weapon picked up and equipped while you control a bot (for example taken from a body) can leave its arms spinning. Give the bot back (Y) and take control again.
+  - Headless host and remote game master are not supported for now: untested, and they may not work.
+  - Some sounds can still be muffled while you control a bot, for example other players' gunshots or the bot's own voice lines.
+  - Generating a bot's loadout sometimes takes long (up to about 10 seconds), so a spawn waits that long before the bot appears.
+  - Black Division Support, Breacher and Lead (MoreBotsAPI) never become active when spawned. MoreBotsAPI doesn't give these roles their brain; Black Division Assault and IB work.
 
 ## 0.12.0 (2026-11-19)
 - Verbose logging also writes the game version, plugin list and Perun settings once per session (the password only as set or empty), and each raid's map, Fika role, your character and game time.

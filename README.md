@@ -67,7 +67,7 @@ To uninstall, delete `BepInEx\plugins\DMNV-Perun\`. Saved weather lives in `BepI
 ## Fika
 Perun works for the **Fika host** (and in single player). Bots spawned by the host sync to everyone through Fika as usual.
 
-**Headless host:** **UNTESTED USE AT YOUR OWN RISK** the headless machine runs the raid, so one player can be the game master instead:
+**Headless host and remote game master: not supported for now.** The code is in, but it isn't tested and may not work; use it at your own risk. With a headless host the headless machine runs the raid, so one player can be the game master instead:
 1. On the headless host, set F12 › *6. Fika game master* › **Game master password** (or `BepInEx\config\com.dmnv.perun.cfg`).
 2. The player who should run Perun sets the same password in their own F12, then presses the RTS key in raid.
 3. The headless host checks the password and makes them game master; spawning, orders, pause, weather and time are carried out on the host. One game master at a time; leaving RTS mode or disconnecting hands it back. Five wrong passwords lock that player out for a minute.
