@@ -40,6 +40,12 @@ internal sealed class CursorPicker
     public Func<Vector3, float?, bool> PlaceHandler { get; set; }
     public Func<bool> IsPlacing { get; set; }
 
+    // Link view: pressing on a bot and releasing over another links the first to the second.
+    public Func<bool> IsLinking { get; set; }
+    public Action<Player, Player> LinkHandler { get; set; }
+    public Action<Player> UnlinkHandler { get; set; }
+    public Player LinkFrom { get; private set; }
+
     public Func<Vector2, bool> ScreenClickHandler { get; set; }
     public Func<bool> CancelHandler { get; set; }
     public Action<Vector3, bool, bool> OrderHandler { get; set; }
@@ -56,6 +62,7 @@ internal sealed class CursorPicker
         _leftDown = false;
         Dragging = false;
         Turning = false;
+        LinkFrom = null;
     }
 
     public void Tick(Camera camera)
@@ -90,10 +97,35 @@ internal sealed class CursorPicker
             Turning = false;
             _pressOnNavMesh = HasNavPoint;
             TurnAnchor = NavPoint;
+            LinkFrom = IsLinking?.Invoke() == true && Hovered != null && Hovered.AIData?.BotOwner != null ? Hovered : null;
         }
 
         if (_leftDown)
         {
+            if (LinkFrom != null)
+            {
+                if (Input.GetMouseButtonUp(0))
+                {
+                    _leftDown = false;
+                    Player from = LinkFrom;
+                    LinkFrom = null;
+                    bool moved = (cursor - _dragStart).sqrMagnitude > DragThreshold * DragThreshold;
+                    if (Hovered == from || (Hovered == null && !moved))
+                    {
+                        Click(shift);
+                    }
+                    else if (Hovered != null)
+                    {
+                        LinkHandler?.Invoke(from, Hovered);
+                    }
+                    else if (!overUi)
+                    {
+                        UnlinkHandler?.Invoke(from);
+                    }
+                }
+                return;
+            }
+
             if (!Dragging && !Turning && (cursor - _dragStart).sqrMagnitude > DragThreshold * DragThreshold)
             {
                 if (IsPlacing?.Invoke() != true)

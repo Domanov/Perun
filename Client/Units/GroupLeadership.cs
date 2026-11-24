@@ -26,8 +26,11 @@ internal static class GroupLeadership
         public float Until;
     }
 
+
     private static readonly AccessTools.FieldRef<BotBoss, Action<BotOwner, FollowerStatusChange>> StatusChange =
         AccessTools.FieldRefAccess<BotBoss, Action<BotOwner, FollowerStatusChange>>("OnFollowerStatusChange");
+
+    private static readonly System.Reflection.MethodInfo SetBotsGroup = AccessTools.PropertySetter(typeof(BotOwner), nameof(BotOwner.BotsGroup));
 
     private static readonly List<Handle> Groups = new();
     private static readonly List<Handle> Dead = new();
@@ -113,7 +116,7 @@ internal static class GroupLeadership
             {
                 try
                 {
-                    Promote(handle);
+                    Promote(handle, "leader died");
                 }
                 catch (Exception ex)
                 {
@@ -121,6 +124,176 @@ internal static class GroupLeadership
                 }
             }
         }
+    }
+
+    // Puts a bot under another bot's lead, from the RTS link view. When the target follows someone, the bot joins that
+    // leader instead, so a group keeps one leader. Returns why it couldn't, or null.
+    public static string Join(BotOwner member, BotOwner target, out BotOwner leader)
+    {
+        leader = null;
+        if (!Alive(member) || !Alive(target) || member == target)
+        {
+            return "both units must be living bots";
+        }
+        if (member.BotState != EBotState.Active || target.BotState != EBotState.Active)
+        {
+            return "both bots must be active";
+        }
+
+        leader = Bots.LeaderOf(target) ?? target;
+        if (leader == member)
+        {
+            // Dropped on one of its own followers: it stays in this BotsGroup, under whoever succeeds it.
+            leader = Leave(member) ?? target;
+        }
+        else
+        {
+            MoveGroup(member, leader.BotsGroup);
+            Leave(member);
+        }
+
+        Handle handle = HandleOf(leader) ?? Track(leader, leader.Profile.Nickname);
+        MakeLeader(leader, 1);
+        QueueAttach(handle, member);
+        Compat.SainCompat.JoinSquad(member);
+        Compat.SainCompat.MatchLeader(leader);
+        Plugin.Log.LogInfo($"Group: {member.Profile.Nickname} joins {leader.Profile.Nickname}'s group");
+        return null;
+    }
+
+    // Takes a bot out of its group into a new one of its own (link view: dropped on the ground).
+    public static string Separate(BotOwner member)
+    {
+        if (!Alive(member) || member.BotState != EBotState.Active)
+        {
+            return "it must be a living, active bot";
+        }
+        if (member.BotsGroup == null || (member.BotsGroup.MembersCount <= 1 && Bots.LeaderOf(member) == null))
+        {
+            return "it is already on its own";
+        }
+
+        BotsGroup group = SpawnService.LoneGroup(member);
+        if (group == null)
+        {
+            return "no bot system in this raid";
+        }
+        MoveGroup(member, group);
+        Leave(member);
+        Compat.SainCompat.JoinSquad(member);
+        Plugin.Log.LogInfo($"Group: {member.Profile.Nickname} leaves its group");
+        return null;
+    }
+
+    private static Handle HandleOf(BotOwner leader)
+    {
+        foreach (Handle handle in Groups)
+        {
+            if (handle.Leader == leader)
+            {
+                return handle;
+            }
+        }
+        return null;
+    }
+
+    // Out of its leader's followers; a leader hands its followers to a successor, which is returned. Call it after the bot
+    // has moved to its new BotsGroup: the successor's SetBoss signs up every member of its BotsGroup as a follower.
+    private static BotOwner Leave(BotOwner bot)
+    {
+        foreach (Handle handle in Groups)
+        {
+            handle.Members.Remove(bot);
+        }
+        Attaches.RemoveAll(a => a.Member == bot);
+
+        if (bot.BotFollower?.BossToFollow is BotBoss boss)
+        {
+            boss.RemoveFollower(bot);
+            bot.BotFollower.BossToFollow = null;
+        }
+
+        Handle old = HandleOf(bot);
+        if (bot.Boss == null || !bot.Boss.IamBoss)
+        {
+            Groups.Remove(old);
+            return null;
+        }
+        List<BotOwner> followers = DropFollowers(bot);
+        followers.RemoveAll(f => !Alive(f));
+        if (followers.Count == 0)
+        {
+            Groups.Remove(old);
+            return null;
+        }
+
+        if (old == null)
+        {
+            old = new Handle { Leader = bot, Name = bot.Profile.Nickname };
+            Groups.Add(old);
+        }
+        foreach (BotOwner follower in followers)
+        {
+            if (!old.Members.Contains(follower))
+            {
+                old.Members.Add(follower);
+            }
+        }
+        Promote(old, "leader left");
+        return old.Leader;
+    }
+
+    private static List<BotOwner> DropFollowers(BotOwner bot)
+    {
+        List<BotOwner> followers = new(bot.Boss._followers.Followers);
+        foreach (BotOwner follower in followers)
+        {
+            bot.Boss.RemoveFollower(follower);
+        }
+        bot.Boss.IamBoss = false;
+        return followers;
+    }
+
+    // The bot is switched to the new group before it leaves the old one: SAIN re-reads a removed member's group to find
+    // its new squad. Enemies the two sides had already taken of each other are dropped.
+    private static void MoveGroup(BotOwner bot, BotsGroup group)
+    {
+        BotsGroup old = bot.BotsGroup;
+        if (group == null || old == group)
+        {
+            return;
+        }
+        SetBotsGroup.Invoke(bot, new object[] { group });
+        group.AddMember(bot, false);
+        old?.RemoveAlly(bot);
+
+        Player body = bot.GetPlayer;
+        group.RemoveEnemy(body);
+        for (int i = 0; i < group.MembersCount; i++)
+        {
+            BotOwner other = group.Member(i);
+            if (other == null || other == bot)
+            {
+                continue;
+            }
+            Forget(other, body);
+            Forget(bot, other.GetPlayer);
+        }
+    }
+
+    // The game's Remove indexes its enemy table without checking, so a bot that never saw the other throws.
+    private static void Forget(BotOwner bot, Player enemy)
+    {
+        if (enemy == null)
+        {
+            return;
+        }
+        BotEnemiesController enemies = bot.EnemiesController;
+        if (enemies != null && enemies.EnemyInfos.ContainsKey(enemy))
+        {
+            enemies.Remove(enemy);
+        }
+        Compat.SainCompat.ForgetEnemy(bot, enemy);
     }
 
     public static void Clear()
@@ -140,10 +313,7 @@ internal static class GroupLeadership
         {
             return;
         }
-        if (!leader.Boss.IamBoss)
-        {
-            leader.Boss.SetBoss(1);
-        }
+        MakeLeader(leader, 1);
         List<BotOwner> followers = leader.Boss._followers.Followers;
         if (!followers.Contains(member))
         {
@@ -177,29 +347,43 @@ internal static class GroupLeadership
 
     // The successor comes from the group's own members: the game's follower list leaves out bots it dropped on its own
     // (one taken over and given back) and members still waiting to attach.
+    // The handler stays on the bot after it stops leading this group; only its death as this group's leader counts.
     private static void Subscribe(Handle handle)
     {
-        handle.Leader.Boss.OnBossDead += (_, _) => Dead.Add(handle);
+        BotOwner leader = handle.Leader;
+        leader.Boss.OnBossDead += (_, _) =>
+        {
+            if (handle.Leader == leader && !Dead.Contains(handle))
+            {
+                Dead.Add(handle);
+            }
+        };
     }
 
-    private static void Promote(Handle handle)
+    // SetBoss reads the patrol data of the boss the bot still follows, which is gone after a death or a move.
+    private static void MakeLeader(BotOwner bot, int followers)
+    {
+        if (!bot.Boss.IamBoss)
+        {
+            bot.BotFollower.BossToFollow = null;
+            bot.Boss.SetBoss(followers);
+        }
+    }
+
+    private static void Promote(Handle handle, string reason)
     {
         handle.Members.RemoveAll(m => !Alive(m));
         List<BotOwner> alive = new(handle.Members);
         if (alive.Count == 0)
         {
+            Groups.Remove(handle);
             return;
         }
 
         BotOwner next = alive.Find(b => b.Boss.IamBoss)
             ?? alive.Find(b => b.Profile.Info.Settings.Role.IsBoss())
             ?? alive[0];
-        if (!next.Boss.IamBoss)
-        {
-            // Still following the dead leader, whose patrol data is gone; SetBoss would read it.
-            next.BotFollower.BossToFollow = null;
-            next.Boss.SetBoss(alive.Count - 1);
-        }
+        MakeLeader(next, alive.Count - 1);
         handle.Leader = next;
         Subscribe(handle);
         Compat.SainCompat.MatchLeader(next);
@@ -211,6 +395,6 @@ internal static class GroupLeadership
                 QueueAttach(handle, bot);
             }
         }
-        Plugin.Log.LogInfo($"Group {handle.Name}: leader died, {next.Profile.Nickname} ({next.Profile.Info.Settings.Role}) leads {alive.Count - 1} follower(s)");
+        Plugin.Log.LogInfo($"Group {handle.Name}: {reason}, {next.Profile.Nickname} ({next.Profile.Info.Settings.Role}) leads {alive.Count - 1} follower(s)");
     }
 }

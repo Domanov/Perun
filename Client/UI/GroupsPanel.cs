@@ -64,6 +64,14 @@ internal sealed class GroupsPanel
     public bool Ready { get; private set; }
     public BotDifficulty? Difficulty => Difficulties[_difficulty];
 
+    public bool Linking { get; private set; }
+
+    public void StopLinking()
+    {
+        Linking = false;
+        _nextStatus = 0f;
+    }
+
     public void Disarm()
     {
         _armed = false;
@@ -176,6 +184,7 @@ internal sealed class GroupsPanel
         if (GUILayout.Toggle(armed, "PLACE GROUP", Theme.Tab) != armed)
         {
             _armed = !armed;
+            Linking &= !_armed;
             _nextStatus = 0f;
         }
         GUILayout.BeginHorizontal();
@@ -191,6 +200,16 @@ internal sealed class GroupsPanel
         }
         GUI.enabled = true;
         GUILayout.EndHorizontal();
+
+        GUI.enabled = !Commands.IsRemote;
+        bool linking = Linking;
+        if (GUILayout.Toggle(linking, "LINK LEADERS", Theme.Tab) != linking)
+        {
+            Linking = !linking;
+            _armed &= !Linking;
+            _nextStatus = 0f;
+        }
+        GUI.enabled = true;
 
         GUILayout.Space(6f);
         GUILayout.Label(_prompt, Theme.Label);
@@ -306,6 +325,13 @@ internal sealed class GroupsPanel
         if (Editor.IsOpen)
         {
             _prompt = "<color=#9fb4c8>Place the group from the editor, or close it to place from here.</color>";
+            _status = units + result;
+            return;
+        }
+
+        if (Linking)
+        {
+            _prompt = "<color=#ffc847>Drag from a bot onto another: the second one leads the first. Drop it on the ground: it leaves its group</color>  <color=#9fb4c8>· LINK LEADERS again stops</color>";
             _status = units + result;
             return;
         }

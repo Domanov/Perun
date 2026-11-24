@@ -685,6 +685,10 @@ internal sealed class PerunHud
         CursorPicker picker = _mode.Picker;
         DrawSelectionBrackets(camera, picker, _mode);
         DrawLeaders(camera, picker);
+        if (_spawn.Linking && Singleton<GameWorld>.Instantiated)
+        {
+            DrawLinks(camera, picker, Singleton<GameWorld>.Instance);
+        }
 
         DrawReturnPoint(camera);
 
@@ -1276,6 +1280,65 @@ internal sealed class PerunHud
                 GUI.Label(new Rect(crown.x - 20f, crown.y - 20f, 40f, 40f), "♛", _marker);
             }
         }
+    }
+
+    private readonly HashSet<BotOwner> _linkLeaders = new();
+    private static readonly Color LinkColor = new(1f, 1f, 1f, 0.75f);
+
+    // Link view: a thin line from every bot to its leader, a crown on each leader, and the line being dragged.
+    private void DrawLinks(Camera camera, CursorPicker picker, GameWorld world)
+    {
+        _linkLeaders.Clear();
+        float maxSqr = Plugin.LabelDistance.Value * Plugin.LabelDistance.Value;
+        Vector3 cameraPosition = camera.transform.position;
+        List<Player> players = world.AllAlivePlayersList;
+        for (int i = 0; i < players.Count; i++)
+        {
+            Player player = players[i];
+            BotOwner bot = player != null ? player.AIData?.BotOwner : null;
+            BotOwner leader = Bots.LeaderOf(bot);
+            Player body = leader?.GetPlayer;
+            if (body == null || player == picker.LinkFrom || (player.Position - cameraPosition).sqrMagnitude > maxSqr)
+            {
+                continue;
+            }
+            if (CursorPicker.ToScreen(camera, Chest(player), out Vector2 from) && CursorPicker.ToScreen(camera, Chest(body), out Vector2 to))
+            {
+                DrawLine(from, to, LinkColor, 1.5f);
+            }
+            if (_linkLeaders.Add(leader) && CursorPicker.ToScreen(camera, body.Position + Vector3.up * 2.5f, out Vector2 crown))
+            {
+                GUI.Label(new Rect(crown.x - 20f, crown.y - 20f, 40f, 40f), "♛", _marker);
+            }
+        }
+
+        Player dragged = picker.LinkFrom;
+        if (dragged != null && CursorPicker.ToScreen(camera, Chest(dragged), out Vector2 start))
+        {
+            Player over = picker.Hovered;
+            Vector2 end = Event.current.mousePosition;
+            if (over != null && over != dragged && CursorPicker.ToScreen(camera, Chest(over), out Vector2 target))
+            {
+                end = target;
+            }
+            DrawLine(start, end, LeaderColor, 2f);
+        }
+    }
+
+    private static Vector3 Chest(Player player) => player.Position + Vector3.up * 1.3f;
+
+    private static void DrawLine(Vector2 from, Vector2 to, Color color, float width)
+    {
+        Vector2 delta = to - from;
+        float length = delta.magnitude;
+        if (length < 1f)
+        {
+            return;
+        }
+        Matrix4x4 matrix = GUI.matrix;
+        GUIUtility.RotateAroundPivot(Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg, from);
+        FillRect(new Rect(from.x, from.y - width / 2f, length, width), color);
+        GUI.matrix = matrix;
     }
 
     private static void DrawBrackets(Camera camera, Player player, Color color, float thickness)

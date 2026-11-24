@@ -58,6 +58,9 @@ internal sealed class SpawnPanel
     public GroupPlan Group => Visible && _sub == GroupsTab && _groups.Armed ? _groups.Selected : null;
     public BotDifficulty? GroupDifficulty => _groups.Difficulty;
     public bool GroupReady => _groups.Ready;
+    public bool Linking => _groups.Linking;
+
+    public void StopLinking() => _groups.StopLinking();
     public WildSpawnType Role => _selected ?? WildSpawnType.assault;
     public string RoleName => _selectedName;
     public WildSpawnType? Chosen => _selected;

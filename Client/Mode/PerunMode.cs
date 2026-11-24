@@ -92,6 +92,38 @@ internal sealed class PerunMode
         Picker.IsPlacing = IsPlacing;
         Picker.ScreenClickHandler = ClickOnScreen;
         Picker.OrderHandler = IssueOrder;
+        Picker.IsLinking = () => Hud?.Spawn.Linking == true;
+        Picker.LinkHandler = LinkUnits;
+        Picker.UnlinkHandler = UnlinkUnit;
+    }
+
+    private void UnlinkUnit(Player unit)
+    {
+        BotOwner member = unit.AIData?.BotOwner;
+        if (member == null || Bots.IsProtected(unit))
+        {
+            return;
+        }
+        string error = GroupLeadership.Separate(member);
+        Notify(error == null ? $"{unit.Profile?.Nickname} leaves its group" : $"{unit.Profile?.Nickname} stays: {error}");
+    }
+
+    private void LinkUnits(Player from, Player to)
+    {
+        BotOwner member = from.AIData?.BotOwner;
+        BotOwner target = to.AIData?.BotOwner;
+        if (member == null || target == null || Bots.IsProtected(from) || Bots.IsProtected(to))
+        {
+            Notify("Only bots can be linked");
+            return;
+        }
+        string error = GroupLeadership.Join(member, target, out BotOwner leader);
+        if (error != null)
+        {
+            Notify($"Can't link: {error}");
+            return;
+        }
+        Notify($"{from.Profile?.Nickname} follows {leader.Profile?.Nickname}");
     }
 
     private void ToggleHud()
@@ -1167,6 +1199,7 @@ internal sealed class PerunMode
         }
         ShowCursor(false);
         Picker.Reset();
+        Hud?.Spawn.StopLinking();
 
         _graceUntil = _dead ? -1f : Time.time + GraceSeconds;
         _dead = false;

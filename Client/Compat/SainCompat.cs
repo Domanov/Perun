@@ -77,6 +77,61 @@ internal static class SainCompat
     // joins and after the leader dies; for Perun's groups the leader Perun chose is put back.
     private static void AssignLeaderPostfix(object __instance) => Redirect(__instance);
 
+    private static MethodInfo _addMember;
+    private static PropertyInfo _enemyController;
+    private static MethodInfo _removeEnemy;
+
+    // SAIN keeps its own enemy list per bot and drops an entry only when the bot's original BotsGroup removes that enemy,
+    // so a bot moved into a group it used to fight keeps shooting its new squad.
+    public static void ForgetEnemy(EFT.BotOwner bot, EFT.Player enemy)
+    {
+        object component = ComponentOf(bot);
+        if (component == null)
+        {
+            return;
+        }
+        try
+        {
+            _enemyController ??= AccessTools.Property(_componentType, "EnemyController");
+            object controller = _enemyController?.GetValue(component);
+            if (controller == null)
+            {
+                return;
+            }
+            _removeEnemy ??= AccessTools.Method(controller.GetType(), "RemoveEnemy", new[] { typeof(string) });
+            _removeEnemy?.Invoke(controller, new object[] { enemy.ProfileId });
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"SAIN: couldn't clear {enemy.Profile?.Nickname} from {bot.Profile?.Nickname}'s enemies: {ex.GetBaseException().Message}");
+        }
+    }
+
+    // SAIN moves a bot that leaves a BotsGroup to its new group's squad but doesn't add it as a member there.
+    public static void JoinSquad(EFT.BotOwner bot)
+    {
+        if (_assignLeader == null)
+        {
+            return;
+        }
+        try
+        {
+            object component = ComponentOf(bot);
+            object container = component != null ? _botSquad.GetValue(component) : null;
+            object squad = container != null ? _squadInfo.GetValue(container) : null;
+            if (squad == null || _squadMembers.GetValue(squad) is not System.Collections.IDictionary members || members.Contains(bot.ProfileId))
+            {
+                return;
+            }
+            _addMember ??= AccessTools.Method(squad.GetType(), "AddMember", new[] { _componentType });
+            _addMember?.Invoke(squad, new[] { component });
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"SAIN: couldn't add {bot.Profile?.Nickname} to its new squad: {ex.GetBaseException().Message}");
+        }
+    }
+
     public static void MatchLeader(EFT.BotOwner leader)
     {
         if (_assignLeader == null)

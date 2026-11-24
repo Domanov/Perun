@@ -271,6 +271,14 @@ internal static partial class SpawnService
         return NavMesh.SamplePosition(candidate, out NavMeshHit hit, 1.5f, NavMesh.AllAreas) ? hit.position : point;
     }
 
+    // A bot taken out of its group in the link view gets a group of its own, set up like a fresh spawn's.
+    public static BotsGroup LoneGroup(BotOwner bot)
+    {
+        BotSpawner spawner = Singleton<IBotGame>.Instantiated ? Singleton<IBotGame>.Instance.BotsController?.BotSpawner : null;
+        BotZone zone = bot.BotsGroup?.BotZone;
+        return spawner != null && zone != null ? NewGroup(spawner, bot, zone, 1) : null;
+    }
+
     // Mirrors the boss branch of BotSpawner.GetGroupAndSetEnemies, but always makes a fresh group so a Perun group
     // never merges into a map group of the same side and role.
     private static BotsGroup NewGroup(BotSpawner spawner, BotOwner bot, BotZone zone, int members)
