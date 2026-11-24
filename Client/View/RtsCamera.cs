@@ -135,7 +135,9 @@ internal sealed class RtsCamera
         }
 
         bool fast = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-        float speed = (6f + _targetDistance * 0.9f) * Plugin.PanSpeed.Value * (fast ? 3f : 1f);
+        // From the distance the camera really is at: collision can pull it far inside the wanted zoom, where panning at the
+        // wanted zoom's speed races across the view.
+        float speed = (6f + _collisionDistance * 0.9f) * Plugin.PanSpeed.Value * (fast ? 3f : 1f);
         _targetPivot += (forward * move.y + right * move.x) * (speed * dt);
 
         float rotate = 0f;
