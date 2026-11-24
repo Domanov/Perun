@@ -15,6 +15,7 @@ internal sealed class MoveOrder
     public float BestDistance = float.MaxValue;
     public float LastProgressAt;
     public int Repaths;
+    public readonly HashSet<BotOwner> Escorted = new();
 }
 
 internal static class OrderService
@@ -23,6 +24,8 @@ internal static class OrderService
     private const float PruneInterval = 0.5f;
 
     private static readonly Dictionary<BotOwner, MoveOrder> Orders = new();
+    // A leader's finished order, kept for his followers still on their way to their places (EscortLayer).
+    private static readonly Dictionary<BotOwner, MoveOrder> Escorts = new();
     private static readonly List<BotOwner> Gone = new();
     private static GameWorld _world;
     private static float _nextPrune;
@@ -77,6 +80,12 @@ internal static class OrderService
         return false;
     }
 
+    public static bool TryGetEscort(BotOwner leader, out MoveOrder order)
+    {
+        order = null;
+        return leader != null && (Orders.TryGetValue(leader, out order) || Escorts.TryGetValue(leader, out order));
+    }
+
     public static int Move(IList<Player> units, Vector3 point, bool run, bool forced)
     {
         CheckWorld();
@@ -97,6 +106,7 @@ internal static class OrderService
             {
                 Units.StandByGuard.Hold(bots[i]);
             }
+            Escorts.Remove(bots[i]);
             Orders[bots[i]] = new MoveOrder
             {
                 Destination = Slot(point, i),
@@ -119,6 +129,10 @@ internal static class OrderService
         foreach (Player unit in units)
         {
             BotOwner bot = unit != null ? unit.AIData?.BotOwner : null;
+            if (bot != null)
+            {
+                Escorts.Remove(bot);
+            }
             if (bot != null && Orders.Remove(bot))
             {
                 Units.StandByGuard.Release(bot);
@@ -131,8 +145,9 @@ internal static class OrderService
 
     public static void Complete(BotOwner bot)
     {
-        if (bot != null && Orders.Remove(bot))
+        if (bot != null && Orders.Remove(bot, out MoveOrder order))
         {
+            Escorts[bot] = order;
             Units.StandByGuard.Release(bot);
         }
     }
@@ -144,6 +159,7 @@ internal static class OrderService
             Units.StandByGuard.Release(bot);
         }
         Orders.Clear();
+        Escorts.Clear();
     }
 
     private static void CheckWorld()
@@ -153,6 +169,7 @@ internal static class OrderService
         {
             _world = world;
             Orders.Clear();
+            Escorts.Clear();
             Units.StandByGuard.Clear();
             return;
         }
@@ -165,9 +182,17 @@ internal static class OrderService
                 Gone.Add(bot);
             }
         }
+        foreach (BotOwner bot in Escorts.Keys)
+        {
+            if (bot == null || bot.IsDead || !IsAlive(bot.GetPlayer))
+            {
+                Gone.Add(bot);
+            }
+        }
         foreach (BotOwner bot in Gone)
         {
             Orders.Remove(bot);
+            Escorts.Remove(bot);
             Units.StandByGuard.Release(bot);
         }
     }

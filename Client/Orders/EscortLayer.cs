@@ -8,7 +8,7 @@ using UnityEngine.AI;
 namespace Perun.Client.Orders;
 
 // The game's follower patrol tracks the boss's patrol route, not where a Perun order walks him, so while the leader
-// has an order his followers escort him to it.
+// has an order his followers escort him to it, and once he arrives each follower still finishes the walk to its place.
 public class PerunEscortLayer : CustomLayer
 {
     public const int LayerPriority = PerunOrderLayer.LayerPriority - 1;
@@ -26,7 +26,15 @@ public class PerunEscortLayer : CustomLayer
             return false;
         }
         BotOwner leader = Bots.LeaderOf(BotOwner);
-        return leader != null && OrderService.TryGet(leader, out MoveOrder order) && (order.Forced || !PerunOrderLayer.InCombat(BotOwner));
+        if (!OrderService.TryGetEscort(leader, out MoveOrder order))
+        {
+            return false;
+        }
+        if (order.Escorted.Contains(BotOwner) && !OrderService.TryGet(leader, out _))
+        {
+            return false;
+        }
+        return order.Forced || !PerunOrderLayer.InCombat(BotOwner);
     }
 
     public override Action GetNextAction() => new(typeof(PerunEscortLogic), "Perun escort");
@@ -56,6 +64,7 @@ public class PerunEscortLogic : CustomLogic
     private const int MaxRepaths = 4;
     private const float EyeHeight = 1.4f;
 
+    private MoveOrder _order;
     private Vector3 _destination;
     private Vector3 _target;
     private Vector3 _heading = Vector3.forward;
@@ -84,21 +93,21 @@ public class PerunEscortLogic : CustomLogic
     public override void Update(CustomLayer.ActionData data)
     {
         BotOwner leader = Bots.LeaderOf(BotOwner);
-        if (leader == null || !OrderService.TryGet(leader, out MoveOrder order))
+        if (!OrderService.TryGetEscort(leader, out MoveOrder order))
         {
             return;
         }
 
-        if (!_planned || order.Destination != _destination)
+        if (!_planned || order != _order)
         {
+            _order = order;
             Plan(leader, order.Destination);
         }
 
         float left = Flat(_target - BotOwner.Position);
         if (!_arrived && left < Arrive)
         {
-            _arrived = true;
-            BotOwner.Mover.Stop();
+            Arrived();
         }
         if (_arrived)
         {
@@ -164,13 +173,19 @@ public class PerunEscortLogic : CustomLogic
         if (++_repaths > MaxRepaths)
         {
             Plugin.Log.LogWarning($"Escort: {BotOwner.Profile.Nickname} can't reach its place near {_destination}, waiting");
-            _arrived = true;
-            BotOwner.Mover.Stop();
+            Arrived();
             return false;
         }
         _progressAt = now;
         Go();
         return true;
+    }
+
+    private void Arrived()
+    {
+        _arrived = true;
+        _order.Escorted.Add(BotOwner);
+        BotOwner.Mover.Stop();
     }
 
     private void Go() => BotOwner.GoToPoint(_target, true, Arrive * 0.8f, false, false);

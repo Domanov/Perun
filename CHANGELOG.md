@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Followers keep walking to their places in the wedge after their leader arrives. Before, a follower still on the way (one that started behind him, or went round an obstacle) dropped back to the game's own follower behaviour the moment the leader reached the destination.
+
 ## 0.13.1 (2026-11-24)
 - Groups: LINK LEADERS (Units › GROUPS) shows a line from every bot to its leader. Drag from a bot onto another and the second one leads the first: the bot leaves its old group (its followers get a new leader) and joins the new one, with SAIN's squad too. Dropping on a follower joins that follower's leader; dropping on the ground takes the bot out of its group into one of its own. Host and single player.
 - Units: several bots spawned at once from the BOTS list now form one group under one leader once they're active: a boss if there is one, else the bot the game made boss, else the best equipped. Before, the game linked only bots whose roles suit each other, so 4 scavs could end up as two pairs.
