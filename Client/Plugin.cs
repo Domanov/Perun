@@ -19,7 +19,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string Guid = "com.dmnv.perun";
     public const string Name = "DMNV-Perun";
-    public const string Version = "0.13.1";
+    public const string Version = "0.13.2";
 
     internal static ManualLogSource Log;
 

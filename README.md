@@ -6,7 +6,7 @@ ZEUS (game master) mode for Tushonka.
 |---|---|
 | GUID | `com.dmnv.perun` |
 | Plugin | `DMNV-Perun` |
-| Version | 0.13.1 |
+| Version | 0.13.2 |
 | SPT | 4.1.x (client, BepInEx plugin) |
 | Fika | host only |
 | License | MIT |
@@ -38,7 +38,7 @@ Checked with:
 1. Download `DMNV-Perun-<version>.zip` from Releases. The same zip works in single player and in Fika: it also has the Fika bridge, which stays off without Fika.
 2. Extract it into your SPT folder (the one with `EscapeFromTarkov.exe`). You should get `BepInEx\plugins\DMNV-Perun\Perun.Client.dll`.
 3. Install BigBrain if you don't have it.
-4. Start the game. `BepInEx\LogOutput.log` shows `DMNV-Perun 0.13.1 loaded`.
+4. Start the game. `BepInEx\LogOutput.log` shows `DMNV-Perun 0.13.2 loaded`.
 
 To uninstall, delete `BepInEx\plugins\DMNV-Perun\`. Saved weather lives in `BepInEx\config\com.dmnv.perun.weather.json`, saved loadouts in `BepInEx\config\com.dmnv.perun.loadouts.json`, and settings in `BepInEx\config\com.dmnv.perun.cfg`.
 
