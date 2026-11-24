@@ -98,7 +98,7 @@ public class Plugin : BaseUnityPlugin
         _gui.Hud = _hud;
         UpdateGui();
 
-        Reflect.Check(typeof(Takeover), typeof(ControlScreenEffects), typeof(WorldPause), typeof(Compat.Animators), typeof(Units.Teleporting));
+        Reflect.Check(typeof(Takeover), typeof(ControlScreenEffects), typeof(ControlAudio), typeof(WorldPause), typeof(Compat.Animators), typeof(Units.Teleporting));
         Log.LogInfo($"{Name} {Version} loaded");
     }
 

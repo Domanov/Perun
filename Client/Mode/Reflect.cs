@@ -10,6 +10,7 @@ internal enum Feature
 {
     Control,
     ControlScreenEffects,
+    ControlAudio,
     PausedClock,
     SmoothieControl,
     TeleportHold
@@ -27,6 +28,7 @@ internal static class Reflect
     {
         [Feature.Control] = "taking control of bots is switched off",
         [Feature.ControlScreenEffects] = "pain, bleeding and death effects and ear ringing may carry over between you and a controlled bot",
+        [Feature.ControlAudio] = "a controlled bot may hear its own steps and other sounds muffled, as if from where your character stood",
         [Feature.PausedClock] = "the raid timer keeps running during a world pause",
         [Feature.SmoothieControl] = "with Smoothie installed, a controlled bot's hands may freeze",
         [Feature.TeleportHold] = "teleported bots may walk back towards their old spot"

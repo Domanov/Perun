@@ -140,8 +140,7 @@ internal sealed class Takeover
             }
             _weapon.Schedule(bot, WeaponSwitchDelay);
             _mainOwner.Mute(true);
-            main.IsYourPlayer = false;
-            bot.IsYourPlayer = true;
+            ControlAudio.SwitchYourPlayer(main, bot);
             bot.PointOfView = EPointOfView.FirstPerson;
             ControlAudio.MatchSteps(bot);
             bot.ChangeSpeed(1f);
@@ -301,17 +300,7 @@ internal sealed class Takeover
         _botOwner = null;
         _mainOwner = null;
 
-        Step("hand 'your player' back", true, () =>
-        {
-            if (bot != null)
-            {
-                bot.IsYourPlayer = false;
-            }
-            if (main != null)
-            {
-                main.IsYourPlayer = true;
-            }
-        });
+        Step("hand 'your player' back", true, () => ControlAudio.SwitchYourPlayer(bot, main));
 
         Step("stop the bot's controls", true, () =>
         {
