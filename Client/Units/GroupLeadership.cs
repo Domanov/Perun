@@ -12,6 +12,20 @@ namespace Perun.Client.Units;
 // follower of the dead boss's own role, so Perun picks the successor for its groups.
 internal static class GroupLeadership
 {
+    private const string LabelNotLivingBots = "both units must be living bots";
+    private const string LabelNotActive = "both bots must be active";
+    private const string LabelNotLivingActiveBot = "it must be a living, active bot";
+    private const string LabelAlreadyAlone = "it is already on its own";
+    private const string LabelNoBotSystem = "no bot system in this raid";
+    private const string LabelLeaderDied = "leader died";
+    private const string LabelLeaderLeft = "leader left";
+
+    private const string FieldOnFollowerStatusChange = "OnFollowerStatusChange";
+    private const string FieldHaveGoodCovers = "HaveGoodCovers";
+    private const string FieldFollowersPositions = "_followersPositions";
+
+    private const string MatchBossWithStayFollowers = "BossWithStayFollowersPosition";
+
     private const float AttachTimeout = 30f;
 
     internal sealed class Handle
@@ -36,7 +50,7 @@ internal static class GroupLeadership
     }
 
     private static readonly AccessTools.FieldRef<BotBoss, Action<BotOwner, FollowerStatusChange>> StatusChange =
-        AccessTools.FieldRefAccess<BotBoss, Action<BotOwner, FollowerStatusChange>>("OnFollowerStatusChange");
+        AccessTools.FieldRefAccess<BotBoss, Action<BotOwner, FollowerStatusChange>>(FieldOnFollowerStatusChange);
 
     private static readonly System.Reflection.MethodInfo SetBotsGroup = AccessTools.PropertySetter(typeof(BotOwner), nameof(BotOwner.BotsGroup));
 
@@ -156,7 +170,7 @@ internal static class GroupLeadership
             {
                 try
                 {
-                    Promote(handle, "leader died");
+                    Promote(handle, LabelLeaderDied);
                 }
                 catch (Exception ex)
                 {
@@ -173,11 +187,11 @@ internal static class GroupLeadership
         leader = null;
         if (!Alive(member) || !Alive(target) || member == target)
         {
-            return "both units must be living bots";
+            return LabelNotLivingBots;
         }
         if (member.BotState != EBotState.Active || target.BotState != EBotState.Active)
         {
-            return "both bots must be active";
+            return LabelNotActive;
         }
 
         leader = Bots.LeaderOf(target) ?? target;
@@ -243,17 +257,17 @@ internal static class GroupLeadership
     {
         if (!Alive(member) || member.BotState != EBotState.Active)
         {
-            return "it must be a living, active bot";
+            return LabelNotLivingActiveBot;
         }
         if (member.BotsGroup == null || (member.BotsGroup.MembersCount <= 1 && Bots.LeaderOf(member) == null))
         {
-            return "it is already on its own";
+            return LabelAlreadyAlone;
         }
 
         BotsGroup group = SpawnService.LoneGroup(member);
         if (group == null)
         {
-            return "no bot system in this raid";
+            return LabelNoBotSystem;
         }
         MoveGroup(member, group);
         Leave(member);
@@ -316,7 +330,7 @@ internal static class GroupLeadership
                 old.Members.Add(follower);
             }
         }
-        Promote(old, "leader left");
+        Promote(old, LabelLeaderLeft);
         return old.Leader;
     }
 
@@ -490,7 +504,7 @@ internal static class GroupLeadership
             return;
         }
         Type type = logic.GetType();
-        while (type != null && !type.Name.StartsWith("BossWithStayFollowersPosition", StringComparison.Ordinal))
+        while (type != null && !type.Name.StartsWith(MatchBossWithStayFollowers, StringComparison.Ordinal))
         {
             type = type.BaseType;
         }
@@ -499,8 +513,8 @@ internal static class GroupLeadership
             return;
         }
         const BindingFlags fields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        if (type.GetField("HaveGoodCovers", fields)?.GetValue(logic) is IDictionary covers
-            && type.GetField("_followersPositions", fields)?.GetValue(logic) is IDictionary positions
+        if (type.GetField(FieldHaveGoodCovers, fields)?.GetValue(logic) is IDictionary covers
+            && type.GetField(FieldFollowersPositions, fields)?.GetValue(logic) is IDictionary positions
             && covers.Contains(member) && !positions.Contains(member))
         {
             covers.Remove(member);

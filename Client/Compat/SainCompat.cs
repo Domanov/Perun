@@ -9,28 +9,59 @@ namespace Perun.Client.Compat;
 
 internal static class SainCompat
 {
-    public const string PluginGuid = "me.sol.sain";
-    private const string BotComponentType = "SAIN.Components.BotComponent";
+    public const string GuidSain = "me.sol.sain";
+
+    private const string TypeBotComponent = "SAIN.Components.BotComponent";
+    private const string TypeSquad = "SAIN.BotController.Classes.Squad";
+    private const string TypePlayerComponent = "SAIN.Components.PlayerComponentSpace.PlayerComponent";
+
+    private const string MethodManualUpdate = "ManualUpdate";
+    private const string MethodAssignSquadLeader = "assignSquadLeader";
+    private const string MethodIsPlayerAnEnemy = "IsPlayerAnEnemy";
+    private const string MethodRemoveEnemy = "RemoveEnemy";
+    private const string MethodAddMember = "AddMember";
+    private const string MethodGetAllWeapons = "getAllWeapons";
+    private const string MethodReCalcPowerOfEquipment = "ReCalcPowerOfEquipment";
+    private const string MethodDispose = "Dispose";
+
+    private const string PropertyBotsGroup = "BotsGroup";
+    private const string PropertyLeaderComponent = "LeaderComponent";
+    private const string PropertyMembers = "Members";
+    private const string PropertySquad = "Squad";
+    private const string PropertySquadInfo = "SquadInfo";
+    private const string PropertyBotOwner = "BotOwner";
+    private const string PropertyEnemyController = "EnemyController";
+    private const string PropertyBotStuck = "BotStuck";
+    private const string PropertyEquipment = "Equipment";
+    private const string PropertyWeaponInfos = "WeaponInfos";
+    private const string PropertyWeapon = "Weapon";
+
+    private const string FieldDontUnstuckMe = "DontUnstuckMe";
+    private const string FieldBotUnstuckCoroutine = "_botUnstuckCoroutine";
+
+    private const string HarmonySain = ".sain";
+
+    private const string DumpNoComponent = "no SAIN component";
 
     public static void Enable()
     {
-        if (!Chainloader.PluginInfos.ContainsKey(PluginGuid))
+        if (!Chainloader.PluginInfos.ContainsKey(GuidSain))
         {
             return;
         }
 
         try
         {
-            Type component = AccessTools.TypeByName(BotComponentType);
+            Type component = AccessTools.TypeByName(TypeBotComponent);
             _componentType = component;
-            MethodInfo update = component != null ? AccessTools.Method(component, "ManualUpdate", new[] { typeof(float), typeof(float) }) : null;
+            MethodInfo update = component != null ? AccessTools.Method(component, MethodManualUpdate, new[] { typeof(float), typeof(float) }) : null;
             if (update == null)
             {
                 Plugin.Log.LogWarning("SAIN found but its bot update isn't; SAIN bots may keep acting during a pause");
                 return;
             }
 
-            Harmony harmony = new(Plugin.Guid + ".sain");
+            Harmony harmony = new(Plugin.Guid + HarmonySain);
             harmony.Patch(update, prefix: new HarmonyMethod(typeof(SainCompat), nameof(UpdatePrefix)));
             Plugin.Log.LogInfo("SAIN: bots pause with the world");
             HookSquadLeader(harmony);
@@ -54,14 +85,14 @@ internal static class SainCompat
 
     private static void HookSquadLeader(Harmony harmony)
     {
-        Type squad = AccessTools.TypeByName("SAIN.BotController.Classes.Squad");
-        MethodInfo assign = squad != null ? AccessTools.Method(squad, "assignSquadLeader") : null;
-        _squadBotsGroup = squad != null ? AccessTools.Property(squad, "BotsGroup") : null;
-        _squadLeader = squad != null ? AccessTools.Property(squad, "LeaderComponent") : null;
-        _squadMembers = squad != null ? AccessTools.Property(squad, "Members") : null;
-        _botSquad = AccessTools.Property(_componentType, "Squad");
-        _squadInfo = _botSquad != null ? AccessTools.Property(_botSquad.PropertyType, "SquadInfo") : null;
-        _componentBotOwner = AccessTools.Property(_componentType, "BotOwner");
+        Type squad = AccessTools.TypeByName(TypeSquad);
+        MethodInfo assign = squad != null ? AccessTools.Method(squad, MethodAssignSquadLeader) : null;
+        _squadBotsGroup = squad != null ? AccessTools.Property(squad, PropertyBotsGroup) : null;
+        _squadLeader = squad != null ? AccessTools.Property(squad, PropertyLeaderComponent) : null;
+        _squadMembers = squad != null ? AccessTools.Property(squad, PropertyMembers) : null;
+        _botSquad = AccessTools.Property(_componentType, PropertySquad);
+        _squadInfo = _botSquad != null ? AccessTools.Property(_botSquad.PropertyType, PropertySquadInfo) : null;
+        _componentBotOwner = AccessTools.Property(_componentType, PropertyBotOwner);
         if (assign == null || _squadBotsGroup == null || _squadLeader == null || _squadMembers == null || _squadInfo == null || _componentBotOwner == null)
         {
             Plugin.Log.LogWarning("SAIN: its squad leader wasn't found; SAIN may lead Perun's groups with another member");
@@ -93,14 +124,14 @@ internal static class SainCompat
         }
         try
         {
-            _enemyController ??= AccessTools.Property(_componentType, "EnemyController");
+            _enemyController ??= AccessTools.Property(_componentType, PropertyEnemyController);
             object controller = _enemyController?.GetValue(component);
             if (controller == null)
             {
                 return false;
             }
-            _isEnemy ??= AccessTools.Method(controller.GetType(), "IsPlayerAnEnemy", new[] { typeof(string) });
-            _removeEnemy ??= AccessTools.Method(controller.GetType(), "RemoveEnemy", new[] { typeof(string) });
+            _isEnemy ??= AccessTools.Method(controller.GetType(), MethodIsPlayerAnEnemy, new[] { typeof(string) });
+            _removeEnemy ??= AccessTools.Method(controller.GetType(), MethodRemoveEnemy, new[] { typeof(string) });
             object[] args = { enemy.ProfileId };
             if (_isEnemy == null || _removeEnemy == null || !(bool)_isEnemy.Invoke(controller, args))
             {
@@ -132,7 +163,7 @@ internal static class SainCompat
             {
                 return;
             }
-            _addMember ??= AccessTools.Method(squad.GetType(), "AddMember", new[] { _componentType });
+            _addMember ??= AccessTools.Method(squad.GetType(), MethodAddMember, new[] { _componentType });
             _addMember?.Invoke(squad, new[] { component });
         }
         catch (Exception ex)
@@ -245,10 +276,10 @@ internal static class SainCompat
         if (!_unstuckResolved)
         {
             _unstuckResolved = true;
-            _stuckProperty = AccessTools.Property(_componentType, "BotStuck");
+            _stuckProperty = AccessTools.Property(_componentType, PropertyBotStuck);
             Type stuckType = _stuckProperty?.PropertyType;
-            _dontUnstuckField = stuckType != null ? AccessTools.Field(stuckType, "DontUnstuckMe") : null;
-            _unstuckCoroutineField = stuckType != null ? AccessTools.Field(stuckType, "_botUnstuckCoroutine") : null;
+            _dontUnstuckField = stuckType != null ? AccessTools.Field(stuckType, FieldDontUnstuckMe) : null;
+            _unstuckCoroutineField = stuckType != null ? AccessTools.Field(stuckType, FieldBotUnstuckCoroutine) : null;
             if (_dontUnstuckField == null || _unstuckCoroutineField == null)
             {
                 Plugin.Log.LogWarning("SAIN: unstuck not found, a controlled bot may get teleported by SAIN");
@@ -283,12 +314,12 @@ internal static class SainCompat
         if (!_weaponsResolved)
         {
             _weaponsResolved = true;
-            _playerComponentType = AccessTools.TypeByName("SAIN.Components.PlayerComponentSpace.PlayerComponent");
-            _equipmentProperty = _playerComponentType != null ? AccessTools.Property(_playerComponentType, "Equipment") : null;
+            _playerComponentType = AccessTools.TypeByName(TypePlayerComponent);
+            _equipmentProperty = _playerComponentType != null ? AccessTools.Property(_playerComponentType, PropertyEquipment) : null;
             Type equipment = _equipmentProperty?.PropertyType;
-            _weaponInfosProperty = equipment != null ? AccessTools.Property(equipment, "WeaponInfos") : null;
-            _getAllWeapons = equipment != null ? AccessTools.Method(equipment, "getAllWeapons") : null;
-            _recalcPower = equipment != null ? AccessTools.Method(equipment, "ReCalcPowerOfEquipment") : null;
+            _weaponInfosProperty = equipment != null ? AccessTools.Property(equipment, PropertyWeaponInfos) : null;
+            _getAllWeapons = equipment != null ? AccessTools.Method(equipment, MethodGetAllWeapons) : null;
+            _recalcPower = equipment != null ? AccessTools.Method(equipment, MethodReCalcPowerOfEquipment) : null;
             if (_weaponInfosProperty == null || _getAllWeapons == null)
             {
                 Plugin.Log.LogWarning("SAIN: its weapon list wasn't found, bots given new guns by the arsenal may keep switching weapons");
@@ -305,7 +336,7 @@ internal static class SainCompat
             object equipment = component != null ? _equipmentProperty.GetValue(component) : null;
             if (equipment == null)
             {
-                return "no SAIN component";
+                return DumpNoComponent;
             }
             // getAllWeapons replaces an entry whose slot holds a different gun but never drops one whose slot is now
             // empty. SAIN's distance-based weapon choice then keeps asking for the removed gun (it still has a round
@@ -317,7 +348,7 @@ internal static class SainCompat
                 List<object> stale = new();
                 foreach (System.Collections.DictionaryEntry entry in infos)
                 {
-                    object held = entry.Value != null ? AccessTools.Property(entry.Value.GetType(), "Weapon")?.GetValue(entry.Value) : null;
+                    object held = entry.Value != null ? AccessTools.Property(entry.Value.GetType(), PropertyWeapon)?.GetValue(entry.Value) : null;
                     object inSlot = gear?.GetSlot((EFT.InventoryLogic.EquipmentSlot)entry.Key)?.ContainedItem;
                     if (held == null || !ReferenceEquals(held, inSlot))
                     {
@@ -329,7 +360,7 @@ internal static class SainCompat
                     object info = infos[slot];
                     if (info != null)
                     {
-                        AccessTools.Method(info.GetType(), "Dispose")?.Invoke(info, null);
+                        AccessTools.Method(info.GetType(), MethodDispose)?.Invoke(info, null);
                     }
                     infos.Remove(slot);
                     dropped++;
