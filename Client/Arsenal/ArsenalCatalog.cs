@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
+using static Perun.Client.Arsenal.Constants.ArsenalCatalog;
 
 namespace Perun.Client.Arsenal;
 
@@ -17,21 +18,6 @@ internal sealed class ArsenalEntry
 
 internal static class ArsenalCatalog
 {
-    private const string LabelWeapons = "Weapons";
-    private const string LabelMelee = "Melee";
-    private const string LabelGrenades = "Grenades";
-    private const string LabelMagazines = "Magazines";
-    private const string LabelAmmo = "Ammo";
-    private const string LabelArmor = "Armor";
-    private const string LabelHeadgear = "Headgear";
-    private const string LabelRigs = "Rigs";
-    private const string LabelBackpacks = "Backpacks";
-    private const string LabelMedical = "Medical";
-    private const string LabelFood = "Food";
-    private const string LabelKeys = "Keys";
-    private const string LabelMods = "Mods";
-    private const string LabelOther = "Other";
-
     public static readonly string[] CategoryNames =
     {
         LabelWeapons, LabelMelee, LabelGrenades, LabelMagazines, LabelAmmo, LabelArmor, LabelHeadgear, LabelRigs, LabelBackpacks, LabelMedical, LabelFood, LabelKeys, LabelMods, LabelOther

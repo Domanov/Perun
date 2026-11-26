@@ -1,3 +1,5 @@
+using static Perun.Client.Arsenal.Constants.ArsenalResult;
+
 #nullable enable
 namespace Perun.Client.Arsenal;
 
@@ -15,10 +17,6 @@ internal enum ArsenalStatus
 
 internal readonly struct ArsenalResult
 {
-    private const string LabelRaidEnded = "the raid ended";
-
-    private const string DumpOk = "ok";
-
     public static readonly ArsenalResult Ok = new(ArsenalStatus.Ok, "");
 
     public ArsenalResult(ArsenalStatus status, string message)

@@ -1,15 +1,12 @@
 using System;
 using UnityEngine;
 using UnityEngine.AI;
+using static Perun.Client.View.Constants.RtsCamera;
 
 namespace Perun.Client.View;
 
 internal sealed class RtsCamera
 {
-    private const string LayerTerrain = "Terrain";
-    private const string LayerHighPolyCollider = "HighPolyCollider";
-    private const string LayerLowPolyCollider = "LowPolyCollider";
-
     private const float MinPitch = 12f;
     private const float MaxPitch = 88f;
     private const float FloorStep = 3f;

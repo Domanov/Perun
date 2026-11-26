@@ -6,13 +6,12 @@ using HarmonyLib;
 using Perun.Client.Mode;
 using Perun.Client.Orders;
 using UnityEngine;
+using static Perun.Client.Units.Constants.Teleporting;
 
 namespace Perun.Client.Units;
 
 internal static class Teleporting
 {
-    private const string FieldPrevSuccessLinkedFrom = "_prevSuccessLinkedFrom";
-
     private static readonly FieldInfo LinkedFromField = Mode.Reflect.Field(Mode.Feature.TeleportHold, typeof(BotMover), FieldPrevSuccessLinkedFrom);
     private static readonly List<Player> Buffer = new();
 

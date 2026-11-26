@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Perun.Client.Arsenal.Constants.ContainerSwap;
 
 namespace Perun.Client.Arsenal;
 
@@ -29,12 +30,6 @@ internal sealed class SwapSteps<T>
 // failure other than "this item doesn't fit" puts the container back the way it was. Items that don't fit are skipped.
 internal static class ContainerSwap
 {
-    private const string LabelItemsLeftOut = "{0} item(s) didn't fit and were left out: {1}";
-    private const string LabelItemError = "{0} ({1})";
-    private const string LabelNewItemStayed = "{0} (new, stayed in the container)";
-    private const string LabelContentsKept = "{0}; contents left as they were";
-    private const string LabelContentsNotRestored = "{0}; contents not fully restored: {1}";
-
     public static async Task<ArsenalResult> Run<T>(IReadOnlyList<T> old, IReadOnlyList<T> fresh, SwapSteps<T> steps)
     {
         List<T> held = new();

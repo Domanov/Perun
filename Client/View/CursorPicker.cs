@@ -4,15 +4,12 @@ using Comfort.Common;
 using EFT;
 using UnityEngine;
 using UnityEngine.AI;
+using static Perun.Client.View.Constants.CursorPicker;
 
 namespace Perun.Client.View;
 
 internal sealed class CursorPicker
 {
-    private const string LayerTerrain = "Terrain";
-    private const string LayerHighPolyCollider = "HighPolyCollider";
-    private const string LayerLowPolyCollider = "LowPolyCollider";
-
     private const float PickRadius = 28f;
     private const float DragThreshold = 6f;
 

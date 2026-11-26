@@ -4,6 +4,7 @@ using EFT;
 using Perun.Client.Units;
 using UnityEngine;
 using UnityEngine.AI;
+using static Perun.Client.Orders.Constants.PerunEscortLayer;
 
 namespace Perun.Client.Orders;
 
@@ -11,11 +12,6 @@ namespace Perun.Client.Orders;
 // has an order his followers escort him to it, and once he arrives each follower still finishes the walk to its place.
 public class PerunEscortLayer : CustomLayer
 {
-    private const string BrainLayerEscort = "PerunEscort";
-    private const string BrainReasonEscort = "Perun escort";
-
-    private const string DumpEscortOf = "Perun escort of ";
-
     public const int LayerPriority = PerunOrderLayer.LayerPriority - 1;
 
     public PerunEscortLayer(BotOwner botOwner, int priority) : base(botOwner, priority)

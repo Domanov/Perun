@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EFT;
 using Perun.Client.Compat;
 using UnityEngine;
+using static Perun.Client.UI.Constants.BotKinds;
 
 namespace Perun.Client.UI;
 
@@ -23,13 +24,6 @@ internal enum BotKind
 
 internal static class BotKinds
 {
-    private const string MatchInfected = "infected";
-    private const string MatchSectant = "sectant";
-    private const string MatchSectantPriestEvent = "sectactPriestEvent";
-    private const string MatchFollower = "follower";
-    private const string MatchTagillaHelperAgro = "tagillaHelperAgro";
-    private const string MatchBoss = "boss";
-
     private static readonly Dictionary<int, BotKind> Cache = new();
     private static readonly string[] HexCache = new string[Enum.GetValues(typeof(BotKind)).Length];
 

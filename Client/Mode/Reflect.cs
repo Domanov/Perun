@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using static Perun.Client.Mode.Constants.Reflect;
 
 namespace Perun.Client.Mode;
 
@@ -22,13 +23,6 @@ internal enum Feature
 // Every lookup is registered under the feature that needs it, so Check() can report and switch off what a game update removed.
 internal static class Reflect
 {
-    private const string LabelNoControl = "taking control of bots is switched off";
-    private const string LabelEffectsCarryOver = "pain, bleeding and death effects and ear ringing may carry over between you and a controlled bot";
-    private const string LabelSoundsMuffled = "a controlled bot may hear its own steps and other sounds muffled, as if from where your character stood";
-    private const string LabelTimerRuns = "the raid timer keeps running during a world pause";
-    private const string LabelHandsFreeze = "with Smoothie installed, a controlled bot's hands may freeze";
-    private const string LabelTeleportWalkBack = "teleported bots may walk back towards their old spot";
-
     private static readonly Dictionary<Feature, List<string>> Missing = new();
 
     private static readonly Dictionary<Feature, string> Effects = new()

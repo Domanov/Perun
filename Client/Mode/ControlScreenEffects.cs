@@ -5,19 +5,12 @@ using System.Reflection;
 using EFT;
 using EFT.InventoryLogic;
 using UnityEngine;
+using static Perun.Client.Mode.Constants.ControlScreenEffects;
 
 namespace Perun.Client.Mode;
 
 internal static class ControlScreenEffects
 {
-    private const string FieldPlayer = "player";
-    private const string FieldDeathFade = "_deathFade";
-    private const string FieldBlur = "_blur";
-    private const string FieldEffectAccumulators = "_effectAccumulators";
-    private const string FieldBloodOnScreen = "_bloodOnScreen";
-    private const string FieldEyeBurn = "_eyeBurn";
-    private const string FieldStimulatorBuffs = "_stimulatorBuffs";
-
     private static readonly FieldInfo EffectsPlayerField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldPlayer);
 
     // In RTS mode the camera belongs to nobody, so no body's effects may reach it. The game hooks a controller to a

@@ -6,53 +6,12 @@ using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
 using UnityEngine;
+using static Perun.Client.Compat.Constants.SmoothieControl;
 
 namespace Perun.Client.Compat;
 
 internal static class SmoothieControl
 {
-    private const string TypeAnimatorThrottle = "Smoothie.AnimatorThrottle";
-    private const string TypeAnimatorPause = "Smoothie.AnimatorPause";
-    private const string TypeDistantDetail = "Smoothie.DistantDetail";
-    private const string TypeHandsCulling = "Smoothie.HandsCulling";
-    private const string TypeLodCulling = "Smoothie.LodCulling";
-    private const string TypeState = "State";
-
-    private const string MethodShowAll = "ShowAll";
-    private const string MethodBeforeLateUpdateSafe = "BeforeLateUpdateSafe";
-    private const string MethodTryGetValue = "TryGetValue";
-    private const string MethodRemove = "Remove";
-    private const string MethodFinishUnityStep = "FinishUnityStep";
-    private const string MethodGiveBack = "GiveBack";
-    private const string MethodRelease = "Release";
-    private const string MethodForget = "Forget";
-    private const string MethodAfterCullerChange = "AfterCullerChange";
-    private const string MethodApply = "Apply";
-
-    private const string FieldStates = "States";
-    private const string FieldBody = "Body";
-    private const string FieldArms = "Arms";
-    private const string FieldStepScale = "StepScale";
-    private const string FieldReleasing = "Releasing";
-    private const string FieldEntries = "Entries";
-
-    private const string DumpFullRate = "full-rate animation";
-    private const string DumpThrottleRelease = "throttle release";
-    private const string DumpPausedRelease = "paused animator release";
-    private const string DumpDistantDetail = "distant detail";
-    private const string DumpWeaponVisible = "weapon visible";
-    private const string DumpLodRefresh = "LOD refresh";
-
-    private const string LabelSlowedAnimator = "a controlled bot may keep a slowed animator for a moment after you take it";
-    private const string LabelFrozen = "a bot Smoothie had paused may stay frozen when you take it";
-    private const string LabelLowDetail = "a controlled bot far from your character may stay at low detail";
-    private const string LabelWeaponHidden = "a controlled bot's weapon may be hidden";
-    private const string LabelBuildingsHidden = "buildings may stay partly hidden after entering RTS mode until Smoothie's A/B switch is toggled";
-
-    private const string HarmonySmoothie = ".smoothie";
-
-    public const string GuidSmoothie = "com.tominocz.smoothie";
-
     private static bool _enabled;
     private static object _states;
     private static MethodInfo _statesTryGet;

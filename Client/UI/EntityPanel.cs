@@ -7,31 +7,12 @@ using Perun.Client.Mode;
 using Perun.Client.Orders;
 using Perun.Client.Units;
 using UnityEngine;
+using static Perun.Client.UI.Constants.EntityPanel;
 
 namespace Perun.Client.UI;
 
 internal sealed class EntityPanel
 {
-    private const string LabelPlayers = "Players";
-    private const string LabelUsec = "USEC";
-    private const string LabelBear = "BEAR";
-    private const string LabelScavs = "Scavs";
-    private const string LabelRaidersRogues = "Raiders & rogues";
-    private const string LabelBosses = "Bosses";
-    private const string LabelFollowers = "Followers";
-    private const string LabelCultists = "Cultists";
-    private const string LabelInfected = "Infected";
-    private const string LabelFactions = "Factions";
-    private const string LabelOther = "Other";
-    private const string LabelMine = "★ Mine";
-    private const string LabelNoPerunUnits = "No Perun units yet.";
-    private const string LabelNobodyHere = "Nobody here.";
-    private const string LabelHint = "Click select · Shift add · double-click fly to · Shift+click group selects all";
-    private const string LabelEntities = "ENTITIES  <color=#9fb4c8>{0}</color>";
-    private const string LabelYou = "  <color=#7f8a95>(you)</color>";
-
-    private const string MarkupColorOpen = "<color=";
-
     private const float Refresh = 0.5f;
     private const float DoubleClick = 0.35f;
 

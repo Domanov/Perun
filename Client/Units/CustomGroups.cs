@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using EFT;
 using Newtonsoft.Json;
+using static Perun.Client.Units.Constants.CustomGroups;
 
 namespace Perun.Client.Units;
 
@@ -22,19 +23,6 @@ internal sealed class SavedMember
 
 internal static class CustomGroups
 {
-    private const string FileGroups = "com.dmnv.perun.groups.json";
-    private const string FileBadSuffix = ".bad";
-
-    private const string LabelNeedMember = "Add at least one member";
-    private const string LabelTooManyGroups = "Too many saved groups ({0}); delete one first";
-    private const string LabelNeedName = "Give the group a name";
-    private const string LabelNameTooLong = "Name is longer than {0} characters";
-    private const string LabelNameTaken = "A group named \"{0}\" already exists";
-    private const string LabelGroupSkipped = "Group \"{0}\": unnamed or duplicate, skipped";
-    private const string LabelRoleSkipped = "Group \"{0}\": unknown role \"{1}\" skipped";
-    private const string LabelNoMembersSkipped = "Group \"{0}\": no members left, skipped";
-    private const string LabelCouldNotWrite = "Couldn't write {0}: {1}";
-
     public const int Limit = 64;
     public const int MaxNameLength = 32;
 

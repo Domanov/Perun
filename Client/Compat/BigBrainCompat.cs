@@ -3,17 +3,12 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Compat.Constants.BigBrainCompat;
 
 namespace Perun.Client.Compat;
 
 internal static class BigBrainCompat
 {
-    private const string MethodPatchPrefix = "PatchPrefix";
-
-    private const string HarmonyBigBrain = ".bigbrain";
-
-    private const string TypeAgentPatch = "DrakiaXYZ.BigBrain.Patches.BotAgentUpdatePatch";
-
     public static void Enable()
     {
         try

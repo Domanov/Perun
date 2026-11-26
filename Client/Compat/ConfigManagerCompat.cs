@@ -1,15 +1,12 @@
 using System;
 using System.Reflection;
 using BepInEx.Bootstrap;
+using static Perun.Client.Compat.Constants.ConfigManagerCompat;
 
 namespace Perun.Client.Compat;
 
 internal static class ConfigManagerCompat
 {
-    private const string PropertyDisplayingWindow = "DisplayingWindow";
-
-    private const string GuidConfigManager = "com.bepis.bepinex.configurationmanager";
-
     private static bool _resolved;
     private static Func<bool> _displaying;
 

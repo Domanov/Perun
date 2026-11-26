@@ -6,30 +6,12 @@ using Fika.Core.Networking.LiteNetLib;
 using Fika.Core.Networking.LiteNetLib.Utils;
 using Perun.Client;
 using UnityEngine;
+using static Perun.Fika.Constants.FikaBridge;
 
 namespace Perun.Fika;
 
 internal sealed class FikaBridge : IGameMasterLink
 {
-    private const string LabelNotConnected = "Perun hasn't finished connecting yet, try again";
-    private const string LabelNoPassword = "The headless host has no game master password set";
-    private const string LabelHostOnly = "Only the host can use Perun";
-    private const string LabelPasswordLocked = "Too many wrong passwords, wait {0} s";
-    private const string LabelWrongPassword = "Wrong game master password";
-    private const string LabelAlreadyGameMaster = "{0} is already the game master";
-    private const string LabelReasonDisconnected = "disconnected";
-    private const string LabelReasonLeftRts = "left RTS mode";
-    private const string LabelReasonRaidEnded = "raid ended";
-    private const string LabelReasonHostLost = "the connection to the host ended";
-
-    private const string DumpPause = "pause";
-    private const string DumpWeather = "weather";
-    private const string DumpTime = "time";
-    private const string DumpAnswer = "game master answer";
-    private const string DumpStatus = "status";
-    private const string DumpTeleport = "teleport";
-    private const string DumpHeal = "heal";
-
     private const DeliveryMethod Reliable = DeliveryMethod.ReliableOrdered;
     private const byte Protocol = 7;
     private const byte EnvironmentProtocol = 2;

@@ -4,19 +4,12 @@ using System.Threading.Tasks;
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
+using static Perun.Client.Arsenal.Constants.ArsenalCrate;
 
 namespace Perun.Client.Arsenal;
 
 internal static class ArsenalCrate
 {
-    private const string ObjectCrateGrid = "perunArsenalCrate";
-    private const string ObjectCrateController = "Perun arsenal crate";
-
-    private const string LabelUnknownItem = "unknown item";
-    private const string LabelNoItemFactory = "no item factory yet";
-    private const string LabelNoControlledUnit = "no controlled unit";
-    private const string LabelCouldNotAdd = "couldn't add it: ";
-
     private static Stash _stash;
     private static GameWorld _world;
     private static Grid _grid;

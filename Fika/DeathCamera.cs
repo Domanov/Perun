@@ -5,6 +5,7 @@ using Fika.Core.Main.FreeCamera;
 using UnityEngine;
 // The game has its own FreeCamera in the global namespace, which wins over a using directive.
 using FikaFreeCamera = Fika.Core.Main.FreeCamera.FreeCamera;
+using static Perun.Fika.Constants.DeathCamera;
 
 namespace Perun.Fika;
 
@@ -12,10 +13,6 @@ namespace Perun.Fika;
 // the extract message. RTS mode takes that camera, so they are paused and put back as they were when it ends.
 internal sealed class DeathCamera
 {
-    private const string FieldFreeCamScript = "_freeCamScript";
-    private const string FieldExtractText = "_extractText";
-    private const string FieldFreecamUI = "_freecamUI";
-
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
     private static readonly FieldInfo FreeCamField = typeof(FreeCameraController).GetField(FieldFreeCamScript, Private);

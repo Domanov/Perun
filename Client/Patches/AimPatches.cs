@@ -4,6 +4,8 @@ using HarmonyLib;
 using Perun.Client.Mode;
 using SPT.Reflection.Patching;
 using UnityEngine;
+using static Perun.Client.Patches.Constants.PossessedMalfunctionPatch;
+using static Perun.Client.Patches.Constants.PossessedGuard;
 
 namespace Perun.Client.Patches;
 
@@ -30,8 +32,6 @@ public class PossessedWeaponDirectionPatch : ModulePatch
 // and the check throws on every trigger pull (seen on Shturman), so the gun never fires. A player's weapon has no check.
 public class PossessedMalfunctionPatch : ModulePatch
 {
-    private const string FieldOwner = "_owner";
-
     private static readonly AccessTools.FieldRef<BotData, BotOwner> Owner = AccessTools.FieldRefAccess<BotData, BotOwner>(FieldOwner);
 
     protected override MethodBase GetTargetMethod() =>
@@ -102,22 +102,6 @@ public class PossessedRotatePatch : ModulePatch
 
 internal static class PossessedGuard
 {
-    private const string MatchSain = "SAIN";
-    private const string MatchBigBrain = "DrakiaXYZ";
-    private const string MatchOrbit = "Orbit";
-    private const string MatchBot = "Bot";
-    private const string MatchAiCore = "AICore";
-    private const string MatchAiming = "Aiming";
-    private const string MatchStandartBotBrain = "StandartBotBrain";
-
-    public const string DumpMove = "move";
-    public const string DumpPose = "pose";
-    public const string DumpProne = "prone";
-    public const string DumpSprint = "sprint";
-    public const string DumpJump = "jump";
-    public const string DumpAim = "aim";
-    public const string DumpTrigger = "trigger";
-
     private static readonly System.Collections.Generic.HashSet<string> Logged = new();
 
     public static bool AllowHands(Player.FirearmController hands, string action)
@@ -169,7 +153,7 @@ public class PossessedMovePatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.Move), new[] { typeof(Vector2) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpMove);
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, Constants.PossessedGuard.DumpMove);
 }
 
 public class PossessedPosePatch : ModulePatch
@@ -177,7 +161,7 @@ public class PossessedPosePatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.ChangePose), new[] { typeof(float) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpPose);
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, Constants.PossessedGuard.DumpPose);
 }
 
 public class PossessedPronePatch : ModulePatch
@@ -185,7 +169,7 @@ public class PossessedPronePatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.ToggleProne));
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpProne);
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, Constants.PossessedGuard.DumpProne);
 }
 
 public class PossessedSprintPatch : ModulePatch
@@ -193,7 +177,7 @@ public class PossessedSprintPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.EnableSprint), new[] { typeof(bool) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpSprint);
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, Constants.PossessedGuard.DumpSprint);
 }
 
 public class PossessedJumpPatch : ModulePatch
@@ -201,7 +185,7 @@ public class PossessedJumpPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.Jump));
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpJump);
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, Constants.PossessedGuard.DumpJump);
 }
 
 public class PossessedAimPatch : ModulePatch
@@ -209,7 +193,7 @@ public class PossessedAimPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player.FirearmController), nameof(Player.FirearmController.SetAim), new[] { typeof(bool) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, PossessedGuard.DumpAim);
+    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, Constants.PossessedGuard.DumpAim);
 }
 
 public class PossessedTriggerPatch : ModulePatch
@@ -217,7 +201,7 @@ public class PossessedTriggerPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player.FirearmController), nameof(Player.FirearmController.SetTriggerPressed), new[] { typeof(bool) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, PossessedGuard.DumpTrigger);
+    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, Constants.PossessedGuard.DumpTrigger);
 }
 
 public class KeepCameraPatch : ModulePatch

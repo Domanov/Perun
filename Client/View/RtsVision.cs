@@ -3,22 +3,12 @@ using EFT.CameraControl;
 using EFT.InventoryLogic;
 using UnityEngine;
 using NightVisionEffect = BSG.CameraEffects.NightVision;
+using static Perun.Client.View.Constants.RtsVision;
 
 namespace Perun.Client.View;
 
 internal static class RtsVision
 {
-    private const string LabelGreen = "green";
-    private const string LabelWhite = "white";
-    private const string LabelAmber = "amber";
-    private const string LabelBlackHot = "black hot";
-    private const string LabelWhiteHot = "white hot";
-    private const string LabelFusion = "fusion";
-    private const string LabelRainbow = "rainbow";
-    private const string LabelVisionOff = "VISION  OFF";
-    private const string LabelNvg = "NVG  ";
-    private const string LabelThermal = "THERMAL  ";
-
     private static readonly (string name, Color color)[] NightModes =
     {
         (LabelGreen, new Color(0.32f, 1f, 0.35f)),

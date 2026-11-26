@@ -9,6 +9,7 @@ using EFT;
 using Perun.Client.Mode;
 using UnityEngine;
 using UnityEngine.AI;
+using static Perun.Client.Units.Constants.SpawnService;
 
 namespace Perun.Client.Units;
 

@@ -9,6 +9,7 @@ using EFT.InventoryLogic;
 using JsonType;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static Perun.Client.Arsenal.Constants.Loadouts;
 
 namespace Perun.Client.Arsenal;
 
@@ -47,24 +48,6 @@ internal sealed class ContentItem
 
 internal static class Loadouts
 {
-    private const string FileLoadouts = "com.dmnv.perun.loadouts.json";
-
-    private const string JsonX = "x";
-    private const string JsonY = "y";
-    private const string JsonRotation = "r";
-
-    private const string LabelNoLoadout = "no loadout";
-    private const string LabelContainerGone = "the container is gone";
-    private const string LabelProgressGear = "{0}: loading gear";
-    private const string LabelProgressTakeOff = "{0}: taking off {1}";
-    private const string LabelProgressStep = "{0}: {1}";
-    private const string LabelProgressAmmo = "{0}: ammo";
-    private const string LabelProgressDraw = "{0}: drawing a weapon";
-    private const string LabelFailure = "{0}: {1}";
-    private const string LabelItemGone = "{0}: its item no longer exists, left as it was";
-    private const string LabelSkippedUnknown = "skipped unknown items {0}";
-    private const string LabelProblems = "{0} problems, first {1}";
-
     public static readonly EquipmentSlot[] Covered =
     {
         EquipmentSlot.Headwear, EquipmentSlot.Earpiece, EquipmentSlot.FaceCover, EquipmentSlot.Eyewear, EquipmentSlot.ArmBand,

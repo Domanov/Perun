@@ -1,15 +1,12 @@
 using System.Collections.Generic;
 using EFT;
 using UnityEngine;
+using static Perun.Client.Units.Constants.RemoteSession;
 
 namespace Perun.Client.Units;
 
 internal sealed class RemoteSession : IRemoteSession
 {
-    private const string LabelAskedSpawn = "Asked the host for {0} ×{1}…";
-    private const string LabelAskedGroup = "Asked the host for {0}…";
-    private const string LabelGroupTooLarge = "{0} can't be sent to the host (at most {1} member types)";
-
     private const float WatchRefresh = 2f;
 
     private sealed class RemoteJob : IJobView

@@ -9,46 +9,12 @@ using EFT.InventoryLogic;
 using Perun.Client.Compat;
 using Perun.Client.Mode;
 using UnityEngine;
+using static Perun.Client.Arsenal.Constants.ArsenalOps;
 
 namespace Perun.Client.Arsenal;
 
 internal static class ArsenalOps
 {
-    private const string LabelUnitGone = "that unit is gone";
-    private const string LabelNoInventory = "that unit has no inventory";
-    private const string LabelGiveBackFirst = "give the bot back first";
-    private const string LabelUnknownItem = "unknown item";
-    private const string LabelWrongSlot = "{0} doesn't go in that slot";
-    private const string LabelNotRestored = "{0}; couldn't put back {1}";
-    private const string LabelFailedSeeLog = "it failed (see log)";
-    private const string LabelCouldNotTakeOut = "couldn't take out {0}";
-    private const string LabelCouldNotTakeOutError = "couldn't take out {0}: {1}";
-    private const string LabelItemNowhere = "that item isn't anywhere";
-    private const string LabelNoSuchSlot = "no such slot";
-    private const string LabelUnknownError = "unknown error";
-    private const string LabelDroppedNextToUnit = "{0} (dropped next to the unit)";
-    private const string LabelLost = "{0} (lost)";
-    private const string LabelHandsBusy = "the unit's hands are busy";
-    private const string LabelUnitNoSuchSlot = "that unit has no such slot";
-    private const string LabelNoRoomForItem = "no slot or free space for it";
-    private const string LabelCouldNotStage = "couldn't stage the item: {0}";
-    private const string LabelDoesNotFit = "it doesn't fit: {0}";
-    private const string LabelCouldNotPlace = "couldn't place it: {0}";
-    private const string LabelOnlySecureContainer = "only a bot's secure container can be swapped";
-    private const string LabelCouldNotPutIn = "couldn't put in {0}: {1}";
-    private const string LabelNoContainer = "no container";
-    private const string LabelNoRoomInContainers = "no room for it in {0} or the unit's other containers";
-    private const string LabelNothingToRemove = "nothing to remove";
-    private const string LabelCantRemove = "can't remove it: {0}";
-    private const string LabelUnitBusy = "the unit is busy, try again ({0})";
-
-    private const string ObjectHoldController = "Perun arsenal hold";
-    private const string ObjectArsenalController = "Perun arsenal";
-
-    private const string DumpOriginalSpot = "its original spot";
-    private const string DumpFreeSpot = "a free spot";
-    private const string DumpOverflow = "another container (overflow)";
-
     private static readonly EquipmentSlot[] SlotOrder =
     {
         EquipmentSlot.FirstPrimaryWeapon, EquipmentSlot.SecondPrimaryWeapon, EquipmentSlot.Holster, EquipmentSlot.Scabbard,

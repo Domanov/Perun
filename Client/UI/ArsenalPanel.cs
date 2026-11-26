@@ -9,84 +9,12 @@ using Perun.Client.Compat;
 using Perun.Client.Units;
 
 using UnityEngine;
+using static Perun.Client.UI.Constants.ArsenalPanel;
 
 namespace Perun.Client.UI;
 
 internal sealed class ArsenalPanel
 {
-    private const string ChipLoadouts = "LOADOUTS";
-    private const string ChipItems = "ITEMS";
-    private const string ChipCrate = "CRATE";
-    private const string ChipSaveCopied = "Save copied";
-    private const string ChipCopy = "Copy {0}";
-    private const string ChipCopySelectOne = "Copy (select one unit)";
-    private const string ChipPasteTo = "Paste to {0}";
-    private const string ChipApplyCount = "Apply ×{0}";
-    private const string ChipApply = "Apply";
-    private const string ChipGiveRandomKit = "Give {0} a random {1} kit";
-    private const string ChipPickRole = "Pick a role in UNITS first";
-    private const string ChipEmpty = "Empty";
-
-    private const string LabelPrimary = "Primary";
-    private const string LabelSecondary = "Secondary";
-    private const string LabelHolster = "Holster";
-    private const string LabelMelee = "Melee";
-    private const string LabelHeadwear = "Headwear";
-    private const string LabelEarpiece = "Earpiece";
-    private const string LabelFaceCover = "Face cover";
-    private const string LabelEyewear = "Eyewear";
-    private const string LabelArmband = "Armband";
-    private const string LabelBodyArmor = "Body armor";
-    private const string LabelRig = "Rig";
-    private const string LabelBackpack = "Backpack";
-    private const string LabelPockets = "Pockets";
-    private const string LabelSecure = "Secure";
-    private const string LabelArsenalHeader = "ARSENAL";
-    private const string LabelSinglePlayerOnly = "The arsenal works in single player for now.";
-    private const string LabelSavedLoadouts = "SAVED LOADOUTS";
-    private const string LabelNothingSavedYet = "Nothing saved yet. Copy a unit's loadout, name it and save it.";
-    private const string LabelRandomKitFrom = "RANDOM KIT FROM A ROLE";
-    private const string LabelWorking = "<color=#ffc847>Working… {0}</color>";
-    private const string LabelCrateHint = "Click items to put them in the crate. Take control of a bot ({0}) and press {1} to open its inventory with the crate beside it, then drag and drop. Anything dropped back in the crate leaves the bot.";
-    private const string LabelCrateHeader = "ARSENAL CRATE · {0} item(s)";
-    private const string LabelOneUnit = "1 unit";
-    private const string LabelUnits = "{0} units";
-    private const string LabelLoadoutsSelectUnits = "LOADOUTS · select units";
-    private const string LabelLoadoutsSelected = "LOADOUTS · {0} selected";
-    private const string LabelCopiedSlots = "Copied: {0} ({1} slots)";
-    private const string LabelNothingCopiedYet = "Nothing copied yet";
-    private const string LabelUnitLoadout = "{0}'s loadout";
-    private const string LabelCouldNotReadGear = "<color=#ff8a7a>Couldn't read that unit's gear</color>";
-    private const string LabelCopiedLoadout = "<color=#8be38b>Copied {0}'s loadout</color>";
-    private const string LabelSaved = "<color=#8be38b>Saved \"{0}\"</color>";
-    private const string LabelDeleted = "Deleted \"{0}\"";
-    private const string LabelKit = "{0} kit";
-    private const string LabelAskingKits = "asking the server for {0} kits";
-    private const string LabelNoKits = "the server sent no kits for that role";
-    private const string LabelFailedSeeLog = "it failed (see log)";
-    private const string LabelAppliedNotRestored = "<b><color=#ff5a4a>Applied {0} on {1}/{2} unit(s). Gear not put back: {3}</color></b>";
-    private const string LabelAppliedOn = "{0} on {1}/{2} unit(s)";
-    private const string LabelApplied = "<color=#8be38b>Applied {0}</color>";
-    private const string LabelAppliedWithProblems = "<color=#ff8a7a>Applied {0}. {1}</color>";
-    private const string LabelSelectOneUnit = "Select one unit (a bot, or click a player) to edit its gear.";
-    private const string LabelWorkingPlain = "<color=#ffc847>Working…</color>";
-    private const string LabelSearchItems = "Search items…";
-    private const string LabelNothingMatches = "Nothing matches.";
-    private const string LabelCrateEmptied = "Crate emptied";
-    private const string LabelAddToCrate = "ADD TO THE CRATE";
-    private const string LabelCannotCreate = "<color=#ff8a7a>Can't create {0}</color>";
-    private const string LabelAddedToCrate = "Added {0} to the crate";
-    private const string LabelArsenalUnitHeader = "ARSENAL · {0}";
-    private const string LabelEmptySlot = "<color=#5d6873>empty</color>";
-    private const string LabelAddToInventory = "ADD TO INVENTORY";
-    private const string LabelPutIn = "PUT IN {0}  <color=#7f8a95>(click it again for inventory)</color>";
-    private const string LabelGave = "Gave {0}";
-    private const string LabelCleared = "Cleared {0}";
-
-    public const string ControlSearch = "PerunArsenalSearch";
-
-    public const string NameControl = "PerunLoadoutName";
-
     private const int CrateView = 2;
     private static readonly string[] Views = { ChipLoadouts, ChipItems, ChipCrate };
 
@@ -215,7 +143,7 @@ internal sealed class ArsenalPanel
         GUILayout.Label(_clipboardLabel, Theme.Small);
 
         GUILayout.BeginHorizontal();
-        GUI.SetNextControlName(NameControl);
+        GUI.SetNextControlName(ControlName);
         _saveName = GUILayout.TextField(_saveName ?? "", 32, Theme.Search);
         GUI.enabled = idle && Loadouts.Clipboard != null;
         if (GUILayout.Button(ChipSaveCopied, Theme.Button, GUILayout.Width(96f)))

@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Compat.Constants.FovFixCompat;
 
 namespace Perun.Client.Compat;
 
@@ -11,19 +12,6 @@ namespace Perun.Client.Compat;
 // character, not the bot you control.
 internal static class FovFixCompat
 {
-    private const string MethodSetCompensationScale = "SetCompensationScale";
-
-    private const string PropertyFovController = "FovController";
-    private const string PropertyEnableFovScaleFix = "EnableFovScaleFix";
-    private const string PropertyFovScale = "FovScale";
-
-    private const string FieldPlayer = "_player";
-
-    private const string HarmonyFovFix = ".fovfix";
-
-    private const string TypeScalePatch = "FOVFix.CalculateScaleValueByFovPatch";
-    private const string TypeFovFixPlugin = "FOVFix.Plugin";
-
     private static MethodInfo _setScale;
     private static PropertyInfo _controller;
     private static FieldInfo _controllerPlayer;

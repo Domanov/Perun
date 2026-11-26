@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EFT;
+using static Perun.Client.Units.Constants.GroupPlan;
 
 namespace Perun.Client.Units;
 
@@ -38,8 +39,6 @@ internal sealed class GroupMember
 
 internal sealed class GroupPlan
 {
-    private const string MatchBoss = "boss";
-
     public GroupPlan(GroupSource source, string name, IReadOnlyList<GroupMember> members, IReadOnlyList<string> maps, int? leaderChoice, string faction = null)
     {
         Source = source;

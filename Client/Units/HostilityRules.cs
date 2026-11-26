@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using EFT;
+using static Perun.Client.Units.Constants.HostilityRules;
 
 namespace Perun.Client.Units;
 
@@ -211,22 +212,6 @@ internal sealed class RoleMind
 
 internal static class HostilityRules
 {
-    private const string ColorAlly = "#8be38b";
-    private const string ColorNeutral = "#9fb4c8";
-    private const string ColorWarns = "#ffd36f";
-    private const string ColorChance = "#ffa04d";
-    private const string ColorEnemy = "#ff8080";
-
-    private const string LabelAlly = "ally";
-    private const string LabelNeutral = "neutral";
-    private const string LabelWarns = "warns";
-    private const string LabelHostileChance = "hostile ";
-    private const string LabelHostile = "hostile";
-
-    private const string MarkupColorOpen = "<color=";
-    private const string MarkupTagEnd = ">";
-    private const string MarkupColorClose = "</color>";
-
     public static Stance Between(WildSpawnType a, RoleMind aMind, EPlayerSide aSide, WildSpawnType b, RoleMind bMind, EPlayerSide bSide, bool sameFamily)
     {
         if (a == b || sameFamily)

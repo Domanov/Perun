@@ -5,52 +5,12 @@ using System.Text;
 using EFT;
 using Perun.Client.Units;
 using UnityEngine;
+using static Perun.Client.UI.Constants.GroupsPanel;
 
 namespace Perun.Client.UI;
 
 internal sealed class GroupsPanel
 {
-    private const string LabelAsSet = "As set";
-    private const string LabelEasy = "Easy";
-    private const string LabelNormal = "Normal";
-    private const string LabelHard = "Hard";
-    private const string LabelImpossibleShort = "Imposs.";
-    private const string LabelGroupHeader = "GROUP";
-    private const string LabelSearchGroups = "Search groups…";
-    private const string LabelNoGroups = "No groups: the server sent no boss data and nothing is saved.";
-    private const string LabelNothingMatches = "Nothing matches.";
-    private const string LabelDifficulty = "DIFFICULTY";
-    private const string LabelCopySuffix = " (copy)";
-    private const string LabelSptPresets = "SPT PRESETS";
-    private const string LabelCustom = "CUSTOM";
-    private const string LabelAlone = "alone";
-    private const string LabelMoreKinds = "+ {0} kinds";
-    private const string LabelSpawning = " · spawning {0}";
-    private const string LabelPerunUnits = "Perun units {0}/{1}{2}";
-    private const string LabelPlaceFromEditor = "<color=#9fb4c8>Place the group from the editor, or close it to place from here.</color>";
-    private const string LabelLinkHint = "<color=#ffc847>Drag from a bot onto another: the second one leads the first. Drop it on the ground: it leaves its group</color>  <color=#9fb4c8>· LINK LEADERS again stops</color>";
-    private const string LabelPickAGroup = "<color=#9fb4c8>Pick a group, then click the map to place it.</color>";
-    private const string LabelClickTheMap = "<color=#ffc847>Click the map to place {0} ({1})</color>  <color=#9fb4c8>· RMB stops</color>";
-    private const string LabelPlaceGroupHint = "<color=#9fb4c8>PLACE GROUP to place it on the map.</color>";
-    private const string LabelHostLoads = "<color=#9fb4c8>The host loads the members when you place the group</color>";
-    private const string LabelReadyToDrop = "<color=#8be38b>● Ready to drop: {0}</color> · spawns instantly";
-    private const string LabelPreparingInAdvance = "<color=#ffc847>◐ Preparing in advance… {0}/{1} ready</color>";
-    private const string LabelOverUnitLimit = "\n<color=#ff8080>Only {0} more units fit (limit {1})</color>";
-    private const string LabelNothingSelected = "<color=#7f8a95>Nothing selected.</color>";
-    private const string LabelCustomLeader = "\n<color=#7f8a95>Custom · leader picked by hand</color>";
-    private const string LabelCustomLine = "\n<color=#7f8a95>Custom</color>";
-    private const string LabelSptSource = "SPT";
-
-    private const string ChipPlaceGroup = "PLACE GROUP";
-    private const string ChipEdit = "Edit";
-    private const string ChipEditCopy = "Edit copy";
-    private const string ChipNewGroup = "New group";
-    private const string ChipLinkLeaders = "LINK LEADERS";
-
-    private const string MarkupColorOpen = "<color=";
-
-    public const string ControlSearch = "PerunGroupSearch";
-
     private const float RowHeight = 22f;
     private const float StatusRefresh = 0.25f;
     private const float DoubleClick = 0.35f;

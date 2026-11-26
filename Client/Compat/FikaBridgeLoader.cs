@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using BepInEx.Configuration;
 using UnityEngine;
+using static Perun.Client.Compat.Constants.FikaBridgeLoader;
 
 namespace Perun.Client.Compat;
 
@@ -10,14 +11,6 @@ namespace Perun.Client.Compat;
 // can't resolve and every mod that lists all types (HarmonyX's TypeByName among them) logs errors on it.
 internal static class FikaBridgeLoader
 {
-    private const string TypeBridgePlugin = "Perun.Fika.Plugin";
-
-    private const string MethodStart = "Start";
-
-    private const string FieldVersion = "Version";
-
-    private const string FileName = "Perun.Fika.dll";
-
     public static string Version { get; private set; }
 
     public static void Load(string pluginFolder, GameObject host, ConfigFile config)

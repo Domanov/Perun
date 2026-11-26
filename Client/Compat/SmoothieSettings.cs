@@ -1,17 +1,12 @@
 using System.Collections.Generic;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using static Perun.Client.Compat.Constants.SmoothieSettings;
 
 namespace Perun.Client.Compat;
 
 internal sealed class SmoothieSettings
 {
-    private const string ConfigSectionSmoothieOtherFixes = "3. Other fixes";
-
-    private const string ConfigKeySmoothieHideCovered = "Hide objects covered by nearer ones (experimental)";
-
-    private const string GuidSmoothie = "com.tominocz.smoothie";
-
     private static readonly ConfigDefinition HideCovered = new(ConfigSectionSmoothieOtherFixes, ConfigKeySmoothieHideCovered);
 
     private readonly List<(ConfigEntryBase entry, object value)> _saved = new();

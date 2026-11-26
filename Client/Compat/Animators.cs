@@ -3,16 +3,12 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using UnityEngine;
+using static Perun.Client.Compat.Constants.Animators;
 
 namespace Perun.Client.Compat;
 
 internal static class Animators
 {
-    private const string TypeUnityAnimatorWrapper = "AnimationSystem.UnityAnimatorWrapper";
-
-    private const string FieldAnimators = "_animators";
-    private const string FieldAnimator = "_animator";
-
     private static readonly FieldInfo PlayerAnimators = Mode.Reflect.Field(Mode.Feature.SmoothieControl, typeof(Player), FieldAnimators);
     private static readonly Type WrapperType = Mode.Reflect.Type(Mode.Feature.SmoothieControl, TypeUnityAnimatorWrapper);
     private static readonly FieldInfo WrapperAnimator = WrapperType != null ? Mode.Reflect.Field(Mode.Feature.SmoothieControl, WrapperType, FieldAnimator) : null;

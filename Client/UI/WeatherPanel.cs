@@ -5,81 +5,12 @@ using EFT;
 using EFT.Weather;
 using Perun.Client.World;
 using UnityEngine;
+using static Perun.Client.UI.Constants.WeatherPanel;
 
 namespace Perun.Client.UI;
 
 internal sealed class WeatherPanel
 {
-    private const string LabelWindE = "E";
-    private const string LabelWindN = "N";
-    private const string LabelWindW = "W";
-    private const string LabelWindS = "S";
-    private const string LabelDawn = "Dawn";
-    private const string LabelMorning = "Morning";
-    private const string LabelNoon = "Noon";
-    private const string LabelDusk = "Dusk";
-    private const string LabelNight = "Night";
-    private const string LabelDeepNight = "Deep night";
-    private const string LabelWindSe = "SE";
-    private const string LabelWindSw = "SW";
-    private const string LabelWindNw = "NW";
-    private const string LabelWindNe = "NE";
-    private const string LabelSavedWeather = "SAVED WEATHER";
-    private const string LabelNothingSaved = "Nothing saved yet. Save the weather you like, then bring it back any time, in any raid.";
-    private const string LabelStorm = "Storm";
-    private const string LabelRain = "Rain";
-    private const string LabelFog = "Fog";
-    private const string LabelCloudy = "Cloudy";
-    private const string LabelClear = "Clear";
-    private const string LabelTime = "TIME";
-    private const string LabelNoRaidClock = "No raid clock.";
-    private const string LabelClockNow = "Now <b>{0}</b> · speed {1}";
-    private const string LabelClockHint = "Speed 0 stops the clock. Raid default is ×7.";
-    private const string LabelWeather = "WEATHER";
-    private const string LabelNoWeatherOn = "No weather on this map.";
-    private const string LabelCustomWeatherOn = "Custom weather: ON";
-    private const string LabelCustomWeatherOff = "Custom weather: OFF (natural forecast)";
-    private const string LabelNatural = "Natural";
-    private const string LabelClouds = "Clouds";
-    private const string LabelLightning = "Lightning";
-    private const string LabelWind = "Wind";
-    private const string LabelFrom = "From";
-    private const string LabelTemp = "Temp";
-
-    private const string ChipSaveCustom = "Save the custom weather";
-    private const string ChipSaveCurrent = "Save the current weather";
-    private const string ChipApply = "Apply";
-    private const string ChipApplyTime = "Apply + time";
-    private const string ChipSet = "Set";
-
-    private const string LocationCustoms = "bigmap";
-    private const string LocationFactoryDay = "factory4_day";
-    private const string LocationFactoryNight = "factory4_night";
-    private const string LocationInterchange = "interchange";
-    private const string LocationLabs = "laboratory";
-    private const string LocationLighthouse = "lighthouse";
-    private const string LocationReserve = "rezervbase";
-    private const string LocationShoreline = "shoreline";
-    private const string LocationStreets = "tarkovstreets";
-    private const string LocationWoods = "woods";
-    private const string LocationGroundZero = "sandbox";
-    private const string LocationGroundZeroHigh = "sandbox_high";
-    private const string LocationLabyrinth = "labyrinth";
-
-    private const string NameMapCustoms = "Customs";
-    private const string NameMapFactory = "Factory";
-    private const string NameMapNightFactory = "Night Factory";
-    private const string NameMapInterchange = "Interchange";
-    private const string NameMapLabs = "Labs";
-    private const string NameMapLighthouse = "Lighthouse";
-    private const string NameMapReserve = "Reserve";
-    private const string NameMapShoreline = "Shoreline";
-    private const string NameMapStreets = "Streets";
-    private const string NameMapWoods = "Woods";
-    private const string NameMapGroundZero = "Ground Zero";
-    private const string NameMapLabyrinth = "Labyrinth";
-    private const string NameMapRaid = "Raid";
-
     private static readonly (string name, float hour)[] TimePresets =
     {
         (LabelDawn, 5.5f), (LabelMorning, 9f), (LabelNoon, 12f), (LabelDusk, 19.5f), (LabelNight, 23f), (LabelDeepNight, 2f)

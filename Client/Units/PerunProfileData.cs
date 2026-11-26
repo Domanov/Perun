@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using EFT;
+using static Perun.Client.Units.Constants.PerunProfileData;
 
 namespace Perun.Client.Units;
 
 internal sealed class PerunProfileData : IGetProfileData
 {
-    private const string DumpPerun = "Perun";
-
     private readonly GetProfileDataParams _inner;
 
     public PerunProfileData(GetProfileDataParams inner)

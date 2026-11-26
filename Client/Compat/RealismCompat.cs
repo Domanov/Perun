@@ -3,6 +3,7 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Compat.Constants.RealismCompat;
 
 namespace Perun.Client.Compat;
 
@@ -12,23 +13,6 @@ namespace Perun.Client.Compat;
 // stops updating (stance keys, poses) when it isn't.
 internal static class RealismCompat
 {
-    private const string MethodCheckIsReady = "CheckIsReady";
-    private const string MethodSetChosen = "SetChosen";
-    private const string MethodReconcile = "Reconcile";
-
-    private const string PropertyPlayerIsReady = "PlayerIsReady";
-    private const string PropertyPlayer = "Player";
-
-    private const string FieldPlayerStateInstance = "PlayerStateInstance";
-    private const string FieldStanceControllerInstance = "StanceControllerInstance";
-    private const string FieldInputHandler = "_inputHandler";
-
-    private const string HarmonyRealism = ".realism";
-
-    private const string TypeRealismPlugin = "RealismCommonLib.Plugin";
-    private const string TypeStancePlugin = "StanceOverhaul.Plugin";
-    private const string TypeGameState = "RealismCommonLib.StateControllers.GlobalState.GameState";
-
     private static FieldInfo _state;
     private static PropertyInfo _player;
     private static FieldInfo _stanceController;

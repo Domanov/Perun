@@ -6,6 +6,7 @@ using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
 using UnityEngine;
+using static Perun.Client.Compat.Constants.OrbitCompat;
 
 namespace Perun.Client.Compat;
 
@@ -13,21 +14,6 @@ namespace Perun.Client.Compat;
 // control as one. It also keeps steering that bot.
 internal static class OrbitCompat
 {
-    private const string MethodScanWorld = "ScanWorld";
-    private const string MethodUpdate = "Update";
-    private const string MethodIsBotDormant = "IsBotDormant";
-
-    private const string FieldHumanPositions = "_humanPositions";
-    private const string FieldBot = "Bot";
-
-    private const string HarmonyOrbit = ".orbit";
-
-    private const string TypeDormancy = "Orbit.Systems.DormancySystem";
-    private const string TypeMovement = "Orbit.Systems.MovementSystem";
-    private const string TypeLook = "Orbit.Systems.LookSystem";
-    private const string TypeAgent = "Orbit.Entities.Agent";
-    private const string TypeTelemetry = "Orbit.Api.OrbitTelemetry";
-
     private static FieldInfo _humans;
     private static FieldInfo _agentBot;
     private static Func<string, bool> _isDormant;

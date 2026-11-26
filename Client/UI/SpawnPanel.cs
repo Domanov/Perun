@@ -2,41 +2,17 @@ using System.Collections.Generic;
 using EFT;
 using Perun.Client.Units;
 using UnityEngine;
+using static Perun.Client.UI.Constants.SpawnPanel;
 
 namespace Perun.Client.UI;
 
 internal sealed class SpawnPanel
 {
-    private const string LabelEasy = "Easy";
-    private const string LabelNormal = "Normal";
-    private const string LabelHard = "Hard";
-    private const string LabelImpossible = "Impossible";
-    private const string LabelDifficulty = "Difficulty";
-    private const string LabelFaction = "FACTION";
-    private const string LabelSearchAllUnits = "Search all units…";
-    private const string LabelNothingMatches = "Nothing matches.";
-    private const string LabelCount = "COUNT";
-    private const string LabelSpawning = " · spawning {0}";
-    private const string LabelPerunUnits = "Perun units {0}/{1}{2}";
-    private const string LabelDifficultyHeader = "DIFFICULTY";
-    private const string LabelPickAUnit = "<color=#9fb4c8>Pick a unit, then click the map to place it.</color>";
-    private const string LabelClickTheMap = "<color=#ffc847>Click the map to place {0} ×{1}</color>  <color=#9fb4c8>· RMB stops</color>";
-    private const string LabelReadyToDrop = "<color=#8be38b>● Ready to drop: {0}</color> · spawns instantly";
-    private const string LabelPreparingInAdvance = "<color=#ffc847>◐ Preparing in advance… {0}/{1} ready</color>";
-    private const string LabelReadyTheRest = "<color=#ffc847>● {0}/{1} ready</color> · the rest loads when you place them";
-    private const string LabelBadgesAttitude = "\n<color=#7f8a95>Badges: attitude toward {0}</color>";
-    private const string LabelOnlyCount = "  <color=#ffd36f>(only {0})</color>";
-
-    private const string ChipBots = "BOTS";
-    private const string ChipGroups = "GROUPS";
-
     private static readonly string[] DifficultyNames = { LabelEasy, LabelNormal, LabelHard, LabelImpossible };
     private static readonly BotDifficulty[] Difficulties = { BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
     private static readonly string[] SubTabs = { ChipBots, ChipGroups };
     private static readonly string[] CountNames = { "1", "2", "3", "4", "5", "6", "8", "10" };
     private static readonly int[] CountValues = { 1, 2, 3, 4, 5, 6, 8, 10 };
-
-    public const string ControlSearch = "PerunSearch";
 
     private const float RowHeight = 22f;
 

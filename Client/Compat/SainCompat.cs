@@ -4,46 +4,12 @@ using System.Reflection;
 using BepInEx.Bootstrap;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Compat.Constants.SainCompat;
 
 namespace Perun.Client.Compat;
 
 internal static class SainCompat
 {
-    private const string DumpWeaponRefresh = "dropped {0} stale, now {1} weapon(s)";
-    private const string DumpNoComponent = "no SAIN component";
-
-    public const string GuidSain = "me.sol.sain";
-
-    private const string TypeBotComponent = "SAIN.Components.BotComponent";
-    private const string TypeSquad = "SAIN.BotController.Classes.Squad";
-    private const string TypePlayerComponent = "SAIN.Components.PlayerComponentSpace.PlayerComponent";
-
-    private const string MethodManualUpdate = "ManualUpdate";
-    private const string MethodAssignSquadLeader = "assignSquadLeader";
-    private const string MethodIsPlayerAnEnemy = "IsPlayerAnEnemy";
-    private const string MethodRemoveEnemy = "RemoveEnemy";
-    private const string MethodAddMember = "AddMember";
-    private const string MethodGetAllWeapons = "getAllWeapons";
-    private const string MethodReCalcPowerOfEquipment = "ReCalcPowerOfEquipment";
-    private const string MethodDispose = "Dispose";
-
-    private const string PropertyBotsGroup = "BotsGroup";
-    private const string PropertyLeaderComponent = "LeaderComponent";
-    private const string PropertyMembers = "Members";
-    private const string PropertySquad = "Squad";
-    private const string PropertySquadInfo = "SquadInfo";
-    private const string PropertyBotOwner = "BotOwner";
-    private const string PropertyEnemyController = "EnemyController";
-    private const string PropertyBotStuck = "BotStuck";
-    private const string PropertyEquipment = "Equipment";
-    private const string PropertyWeaponInfos = "WeaponInfos";
-    private const string PropertyWeapon = "Weapon";
-
-    private const string FieldDontUnstuckMe = "DontUnstuckMe";
-    private const string FieldBotUnstuckCoroutine = "_botUnstuckCoroutine";
-
-    private const string HarmonySain = ".sain";
-
     public static void Enable()
     {
         if (!Chainloader.PluginInfos.ContainsKey(GuidSain))

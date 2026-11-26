@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Perun.Client.Arsenal.Constants.LoadoutRun;
 
 namespace Perun.Client.Arsenal;
 
@@ -32,13 +33,6 @@ internal sealed class LoadoutOutcome
 // then, so every way out of the run, including an abort or an exception, must put back all slots still waiting.
 internal static class LoadoutRun
 {
-    private const string LabelStoppedUnexpectedly = "stopped unexpectedly";
-    private const string LabelSlotFailed = "{0}: {1}";
-    private const string LabelSlotFailedNotRestored = "{0}: {1}; couldn't put back {2}";
-    private const string LabelSlotError = "{0} ({1})";
-    private const string LabelNotRestored = "{0}; couldn't put back {1}";
-    private const string LabelSlotsKept = "{0}; {1} slot(s) left as they were";
-
     public static async Task<LoadoutOutcome> Run<TSlot>(IReadOnlyList<TSlot> takeOff, IReadOnlyList<TSlot> give, LoadoutSteps<TSlot> steps) where TSlot : notnull
     {
         LoadoutOutcome outcome = new();

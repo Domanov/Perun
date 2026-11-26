@@ -5,6 +5,7 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using UnityEngine;
+using static Perun.Client.Units.Constants.GroupLeadership;
 
 namespace Perun.Client.Units;
 
@@ -12,20 +13,6 @@ namespace Perun.Client.Units;
 // follower of the dead boss's own role, so Perun picks the successor for its groups.
 internal static class GroupLeadership
 {
-    private const string LabelNotLivingBots = "both units must be living bots";
-    private const string LabelNotActive = "both bots must be active";
-    private const string LabelNotLivingActiveBot = "it must be a living, active bot";
-    private const string LabelAlreadyAlone = "it is already on its own";
-    private const string LabelNoBotSystem = "no bot system in this raid";
-    private const string LabelLeaderDied = "leader died";
-    private const string LabelLeaderLeft = "leader left";
-
-    private const string FieldOnFollowerStatusChange = "OnFollowerStatusChange";
-    private const string FieldHaveGoodCovers = "HaveGoodCovers";
-    private const string FieldFollowersPositions = "_followersPositions";
-
-    private const string MatchBossWithStayFollowers = "BossWithStayFollowersPosition";
-
     private const float AttachTimeout = 30f;
 
     internal sealed class Handle

@@ -11,41 +11,12 @@ using EFT.UI.Screens;
 using HarmonyLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using static Perun.Client.Mode.Constants.Takeover;
 
 namespace Perun.Client.Mode;
 
 internal sealed class Takeover
 {
-    private const string FieldMyPlayer = "_myPlayer";
-    private const string FieldInsurance = "_insurance";
-    private const string FieldGameDateTime = "_gameDateTime";
-    private const string FieldLocation = "_location";
-    private const string FieldBattleUiScreenController = "BattleUIScreenController";
-    private const string FieldRemoveItemEvent = "_removeItemEvent";
-    private const string FieldAction = "_action";
-
-    private const string MethodShowScreen = "ShowScreen";
-    private const string MethodOwnerCreate = "EftGamePlayerOwner.Create<T>";
-
-    private const string LabelUnsupportedVersion = "this game version isn't supported for taking control";
-    private const string LabelNoControls = "your character's controls weren't found";
-    private const string LabelInfected = "infected can't be controlled";
-    private const string LabelInterfaceNotReady = "the raid interface isn't ready";
-    private const string LabelNoCamera = "your character's camera wasn't found";
-    private const string LabelNoArms = "no first-person arms could be found for that bot";
-    private const string LabelTakeFailed = "taking control failed (see log)";
-    private const string LabelStepYourPlayer = "hand 'your player' back";
-    private const string LabelStepStopControls = "stop the bot's controls";
-    private const string LabelStepRemoveCamera = "remove the bot's camera";
-    private const string LabelStepClearDeath = "clear the bot's death from the screen";
-    private const string LabelStepGiveBack = "give the bot back to its AI";
-    private const string LabelStepThirdPerson = "return the bot to third person";
-    private const string LabelStepHideHud = "hide the raid HUD again";
-    private const string LabelStepControlsBack = "give your character its controls back";
-    private const string LabelStepSound = "match the sound to your character's surroundings";
-
-    private const string DumpNewHands = "new hands while controlled";
-
     // A bot gets its own GamePlayerOwner; the raid context the game gives yours (player, insurance, date, location,
     // battle screen) lives in private fields and has to be copied across.
     private static readonly FieldInfo MyPlayerField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), FieldMyPlayer);

@@ -9,19 +9,12 @@ using EFT.CameraControl;
 using EFT.EnvironmentEffect;
 using EFT.HealthSystem;
 using UnityEngine;
+using static Perun.Client.Mode.Constants.ControlAudio;
 
 namespace Perun.Client.Mode;
 
 internal static class ControlAudio
 {
-    private const string FieldTinnitusEnd = "float_2";
-    private const string FieldNestedStepSoundSource = "NestedStepSoundSource";
-    private const string FieldAudioRoomStorage = "_audioRoomStorage";
-    private const string FieldListenerIndoorRooms = "list_3";
-    private const string FieldListenerOutdoorRooms = "list_4";
-    private const string FieldPlayerCurrentIndoorRooms = "_playerCurrentIndoorRooms";
-    private const string FieldPlayerCurrentOutdoorRooms = "_playerCurrentOutdoorRooms";
-
     public static void FollowCamera()
     {
         if (!CameraManager.Exist || CameraManager.Instance.Camera == null)

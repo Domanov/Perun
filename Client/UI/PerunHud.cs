@@ -9,6 +9,7 @@ using Perun.Client.Orders;
 using Perun.Client.Units;
 using Perun.Client.View;
 using UnityEngine;
+using static Perun.Client.UI.Constants.PerunHud;
 
 namespace Perun.Client.UI;
 
@@ -24,70 +25,6 @@ internal enum AssetTab
 // left as one class until it can be retested panel by panel in game.
 internal sealed class PerunHud
 {
-    private const string ChipReturn = "RETURN  ({0})";
-    private const string ChipControl = "Control ({0})";
-    private const string ChipResume = "▶  RESUME  (P)";
-    private const string ChipPause = "❚❚  PAUSE  (P)";
-    private const string ChipHide = "HIDE  (H)";
-    private const string ChipHelp = "HELP  (F1)";
-    private const string ChipFlyTo = "Fly to";
-    private const string ChipLockCam = "Lock cam";
-    private const string ChipHeal = "Heal";
-    private const string ChipTeleport = "Teleport";
-    private const string ChipHalt = "Halt";
-    private const string ChipDeselect = "Deselect";
-    private const string ChipRemove = "Remove";
-    private const string ChipKill = "Kill";
-    private const string ChipUnits = "UNITS  (B)";
-    private const string ChipEnvironment = "ENV  (T)";
-    private const string ChipArsenal = "ARSENAL  (I)";
-    private const string ChipCloseHelp = "Close  (F1)";
-
-    private const string LabelHelpHint = "<color=#7f8a95>F1 help · H hide · {0} return</color>";
-    private const string LabelTitle = "PERUN";
-    private const string LabelControls = "CONTROLS";
-    private const string LabelABot = "a bot";
-    private const string LabelControlBar = "<color=#ffc847><b>PERUN</b></color>  controlling {0}  ·  <b>{1}</b> gives it back  ·  <b>{2}</b> arsenal crate";
-    private const string LabelMoreQueued = "+{0} more queued";
-    private const string LabelQueued = "<color=#9fb4c8>queued</color>";
-    private const string LabelFetchingProfilesFrom = "<color=#ffc847>fetching profiles from the server…</color>";
-    private const string LabelLoadingGear = "<color=#ffc847>loading gear</color> {0}%";
-    private const string LabelSpawning = "<color=#8be38b>spawning</color> {0}/{1}";
-    private const string LabelDone = "done";
-    private const string LabelInAdvance = "<color=#c8d2dc>{0}</color> <color=#7f8a95>(in advance)</color>";
-    private const string LabelReady = "+ {0} ×{1}  <color=#8be38b>ready</color>";
-    private const string LabelNeedsLoadingFirst = "+ {0} ×{1}  <color=#ffc847>needs loading first</color>";
-    private const string LabelGroupReady = "+ {0} ({1}) · {2:0.0} m  <color=#8be38b>ready</color>";
-    private const string LabelGroupNeedsLoading = "+ {0} ({1}) · {2:0.0} m  <color=#ffc847>needs loading first</color>";
-    private const string LabelCursorHeader = "<color=#7f8a95>CURSOR</color>  ";
-    private const string LabelNoNavmesh = "  <color=#ff8080>no navmesh</color>";
-    private const string LabelSelectedHeader = "     <color=#7f8a95>SELECTED</color>  ";
-    private const string LabelUnitsSuffix = " units";
-    private const string LabelCameraLockedOn = "     <color=#ffd36f>camera locked on ";
-    private const string LabelLockRelease = " · L or WASD releases</color>";
-    private const string LabelPlacingGroupClick = "<color=#ffc847>Placing group: click · drag to turn · Ctrl+wheel spread · RMB cancels</color>";
-    private const string LabelPlacingClickThe = "<color=#ffc847>Placing: click the map · drag to turn · RMB cancels</color>";
-    private const string LabelTimeHeader = "<color=#7f8a95>TIME</color>  ";
-    private const string LabelUnitsHeader = "<color=#7f8a95>UNITS</color>  ";
-    private const string LabelSpawningTail = " spawning</color>";
-    private const string LabelWorldPaused = "     <color=#ffc847><b>WORLD PAUSED</b></color>";
-    private const string LabelPlayer = "Player";
-    private const string LabelHealthSuffix = " health";
-    private const string LabelForcedMove = "Forced move";
-    private const string LabelRunning = "Running";
-    private const string LabelMoving = "Moving";
-    private const string LabelMetersToGo = " m to go";
-    private const string LabelNoOrders = "\nNo orders";
-    private const string LabelUnitsSelected = " UNITS SELECTED";
-    private const string LabelYoursSuffix = " yours · ";
-    private const string LabelWithOrdersHint = " with orders\nRMB on the map to move them";
-    private const string LabelYouReturnHere = "you return here";
-    private const string LabelReturnHere = "return here";
-    private const string LabelYouSuffix = " (you)";
-    private const string LabelPlayerSuffix = " (player)";
-
-    private const string MarkupColorOpen = "<color=";
-
     private const float StatusRefresh = 0.1f;
     private const float LabelPruneInterval = 5f;
     private const float Gap = 10f;
@@ -101,23 +38,6 @@ internal sealed class PerunHud
     private const float EditorWidth = 640f;
     private const float EditorMinWidth = 480f;
     private static readonly string[] Spinner = { "◐", "◓", "◑", "◒" };
-
-    private const string LabelPausedHost = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>P to resume</color>";
-    private const string LabelPausedClient = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>by the game master</color>";
-    private const string LabelCantPlace = "<color=#ff8080>can't place here</color>";
-    private const string LabelHelp =
-        "<b><color=#ffc847>CAMERA</color></b>\n" +
-        "WASD pan · Shift faster · Q/E or middle-drag rotate · wheel zoom · {0}+wheel tilt · R/F floor up/down\n" +
-        "Home back to your body · click the magenta dot to select yourself (Heal, Kill with a confirm), then the map to change where you return · L lock camera on the selected unit · Ctrl+F fly to the selection\n\n" +
-        "<b><color=#ffc847>UNITS</color></b>\n" +
-        "LMB select · drag a box · Shift adds · click empty ground clears\n" +
-        "RMB move · Shift+RMB run · Ctrl+RMB forced move (ignores enemies) · X halt\n" +
-        "Del remove · Ctrl+Del kill · Heal on the card (click a player to select them) · Alt+right-click teleport (or Teleport on the card, then click)\n\n" +
-        "<b><color=#ffc847>EDITOR</color></b>\n" +
-        "B units browser · T environment · I arsenal (gear of the selected unit) · N vision (night green, white, amber, then thermal white hot, black hot, fusion, rainbow, off) · P pause the world · H hide the interface · F1 this help · {1} leave\n\n" +
-        "<b><color=#ffc847>TAKE CONTROL</color></b>\n" +
-        "Select one bot and press {2} (or Control on the card) to play it with the game's own controls, HUD and inventory · {1} gives it back";
-
 
     private sealed class LabelCache
     {
@@ -148,8 +68,8 @@ internal sealed class PerunHud
 
     private static readonly HashSet<string> TextControls = new()
     {
-        SpawnPanel.ControlSearch, GroupsPanel.ControlSearch, ArsenalPanel.ControlSearch, ArsenalPanel.NameControl,
-        GroupEditor.NameControl, GroupEditor.ControlSearch
+        Constants.SpawnPanel.ControlSearch, Constants.GroupsPanel.ControlSearch, Constants.ArsenalPanel.ControlSearch, Constants.ArsenalPanel.ControlName,
+        Constants.GroupEditor.ControlName, Constants.GroupEditor.ControlSearch
     };
 
     private float _nextLabelPrune;
@@ -1294,7 +1214,6 @@ internal sealed class PerunHud
         b.Append(SpawnNames.Of(profile.Info.Settings.Role)).Append(" · ").Append(profile.Nickname);
     }
 
-
     private static int HealthPercent(Player player)
     {
         IHealthController health = player.HealthController;
@@ -1306,7 +1225,6 @@ internal sealed class PerunHud
         ValueStruct common = health.GetBodyPartHealth(EBodyPart.Common);
         return common.Maximum > 0f ? Mathf.Clamp(Mathf.RoundToInt(common.Current / common.Maximum * 100f), 0, 100) : 127;
     }
-
 
     // Your parked character is under the map; the return dot shows its selection instead.
     private static void DrawSelectionBrackets(Camera camera, CursorPicker picker, PerunMode mode)
@@ -1475,7 +1393,6 @@ internal sealed class PerunHud
             return;
         }
 
-
         _label = new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.LowerCenter,
@@ -1483,7 +1400,6 @@ internal sealed class PerunHud
             fontSize = 12
         };
         _label.normal.textColor = Color.white;
-
 
         _banner = new GUIStyle(GUI.skin.box)
         {

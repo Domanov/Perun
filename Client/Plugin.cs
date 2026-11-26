@@ -5,6 +5,7 @@ using Perun.Client.Mode;
 using Perun.Client.Patches;
 using Perun.Client.UI;
 using UnityEngine;
+using static Perun.Client.Constants.Plugin;
 
 namespace Perun.Client;
 
@@ -17,91 +18,11 @@ namespace Perun.Client;
 [BepInDependency(GuidSain, BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
-    private const string GuidSptCore = "com.SPT.core";
-    private const string GuidBigBrain = "xyz.drakia.bigbrain";
-    private const string GuidFika = "com.fika.core";
-    private const string GuidSmoothie = "com.tominocz.smoothie";
-    private const string GuidMoreBots = "com.morebotsapi.tacticaltoaster";
-    private const string GuidSain = "me.sol.sain";
     public const string Guid = "com.dmnv.perun";
 
     public const string Name = "DMNV-Perun";
 
     public const string Version = "0.13.0";
-
-    private const string ConfigSectionGeneral = "1. General";
-    private const string ConfigSectionCamera = "2. Camera";
-    private const string ConfigSectionDisplay = "3. Display";
-    private const string ConfigSectionFikaGameMaster = "5. Fika game master";
-    private const string ConfigSectionDebug = "4. Debug";
-
-    private const string ConfigKeyToggleRTSMode = "Toggle RTS mode";
-    private const string ConfigKeyTakeControlKey = "Take control key";
-    private const string ConfigKeyArsenalCrateKey = "Arsenal crate key";
-    private const string ConfigKeyReturnAtCursor = "Return at cursor";
-    private const string ConfigKeyPanSpeed = "Pan speed";
-    private const string ConfigKeyRotateSpeed = "Rotate speed";
-    private const string ConfigKeyZoomSpeed = "Zoom speed";
-    private const string ConfigKeyClosestZoom = "Closest zoom (m)";
-    private const string ConfigKeyFarthestZoom = "Farthest zoom (m)";
-    private const string ConfigKeyTiltKey = "Tilt key";
-    private const string ConfigKeyEdgeScrolling = "Edge scrolling";
-    private const string ConfigKeyAvoidWalls = "Avoid walls";
-    private const string ConfigKeyMaxSpawnedUnits = "Max spawned units";
-    private const string ConfigKeyPrepareBotsInAdvance = "Prepare bots in advance";
-    private const string ConfigKeyRefuseHostileGroupMembers = "Refuse hostile group members";
-    private const string ConfigKeyUnitLabels = "Unit labels";
-    private const string ConfigKeyLabelDistance = "Label distance (m)";
-    private const string ConfigKeySelectionColour = "Selection colour";
-    private const string ConfigKeyGameMasterPassword = "Game master password";
-    private const string ConfigKeyAllowTakeControlInFika = "Allow take control in Fika (experimental)";
-    private const string ConfigKeyVerboseLogging = "Verbose logging";
-    private const string ConfigKeyColourPlayer = "Colour: players";
-    private const string ConfigKeyColourUsec = "Colour: USEC PMCs";
-    private const string ConfigKeyColourBear = "Colour: BEAR PMCs";
-    private const string ConfigKeyColourScav = "Colour: scavs";
-    private const string ConfigKeyColourRaider = "Colour: raiders & rogues";
-    private const string ConfigKeyColourBoss = "Colour: bosses";
-    private const string ConfigKeyColourFollower = "Colour: followers";
-    private const string ConfigKeyColourCultist = "Colour: cultists";
-    private const string ConfigKeyColourInfected = "Colour: infected";
-    private const string ConfigKeyColourCustom = "Colour: MoreBots factions";
-    private const string ConfigKeyColourOther = "Colour: other bots";
-
-    private const string ConfigDescriptionToggleRTSMode = "Switches between your character and the RTS view. In Fika only the host can use it.";
-    private const string ConfigDescriptionTakeControlKey = "In RTS mode: take full control of the selected bot with the game's own controls, HUD and inventory. The RTS toggle key gives it back. Single player only for now.";
-    private const string ConfigDescriptionArsenalCrateKey = "While you control a bot: opens its inventory with the arsenal crate beside it. Fill the crate in the ARSENAL tab (CRATE view). Single player only for now.";
-    private const string ConfigDescriptionReturnAtCursor = "On leaving RTS mode, put your character at the point under the cursor instead of where you left it.";
-    private const string ConfigDescriptionPanSpeed = "WASD / edge pan speed. Scales with zoom; hold Shift for faster.";
-    private const string ConfigDescriptionRotateSpeed = "Middle mouse drag and Q/E rotation speed.";
-    private const string ConfigDescriptionZoomSpeed = "Mouse wheel zoom speed.";
-    private const string ConfigDescriptionClosestZoom = "Smallest camera distance from the point it looks at.";
-    private const string ConfigDescriptionFarthestZoom = "Largest camera distance from the point it looks at.";
-    private const string ConfigDescriptionTiltKey = "Hold this and use the mouse wheel to change the camera angle instead of zooming.";
-    private const string ConfigDescriptionEdgeScrolling = "Move the view when the cursor touches the screen edge. Keeps the cursor inside the game window in RTS mode.";
-    private const string ConfigDescriptionAvoidWalls = "Pull the camera in front of walls and roofs between it and the point it looks at. Off: the camera passes through buildings.";
-    private const string ConfigDescriptionMaxSpawnedUnits = "How many bots placed with Perun can be alive at once.";
-    private const string ConfigDescriptionPrepareBotsInAdvance = "When you pick a bot type in the spawn panel, ask the server for its profiles and load its gear right away, so the click spawns them almost instantly.";
-    private const string ConfigDescriptionRefuseHostileGroupMembers = "In the group editor, don't offer bot types that are hostile to the group's leader. Off: they can be added, with a warning; inside one group they fight as allies.";
-    private const string ConfigDescriptionUnitLabels = "Names and roles above characters in RTS mode.";
-    private const string ConfigDescriptionLabelDistance = "Labels are drawn for characters closer than this to the camera.";
-    private const string ConfigDescriptionSelectionColour = "Brackets around selected units and the selection box.";
-    private const string ConfigDescriptionGameMasterPassword = "Only for raids with a Fika headless host. On the headless host: players who enter this password can become the game master (one at a time). On your own PC: the password to send to the headless host when you press the RTS key. Leave empty to turn it off.";
-    private const string ConfigDescriptionAllowTakeControlInFika = "Lets the Fika host take control of a bot (G) like in single player. Not for a headless host's game master. Experimental: report anything odd other players see.";
-    private const string ConfigDescriptionVerboseLogging = "Log every step of entering and leaving RTS mode, plus the game, plugin list and Perun settings once, and each raid's map and Fika role. Arsenal changes log every step with the unit's hands and animator state, and keep watching the unit's hands for 20 s afterwards.";
-    private const string ConfigDescriptionLabelColour = "Label colour in the RTS view.";
-
-    private const string ColorPlayer = "#E6E6FF";
-    private const string ColorUsec = "#6FB3FF";
-    private const string ColorBear = "#FF7A6F";
-    private const string ColorScav = "#FFD36F";
-    private const string ColorRaider = "#C792EA";
-    private const string ColorBoss = "#FF3B3B";
-    private const string ColorFollower = "#FF9B54";
-    private const string ColorCultist = "#B39DDB";
-    private const string ColorInfected = "#8BE38B";
-    private const string ColorCustom = "#4DD0E1";
-    private const string ColorOther = "#FFFFFF";
 
     internal static ManualLogSource Log;
 

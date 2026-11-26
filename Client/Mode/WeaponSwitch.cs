@@ -2,16 +2,12 @@ using System;
 using EFT;
 using EFT.InventoryLogic;
 using UnityEngine;
+using static Perun.Client.Mode.Constants.WeaponSwitch;
 
 namespace Perun.Client.Mode;
 
 internal sealed class WeaponSwitch
 {
-    private const string MatchFika = "Fika";
-
-    private const string DumpLowering = "lowering";
-    private const string DumpDrawing = "drawing";
-
     private enum Stage
     {
         Idle,

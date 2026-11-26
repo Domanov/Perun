@@ -2,13 +2,12 @@ using System;
 using EFT.HealthSystem;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Patches.Constants.HealthPatches;
 
 namespace Perun.Client.Patches;
 
 internal static class HealthPatches
 {
-    private const string HarmonyHealth = ".health";
-
     private static readonly string[] Blocked =
     {
         nameof(ActiveHealthController.Kill),

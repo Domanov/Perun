@@ -3,45 +3,12 @@ using System.Collections.Generic;
 using EFT;
 using Perun.Client.Units;
 using UnityEngine;
+using static Perun.Client.UI.Constants.GroupEditor;
 
 namespace Perun.Client.UI;
 
 internal sealed class GroupEditor
 {
-    private const string ChipAuto = "AUTO";
-    private const string ChipManual = "MANUAL";
-    private const string ChipDelete = "Delete";
-    private const string ChipCancel = "Cancel";
-    private const string ChipSave = "Save";
-    private const string ChipDiscard = "Discard";
-    private const string ChipSaveAs = "Save as";
-    private const string ChipClose = "Close";
-    private const string ChipPlaceGroup = "PLACE GROUP";
-
-    private const string LabelEasy = "Easy";
-    private const string LabelNormal = "Normal";
-    private const string LabelHard = "Hard";
-    private const string LabelImpossible = "Impossible";
-    private const string LabelGroupName = "Group name…";
-    private const string LabelLeader = "Leader";
-    private const string LabelAddTypesHint = "<color=#9fb4c8>Add types from the list on the right.</color>";
-    private const string LabelAddType = "ADD TYPE";
-    private const string LabelSearchTypes = "Search types…";
-    private const string LabelNothingMatches = "Nothing matches.";
-    private const string LabelHostileBlocked = "<color=#7f8a95>Hostile types are blocked by the setting.</color>";
-    private const string LabelNewGroup = "NEW GROUP";
-    private const string LabelGroupEditorUnsaved = "GROUP EDITOR · {0} <color=#7f8a95>· not saved</color>";
-    private const string LabelGroupEditor = "GROUP EDITOR · {0}";
-    private const string LabelMembersMax = "MEMBERS ({0} / max {1})";
-    private const string LabelHostileMembers = "⚠ {0} member type(s) can be hostile to {1}. Inside one group they fight as allies; other groups see each by its own role.";
-    private const string LabelOverUnitLimit = "⚠ {0} members, but only {1} Perun units can be alive at once; the rest won't spawn.";
-    private const string LabelConfirmDelete = "Delete \"{0}\"?";
-    private const string LabelUnsavedChanges = "Unsaved changes.";
-
-    public const string NameControl = "PerunGroupName";
-
-    public const string ControlSearch = "PerunGroupAddSearch";
-
     private const float RowHeight = 22f;
     private const float AddWidth = 240f;
     private const float ColumnGap = 12f;
@@ -214,9 +181,9 @@ internal sealed class GroupEditor
     private void DrawNameRow()
     {
         GUILayout.BeginHorizontal();
-        GUI.SetNextControlName(NameControl);
+        GUI.SetNextControlName(ControlName);
         string name = GUILayout.TextField(_draft.Name, CustomGroups.MaxNameLength, Theme.Search, GUILayout.ExpandWidth(true));
-        if (string.IsNullOrEmpty(name) && GUI.GetNameOfFocusedControl() != NameControl && Event.current.type == EventType.Repaint)
+        if (string.IsNullOrEmpty(name) && GUI.GetNameOfFocusedControl() != ControlName && Event.current.type == EventType.Repaint)
         {
             Rect field = GUILayoutUtility.GetLastRect();
             GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), LabelGroupName, Theme.Small);
@@ -569,7 +536,7 @@ internal sealed class GroupEditor
         _confirm = Confirm.None;
         _error = "";
         string focused = GUI.GetNameOfFocusedControl();
-        if (focused == NameControl || focused == ControlSearch)
+        if (focused == ControlName || focused == ControlSearch)
         {
             GUIUtility.keyboardControl = 0;
         }

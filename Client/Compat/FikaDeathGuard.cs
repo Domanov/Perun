@@ -3,6 +3,7 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Compat.Constants.FikaDeathGuard;
 
 namespace Perun.Client.Compat;
 
@@ -10,12 +11,6 @@ namespace Perun.Client.Compat;
 // "your player" while you control it, so when it dies hand that back to your parked character first.
 internal static class FikaDeathGuard
 {
-    private const string MethodOnDead = "OnDead";
-
-    private const string HarmonyFikaDeath = ".fikadeath";
-
-    private const string TypeFikaPlayer = "Fika.Core.Main.Players.FikaPlayer";
-
     public static void Enable()
     {
         if (!FikaInfo.Present)

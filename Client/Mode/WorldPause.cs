@@ -7,13 +7,12 @@ using EFT.UI.BattleTimer;
 using HarmonyLib;
 using Perun.Client.Compat;
 using UnityEngine;
+using static Perun.Client.Mode.Constants.WorldPause;
 
 namespace Perun.Client.Mode;
 
 internal static class WorldPause
 {
-    private const string FieldDateTime = "_dateTime";
-
     private static readonly FieldInfo TimerPanelDate = Reflect.Field(Feature.PausedClock, typeof(TimerPanel), FieldDateTime);
     private static readonly Dictionary<BotOwner, Vector3> Frozen = new();
     private static readonly List<BotOwner> Gone = new();

@@ -5,6 +5,7 @@ using BepInEx;
 using EFT.Weather;
 using Newtonsoft.Json;
 using UnityEngine;
+using static Perun.Client.UI.Constants.WeatherSnapshots;
 
 namespace Perun.Client.UI;
 
@@ -30,10 +31,6 @@ internal sealed class WeatherSnapshot
 
 internal static class WeatherSnapshots
 {
-    private const string FileWeather = "com.dmnv.perun.weather.json";
-
-    private const string LabelSummary = "Clouds {0:0}% · Fog {1:0}% · Rain {2:0}% · Lightning {3:0}%\nWind {4:0}% from {5} · {6:0} °C · time {7}";
-
     private const int Limit = 16;
 
     private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, FileWeather);

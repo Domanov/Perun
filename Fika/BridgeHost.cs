@@ -4,19 +4,12 @@ using Fika.Core.Modding;
 using Fika.Core.Modding.Events;
 using Perun.Client;
 using UnityEngine;
+using static Perun.Fika.Constants.BridgeHost;
 
 namespace Perun.Fika;
 
 internal sealed class BridgeHost : MonoBehaviour
 {
-    private const string ConfigSectionDebug = "Debug build";
-
-    private const string ConfigKeyForgeHost = "Send forged host messages";
-    private const string ConfigKeyMalformedRequests = "Send malformed game master requests";
-
-    private const string ConfigDescriptionForgeHost = "Sends a Hello claiming protocol 6, an unsigned pause and a pause with a wrong token to every other player, the way a modified client would. Debug builds only.";
-    private const string ConfigDescriptionMalformedRequests = "Sends a NaN spawn, a BTR gunner spawn, a 500-bot spawn and an unknown order to the host. Debug builds only.";
-
     private FikaBridge _bridge;
 #if DEBUG
     private ConfigEntry<bool> _forge;

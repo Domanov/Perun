@@ -1,18 +1,12 @@
 using System;
 using System.Reflection;
 using BepInEx.Bootstrap;
+using static Perun.Client.Compat.Constants.FikaInfo;
 
 namespace Perun.Client.Compat;
 
 internal static class FikaInfo
 {
-    private const string GuidFika = "com.fika.core";
-
-    private const string TypeFikaBackendUtils = "Fika.Core.Main.Utils.FikaBackendUtils, Fika.Core";
-
-    private const string PropertyIsServer = "IsServer";
-    private const string PropertyIsHeadless = "IsHeadless";
-
     private static bool _resolved;
     private static PropertyInfo _isServer;
     private static PropertyInfo _isHeadless;

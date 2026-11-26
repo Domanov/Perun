@@ -2,6 +2,7 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using static Perun.Client.Patches.Constants.ParkedHitPatch;
 
 namespace Perun.Client.Patches;
 
@@ -19,8 +20,6 @@ public class ParkedVoicePatch : ModulePatch
 // through Say; the hit's slowdown doesn't matter under the map either.
 public class ParkedHitPatch : ModulePatch
 {
-    private const string MethodApplyHitDebuff = "ApplyHitDebuff";
-
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), MethodApplyHitDebuff);
 
     [PatchPrefix]

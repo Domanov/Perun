@@ -3,62 +3,12 @@ using System.Text;
 using DrakiaXYZ.BigBrain.Brains;
 using EFT;
 using UnityEngine;
+using static Perun.Client.Orders.Constants.PerunOrderLayer;
 
 namespace Perun.Client.Orders;
 
 public class PerunOrderLayer : CustomLayer
 {
-    private const string BrainArenaFighter = "ArenaFighter";
-    private const string BrainAssault = "Assault";
-    private const string BrainBigPipe = "BigPipe";
-    private const string BrainBirdEye = "BirdEye";
-    private const string BrainBoarSniper = "BoarSniper";
-    private const string BrainBossBoar = "BossBoar";
-    private const string BrainBossBully = "BossBully";
-    private const string BrainBossGluhar = "BossGluhar";
-    private const string BrainBossKojaniy = "BossKojaniy";
-    private const string BrainBossKolontay = "BossKolontay";
-    private const string BrainBossPartisan = "BossPartisan";
-    private const string BrainBossSanitar = "BossSanitar";
-    private const string BrainBossTest = "BossTest";
-    private const string BrainBossZryachiy = "BossZryachiy";
-    private const string BrainCursAssault = "CursAssault";
-    private const string BrainExUsec = "ExUsec";
-    private const string BrainFlKlnAslt = "FlKlnAslt";
-    private const string BrainFlZraychiy = "Fl_Zraychiy";
-    private const string BrainFollowerBully = "FollowerBully";
-    private const string BrainFollowerGluharAssault = "FollowerGluharAssault";
-    private const string BrainFollowerGluharProtect = "FollowerGluharProtect";
-    private const string BrainFollowerGluharScout = "FollowerGluharScout";
-    private const string BrainFollowerKojaniy = "FollowerKojaniy";
-    private const string BrainFollowerSanitar = "FollowerSanitar";
-    private const string BrainHelperAgro = "HelperAgro";
-    private const string BrainInfectedAssault = "InfectedAssault";
-    private const string BrainKilla = "Killa";
-    private const string BrainKillaAgro = "KillaAgro";
-    private const string BrainKnight = "Knight";
-    private const string BrainKolonSec = "KolonSec";
-    private const string BrainMarksman = "Marksman";
-    private const string BrainObdolbs = "Obdolbs";
-    private const string BrainOni = "Oni";
-    private const string BrainPMC = "PMC";
-    private const string BrainPeaceZryachiy = "PeaceZryachiy";
-    private const string BrainPmcBear = "PmcBear";
-    private const string BrainPmcUsec = "PmcUsec";
-    private const string BrainPrizrakSt = "PrizrakSt";
-    private const string BrainPrstEvent = "Prst event";
-    private const string BrainRavangeZryachiy = "RavangeZryachiy";
-    private const string BrainSctPredvst = "SctPredvst";
-    private const string BrainSectantPriest = "SectantPriest";
-    private const string BrainSectantWarrior = "SectantWarrior";
-    private const string BrainTagilla = "Tagilla";
-    private const string BrainTagillaAgro = "TagillaAgro";
-    private const string BrainTagillaFollower = "TagillaFollower";
-    private const string BrainLayerOrder = "PerunOrder";
-    private const string BrainReasonOrder = "Perun order";
-
-    private const string DumpOrder = "Perun order to {0} forced={1} run={2}";
-
     public const int LayerPriority = 95;
 
     public static readonly List<string> Brains = new()

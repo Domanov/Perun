@@ -3,16 +3,13 @@ using System.Reflection;
 using EFT;
 using HarmonyLib;
 using Perun.Client.Mode;
+using static Perun.Client.Patches.Constants.AsBotPatch;
 
 namespace Perun.Client.Patches;
 
 // Game and mod checks that tell bots from human players, run with the controlled bot counted as a bot.
 internal static class AsBotPatch
 {
-    private const string MethodCollectWarnTargets = "CollectWarnTargets";
-
-    private const string HarmonyAsBot = ".asbot";
-
     private static readonly HarmonyMethod Prefix = new(typeof(AsBotPatch), nameof(ShowAsBot));
     private static readonly HarmonyMethod Finalizer = new(typeof(AsBotPatch), nameof(EndShowAsBot));
 

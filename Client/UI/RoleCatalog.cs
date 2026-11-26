@@ -4,31 +4,13 @@ using System.Linq;
 using EFT;
 using Perun.Client.Compat;
 using Perun.Client.Units;
+using static Perun.Client.UI.Constants.RoleCatalog;
 
 namespace Perun.Client.UI;
 
 // The spawnable roles by faction, shared by the Bots tab and the group editor.
 internal sealed class RoleCatalog
 {
-    private const string LabelScavs = "Scavs";
-    private const string LabelPmc = "PMC";
-    private const string LabelRaiders = "Raiders";
-    private const string LabelBosses = "Bosses";
-    private const string LabelFollowers = "Followers";
-    private const string LabelCultists = "Cultists";
-    private const string LabelInfected = "Infected";
-    private const string LabelOther = "Other";
-
-    private const string MatchBoss = "boss";
-    private const string MatchFollower = "follower";
-    private const string MatchTagillaHelperAgro = "tagillaHelperAgro";
-    private const string MatchSectant = "sectant";
-    private const string MatchSectantPriestEvent = "sectactPriestEvent";
-    private const string MatchInfected = "infected";
-
-    private const string MarkupCategoryOpen = "  <color=#7f8a95>";
-    private const string MarkupColorClose = "</color>";
-
     private static readonly (string name, Func<WildSpawnType, string, bool> match)[] Categories =
     {
         (LabelScavs, (t, n) => t is WildSpawnType.assault or WildSpawnType.marksman or WildSpawnType.cursedAssault or WildSpawnType.crazyAssaultEvent),

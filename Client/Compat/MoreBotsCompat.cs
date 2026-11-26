@@ -5,29 +5,12 @@ using System.Reflection;
 using BepInEx.Bootstrap;
 using HarmonyLib;
 using Perun.Client.Patches;
+using static Perun.Client.Compat.Constants.MoreBotsCompat;
 
 namespace Perun.Client.Compat;
 
 internal static class MoreBotsCompat
 {
-    private const string TypeHuntManager = "MoreBotsAPI.Components.HuntManager";
-    private const string TypeFactionManager = "MoreBotsAPI.Components.FactionManager";
-    private const string TypeWildSpawnTypeManager = "MoreBotsAPI.CustomWildSpawnTypeManager";
-
-    private const string MethodFindFirstHuntTarget = "FindFirstHuntTarget";
-    private const string MethodFindNewHuntTarget = "FindNewHuntTarget";
-    private const string MethodOnKill = "OnKill";
-    private const string MethodGetCustomWildSpawnTypes = "GetCustomWildSpawnTypes";
-
-    private const string PropertyWildSpawnTypeValue = "WildSpawnTypeValue";
-    private const string PropertyScavRole = "ScavRole";
-
-    private const string LabelCustomFaction = "Custom";
-
-    private const string HarmonyMoreBots = ".morebots";
-
-    private const string GuidMoreBots = "com.morebotsapi.tacticaltoaster";
-
     private static Dictionary<int, string> _factions;
 
     public static bool Present => Chainloader.PluginInfos.ContainsKey(GuidMoreBots);

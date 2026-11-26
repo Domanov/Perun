@@ -2,61 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EFT;
+using static Perun.Client.Units.Constants.BossPresets;
 
 namespace Perun.Client.Units;
 
 internal static class BossPresets
 {
-    private const string NameReshala = "Reshala";
-    private const string NameShturman = "Shturman";
-    private const string NameGlukhar = "Glukhar";
-    private const string NameSanitar = "Sanitar";
-    private const string NameKilla = "Killa";
-    private const string NameTagilla = "Tagilla";
-    private const string NameGoons = "Goons";
-    private const string NameZryachiy = "Zryachiy";
-    private const string NameKaban = "Kaban";
-    private const string NameKabanSnipers = "Kaban's snipers";
-    private const string NameKollontay = "Kollontay";
-    private const string NamePartisan = "Partisan";
-    private const string NameKillaLabyrinth = "Killa (Labyrinth)";
-    private const string NameTagillaLabyrinth = "Tagilla (Labyrinth)";
-    private const string NameLabyrinthShadows = "Labyrinth shadows";
-    private const string NameRaiders = "Raiders";
-    private const string NameRogues = "Rogues";
-    private const string NameCultists = "Cultists";
-    private const string NamePeacemakers = "Peacemakers";
-    private const string NameCrazyScavs = "Crazy scavs";
-    private const string NameBloodhounds = "Bloodhounds";
-    private const string NameMapCustoms = "Customs";
-    private const string NameMapFactory = "Factory";
-    private const string NameMapNightFactory = "Night Factory";
-    private const string NameMapInterchange = "Interchange";
-    private const string NameMapLabs = "Labs";
-    private const string NameMapLighthouse = "Lighthouse";
-    private const string NameMapReserve = "Reserve";
-    private const string NameMapShoreline = "Shoreline";
-    private const string NameMapWoods = "Woods";
-    private const string NameMapStreets = "Streets";
-    private const string NameMapGroundZero = "Ground Zero";
-    private const string NameMapLabyrinth = "Labyrinth";
-
-    private const string LocationCustoms = "bigmap";
-    private const string LocationFactoryDay = "factory4_day";
-    private const string LocationFactoryNight = "factory4_night";
-    private const string LocationInterchange = "interchange";
-    private const string LocationLabs = "laboratory";
-    private const string LocationLighthouse = "lighthouse";
-    private const string LocationReserve = "rezervbase";
-    private const string LocationShoreline = "shoreline";
-    private const string LocationWoods = "woods";
-    private const string LocationStreets = "tarkovstreets";
-    private const string LocationGroundZero = "sandbox";
-    private const string LocationGroundZeroHigh = "sandbox_high";
-    private const string LocationLabyrinth = "labyrinth";
-
-    private const string KeyFactionPrefix = "faction|";
-
     private static readonly HashSet<WildSpawnType> Skipped = new()
     {
         WildSpawnType.pmcUSEC,

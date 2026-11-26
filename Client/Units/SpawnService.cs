@@ -11,41 +11,12 @@ using Diz.Jobs;
 using Perun.Client.Mode;
 using UnityEngine;
 using UnityEngine.AI;
+using static Perun.Client.Units.Constants.SpawnService;
 
 namespace Perun.Client.Units;
 
 internal static partial class SpawnService
 {
-    private const string NameSpawnPoint = "Perun";
-    private const string NameSpawnPointPrefix = "perun_";
-
-    private const string FieldLastAggressor = "LastAggressor";
-
-    private const string LabelNoBotSystem = "No bot system in this raid";
-    private const string LabelNoBotZone = "No bot zone on this map";
-    private const string LabelOnlyBotsRemoved = "Only bots can be removed";
-    private const string LabelUnitLimit = "Unit limit reached ({0})";
-    private const string LabelPreparing = "Preparing {0} ×{1}";
-    private const string LabelCount = "{0} ×{1}";
-    private const string LabelSpawning = "Spawning {0}";
-    private const string LabelSpawningProgress = "Spawning {0}…";
-    private const string LabelLoadingFromServer = "Loading {0} ×{1} from the server…";
-    private const string LabelNoProfile = "The server sent no {0} profile";
-    private const string LabelNoLeaderProfile = "The server sent no {0} profile for the leader";
-    private const string LabelCreating = "Creating {0}…";
-    private const string LabelSpawnedCount = "Spawned {0} {1}/{2}";
-    private const string LabelSpawnedPartly = "Only {0}/{1} {2} spawned (see log)";
-    private const string LabelGroupSpawnedPartly = "Only {0}/{1} of {2} spawned (see log)";
-    private const string LabelGroupSpawned = "Spawned {0} ({1})";
-    private const string LabelLeaderMissing = "{0}: the leader didn't spawn (see log)";
-    private const string LabelGroupLabel = "{0} ({1})";
-    private const string LabelSpawnFailed = "Spawn failed: {0}";
-    private const string LabelGroupSpawnFailed = "Group spawn failed: {0}";
-    private const string LabelRemoved = "Removed {0}";
-    private const string LabelKilled = "Killed {0}";
-
-    private const string DumpNone = "none";
-
     private const float LoadingSpeed = 3f;
 
     private const float GroupSpacing = 1.3f;
@@ -213,8 +184,6 @@ internal static partial class SpawnService
         }
         return result;
     }
-
-    private const string NameSpawnId = "perun";
 
     private static async Task<BotCreationData> CreateData(WildSpawnType role, BotDifficulty difficulty, int count, LoadJob job)
     {
