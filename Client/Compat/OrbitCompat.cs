@@ -13,11 +13,20 @@ namespace Perun.Client.Compat;
 // control as one. It also keeps steering that bot.
 internal static class OrbitCompat
 {
-    private const string DormancyType = "Orbit.Systems.DormancySystem";
-    private const string MovementType = "Orbit.Systems.MovementSystem";
-    private const string LookType = "Orbit.Systems.LookSystem";
-    private const string AgentType = "Orbit.Entities.Agent";
-    private const string TelemetryType = "Orbit.Api.OrbitTelemetry";
+    private const string MethodScanWorld = "ScanWorld";
+    private const string MethodUpdate = "Update";
+    private const string MethodIsBotDormant = "IsBotDormant";
+
+    private const string FieldHumanPositions = "_humanPositions";
+    private const string FieldBot = "Bot";
+
+    private const string HarmonyOrbit = ".orbit";
+
+    private const string TypeDormancy = "Orbit.Systems.DormancySystem";
+    private const string TypeMovement = "Orbit.Systems.MovementSystem";
+    private const string TypeLook = "Orbit.Systems.LookSystem";
+    private const string TypeAgent = "Orbit.Entities.Agent";
+    private const string TypeTelemetry = "Orbit.Api.OrbitTelemetry";
 
     private static FieldInfo _humans;
     private static FieldInfo _agentBot;
@@ -26,7 +35,7 @@ internal static class OrbitCompat
 
     public static void Enable()
     {
-        Type dormancy = AccessTools.TypeByName(DormancyType);
+        Type dormancy = AccessTools.TypeByName(TypeDormancy);
         if (dormancy == null)
         {
             return;
@@ -34,25 +43,25 @@ internal static class OrbitCompat
 
         try
         {
-            Harmony harmony = new(Plugin.Guid + ".orbit");
+            Harmony harmony = new(Plugin.Guid + HarmonyOrbit);
             List<string> found = new();
 
-            _humans = AccessTools.Field(dormancy, "_humanPositions");
-            MethodInfo scan = AccessTools.Method(dormancy, "ScanWorld");
+            _humans = AccessTools.Field(dormancy, FieldHumanPositions);
+            MethodInfo scan = AccessTools.Method(dormancy, MethodScanWorld);
             if (_humans != null && scan != null)
             {
                 harmony.Patch(scan, postfix: new HarmonyMethod(typeof(OrbitCompat), nameof(AddEyes)));
                 found.Add("bots wake around the RTS camera and the controlled bot");
             }
 
-            Type agent = AccessTools.TypeByName(AgentType);
-            _agentBot = agent != null ? AccessTools.Field(agent, "Bot") : null;
+            Type agent = AccessTools.TypeByName(TypeAgent);
+            _agentBot = agent != null ? AccessTools.Field(agent, FieldBot) : null;
             if (_agentBot != null)
             {
                 int skipped = 0;
-                foreach (string type in new[] { MovementType, LookType })
+                foreach (string type in new[] { TypeMovement, TypeLook })
                 {
-                    MethodInfo update = AccessTools.Method(AccessTools.TypeByName(type), "Update", new[] { typeof(List<>).MakeGenericType(agent) });
+                    MethodInfo update = AccessTools.Method(AccessTools.TypeByName(type), MethodUpdate, new[] { typeof(List<>).MakeGenericType(agent) });
                     if (update != null)
                     {
                         harmony.Patch(update, prefix: new HarmonyMethod(typeof(OrbitCompat), nameof(HidePossessed)), finalizer: new HarmonyMethod(typeof(OrbitCompat), nameof(RestorePossessed)));
@@ -65,7 +74,7 @@ internal static class OrbitCompat
                 }
             }
 
-            MethodInfo dormant = AccessTools.Method(AccessTools.TypeByName(TelemetryType), "IsBotDormant", new[] { typeof(string) });
+            MethodInfo dormant = AccessTools.Method(AccessTools.TypeByName(TypeTelemetry), MethodIsBotDormant, new[] { typeof(string) });
             if (dormant != null)
             {
                 _isDormant = (Func<string, bool>)Delegate.CreateDelegate(typeof(Func<string, bool>), dormant);

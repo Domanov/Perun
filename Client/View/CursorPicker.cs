@@ -9,6 +9,10 @@ namespace Perun.Client.View;
 
 internal sealed class CursorPicker
 {
+    private const string LayerTerrain = "Terrain";
+    private const string LayerHighPolyCollider = "HighPolyCollider";
+    private const string LayerLowPolyCollider = "LowPolyCollider";
+
     private const float PickRadius = 28f;
     private const float DragThreshold = 6f;
 
@@ -74,7 +78,7 @@ internal sealed class CursorPicker
 
         if (_groundMask == 0)
         {
-            _groundMask = LayerMask.GetMask("Terrain", "HighPolyCollider", "LowPolyCollider");
+            _groundMask = LayerMask.GetMask(LayerTerrain, LayerHighPolyCollider, LayerLowPolyCollider);
         }
 
         PruneSelection();

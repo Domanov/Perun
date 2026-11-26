@@ -10,12 +10,82 @@ namespace Perun.Client.UI;
 
 internal sealed class WeatherPanel
 {
+    private const string LabelWindE = "E";
+    private const string LabelWindN = "N";
+    private const string LabelWindW = "W";
+    private const string LabelWindS = "S";
+    private const string LabelDawn = "Dawn";
+    private const string LabelMorning = "Morning";
+    private const string LabelNoon = "Noon";
+    private const string LabelDusk = "Dusk";
+    private const string LabelNight = "Night";
+    private const string LabelDeepNight = "Deep night";
+    private const string LabelWindSe = "SE";
+    private const string LabelWindSw = "SW";
+    private const string LabelWindNw = "NW";
+    private const string LabelWindNe = "NE";
+    private const string LabelSavedWeather = "SAVED WEATHER";
+    private const string LabelNothingSaved = "Nothing saved yet. Save the weather you like, then bring it back any time, in any raid.";
+    private const string LabelStorm = "Storm";
+    private const string LabelRain = "Rain";
+    private const string LabelFog = "Fog";
+    private const string LabelCloudy = "Cloudy";
+    private const string LabelClear = "Clear";
+    private const string LabelTime = "TIME";
+    private const string LabelNoRaidClock = "No raid clock.";
+    private const string LabelClockNow = "Now <b>{0}</b> · speed {1}";
+    private const string LabelClockHint = "Speed 0 stops the clock. Raid default is ×7.";
+    private const string LabelWeather = "WEATHER";
+    private const string LabelNoWeatherOn = "No weather on this map.";
+    private const string LabelCustomWeatherOn = "Custom weather: ON";
+    private const string LabelCustomWeatherOff = "Custom weather: OFF (natural forecast)";
+    private const string LabelNatural = "Natural";
+    private const string LabelClouds = "Clouds";
+    private const string LabelLightning = "Lightning";
+    private const string LabelWind = "Wind";
+    private const string LabelFrom = "From";
+    private const string LabelTemp = "Temp";
+
+    private const string ChipSaveCustom = "Save the custom weather";
+    private const string ChipSaveCurrent = "Save the current weather";
+    private const string ChipApply = "Apply";
+    private const string ChipApplyTime = "Apply + time";
+    private const string ChipSet = "Set";
+
+    private const string LocationCustoms = "bigmap";
+    private const string LocationFactoryDay = "factory4_day";
+    private const string LocationFactoryNight = "factory4_night";
+    private const string LocationInterchange = "interchange";
+    private const string LocationLabs = "laboratory";
+    private const string LocationLighthouse = "lighthouse";
+    private const string LocationReserve = "rezervbase";
+    private const string LocationShoreline = "shoreline";
+    private const string LocationStreets = "tarkovstreets";
+    private const string LocationWoods = "woods";
+    private const string LocationGroundZero = "sandbox";
+    private const string LocationGroundZeroHigh = "sandbox_high";
+    private const string LocationLabyrinth = "labyrinth";
+
+    private const string NameMapCustoms = "Customs";
+    private const string NameMapFactory = "Factory";
+    private const string NameMapNightFactory = "Night Factory";
+    private const string NameMapInterchange = "Interchange";
+    private const string NameMapLabs = "Labs";
+    private const string NameMapLighthouse = "Lighthouse";
+    private const string NameMapReserve = "Reserve";
+    private const string NameMapShoreline = "Shoreline";
+    private const string NameMapStreets = "Streets";
+    private const string NameMapWoods = "Woods";
+    private const string NameMapGroundZero = "Ground Zero";
+    private const string NameMapLabyrinth = "Labyrinth";
+    private const string NameMapRaid = "Raid";
+
     private static readonly (string name, float hour)[] TimePresets =
     {
-        ("Dawn", 5.5f), ("Morning", 9f), ("Noon", 12f), ("Dusk", 19.5f), ("Night", 23f), ("Deep night", 2f)
+        (LabelDawn, 5.5f), (LabelMorning, 9f), (LabelNoon, 12f), (LabelDusk, 19.5f), (LabelNight, 23f), (LabelDeepNight, 2f)
     };
 
-    private static readonly string[] WindNames = { "E", "N", "W", "S", "SE", "SW", "NW", "NE" };
+    private static readonly string[] WindNames = { LabelWindE, LabelWindN, LabelWindW, LabelWindS, LabelWindSe, LabelWindSw, LabelWindNw, LabelWindNe };
 
     private float _hour = 12f;
     private float _speed = 7f;
@@ -69,11 +139,11 @@ internal sealed class WeatherPanel
 
     private void DrawSaved(GameWorld world, GameDateTime clock, WeatherController controller)
     {
-        GUILayout.Label("SAVED WEATHER", Theme.Header);
+        GUILayout.Label(LabelSavedWeather, Theme.Header);
         WeatherDebug weather = controller != null ? controller.WeatherDebug : null;
 
         GUI.enabled = weather != null;
-        if (GUILayout.Button(weather != null && weather.Enabled ? "Save the custom weather" : "Save the current weather", Theme.Button))
+        if (GUILayout.Button(weather != null && weather.Enabled ? ChipSaveCustom : ChipSaveCurrent, Theme.Button))
         {
             Capture(world, clock, controller, weather);
         }
@@ -82,7 +152,7 @@ internal sealed class WeatherPanel
         List<WeatherSnapshot> items = WeatherSnapshots.Items;
         if (items.Count == 0)
         {
-            GUILayout.Label("Nothing saved yet. Save the weather you like, then bring it back any time, in any raid.", Theme.Small);
+            GUILayout.Label(LabelNothingSaved, Theme.Small);
             return;
         }
 
@@ -111,12 +181,12 @@ internal sealed class WeatherPanel
             GUILayout.Label(WeatherSnapshots.Describe(item), Theme.Small);
             GUILayout.BeginHorizontal();
             GUI.enabled = weather != null;
-            if (GUILayout.Button("Apply", Theme.Button))
+            if (GUILayout.Button(ChipApply, Theme.Button))
             {
                 Apply(item, controller, weather, null);
             }
             GUI.enabled = weather != null && clock != null && item.Hour >= 0f;
-            if (GUILayout.Button("Apply + time", Theme.Button))
+            if (GUILayout.Button(ChipApplyTime, Theme.Button))
             {
                 Apply(item, controller, weather, clock);
             }
@@ -165,41 +235,41 @@ internal sealed class WeatherPanel
 
     private static string Kind(WeatherSnapshot s)
     {
-        if (s.Rain > 0.6f && s.Lightning > 0.3f) return "Storm";
-        if (s.Rain > 0.05f) return "Rain";
-        if (WeatherSnapshots.FogPercent(s.Fog) > 40f) return "Fog";
-        if (s.Clouds > 0.2f) return "Cloudy";
-        return "Clear";
+        if (s.Rain > 0.6f && s.Lightning > 0.3f) return LabelStorm;
+        if (s.Rain > 0.05f) return LabelRain;
+        if (WeatherSnapshots.FogPercent(s.Fog) > 40f) return LabelFog;
+        if (s.Clouds > 0.2f) return LabelCloudy;
+        return LabelClear;
     }
 
     private static string MapName(string id)
     {
         switch ((id ?? "").ToLowerInvariant())
         {
-            case "bigmap": return "Customs";
-            case "factory4_day": return "Factory";
-            case "factory4_night": return "Night Factory";
-            case "interchange": return "Interchange";
-            case "laboratory": return "Labs";
-            case "lighthouse": return "Lighthouse";
-            case "rezervbase": return "Reserve";
-            case "shoreline": return "Shoreline";
-            case "tarkovstreets": return "Streets";
-            case "woods": return "Woods";
-            case "sandbox": return "Ground Zero";
-            case "sandbox_high": return "Ground Zero";
-            case "labyrinth": return "Labyrinth";
-            case "": return "Raid";
+            case LocationCustoms: return NameMapCustoms;
+            case LocationFactoryDay: return NameMapFactory;
+            case LocationFactoryNight: return NameMapNightFactory;
+            case LocationInterchange: return NameMapInterchange;
+            case LocationLabs: return NameMapLabs;
+            case LocationLighthouse: return NameMapLighthouse;
+            case LocationReserve: return NameMapReserve;
+            case LocationShoreline: return NameMapShoreline;
+            case LocationStreets: return NameMapStreets;
+            case LocationWoods: return NameMapWoods;
+            case LocationGroundZero: return NameMapGroundZero;
+            case LocationGroundZeroHigh: return NameMapGroundZero;
+            case LocationLabyrinth: return NameMapLabyrinth;
+            case "": return NameMapRaid;
             default: return id;
         }
     }
 
     private void DrawTime(GameDateTime clock)
     {
-        GUILayout.Label("TIME", Theme.Header);
+        GUILayout.Label(LabelTime, Theme.Header);
         if (clock == null)
         {
-            GUILayout.Label("No raid clock.", Theme.Small);
+            GUILayout.Label(LabelNoRaidClock, Theme.Small);
             return;
         }
 
@@ -219,7 +289,7 @@ internal sealed class WeatherPanel
         {
             _nowKey = nowKey;
             _nowFactor = factor;
-            _nowText = $"Now <b>{Theme.Time(now)}</b> · speed {Theme.Factor(_nowFactor)}";
+            _nowText = string.Format(LabelClockNow, Theme.Time(now), Theme.Factor(_nowFactor));
         }
         GUILayout.Label(_nowText, Theme.Label);
 
@@ -231,7 +301,7 @@ internal sealed class WeatherPanel
             _hour = hour;
             _hourEdited = true;
         }
-        if (GUILayout.Button("Set", Theme.Button, GUILayout.Width(48f)))
+        if (GUILayout.Button(ChipSet, Theme.Button, GUILayout.Width(48f)))
         {
             SetTime(_hour);
         }
@@ -260,26 +330,26 @@ internal sealed class WeatherPanel
             _speed = speed;
             _speedEdited = true;
         }
-        if (GUILayout.Button("Set", Theme.Button, GUILayout.Width(48f)))
+        if (GUILayout.Button(ChipSet, Theme.Button, GUILayout.Width(48f)))
         {
             SetSpeed(_speed);
         }
         GUILayout.EndHorizontal();
-        GUILayout.Label("Speed 0 stops the clock. Raid default is ×7.", Theme.Small);
+        GUILayout.Label(LabelClockHint, Theme.Small);
     }
 
     private void DrawWeather(WeatherController controller)
     {
-        GUILayout.Label("WEATHER", Theme.Header);
+        GUILayout.Label(LabelWeather, Theme.Header);
         WeatherDebug weather = controller != null ? controller.WeatherDebug : null;
         if (weather == null)
         {
-            GUILayout.Label("No weather on this map.", Theme.Small);
+            GUILayout.Label(LabelNoWeatherOn, Theme.Small);
             return;
         }
 
         bool overridden = weather.Enabled;
-        bool wantOverride = GUILayout.Toggle(overridden, overridden ? "Custom weather: ON" : "Custom weather: OFF (natural forecast)", Theme.Tab);
+        bool wantOverride = GUILayout.Toggle(overridden, overridden ? LabelCustomWeatherOn : LabelCustomWeatherOff, Theme.Tab);
         if (wantOverride != overridden)
         {
             if (wantOverride)
@@ -293,25 +363,25 @@ internal sealed class WeatherPanel
         }
 
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Clear", Theme.Button)) Preset(controller, weather, -1f, 0f, 0f, 0f, 0.1f);
-        if (GUILayout.Button("Cloudy", Theme.Button)) Preset(controller, weather, 0.4f, 0.01f, 0f, 0f, 0.3f);
-        if (GUILayout.Button("Rain", Theme.Button)) Preset(controller, weather, 0.8f, 0.02f, 0.6f, 0.1f, 0.5f);
+        if (GUILayout.Button(LabelClear, Theme.Button)) Preset(controller, weather, -1f, 0f, 0f, 0f, 0.1f);
+        if (GUILayout.Button(LabelCloudy, Theme.Button)) Preset(controller, weather, 0.4f, 0.01f, 0f, 0f, 0.3f);
+        if (GUILayout.Button(LabelRain, Theme.Button)) Preset(controller, weather, 0.8f, 0.02f, 0.6f, 0.1f, 0.5f);
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Storm", Theme.Button)) Preset(controller, weather, 1f, 0.03f, 1f, 1f, 0.9f);
-        if (GUILayout.Button("Fog", Theme.Button)) Preset(controller, weather, 0.3f, 0.2f, 0f, 0f, 0.05f);
-        if (GUILayout.Button("Natural", Theme.Button)) WorldEnvironment.DisableCustom();
+        if (GUILayout.Button(LabelStorm, Theme.Button)) Preset(controller, weather, 1f, 0.03f, 1f, 1f, 0.9f);
+        if (GUILayout.Button(LabelFog, Theme.Button)) Preset(controller, weather, 0.3f, 0.2f, 0f, 0f, 0.05f);
+        if (GUILayout.Button(LabelNatural, Theme.Button)) WorldEnvironment.DisableCustom();
         GUILayout.EndHorizontal();
 
         GUI.enabled = weather.Enabled;
-        weather.CloudDensity = Slider("Clouds", weather.CloudDensity, -1f, 1f, Theme.Percent(Mathf.RoundToInt((weather.CloudDensity + 1f) * 50f)));
+        weather.CloudDensity = Slider(LabelClouds, weather.CloudDensity, -1f, 1f, Theme.Percent(Mathf.RoundToInt((weather.CloudDensity + 1f) * 50f)));
         weather.Fog = FogSlider(weather.Fog);
-        weather.Rain = Slider("Rain", weather.Rain, 0f, 1f, Theme.Percent(Mathf.RoundToInt(weather.Rain * 100f)));
-        weather.LightningThunderProbability = Slider("Lightning", weather.LightningThunderProbability, 0f, 1f, Theme.Percent(Mathf.RoundToInt(weather.LightningThunderProbability * 100f)));
-        weather.WindMagnitude = Slider("Wind", weather.WindMagnitude, 0f, 1f, Theme.Percent(Mathf.RoundToInt(weather.WindMagnitude * 100f)));
+        weather.Rain = Slider(LabelRain, weather.Rain, 0f, 1f, Theme.Percent(Mathf.RoundToInt(weather.Rain * 100f)));
+        weather.LightningThunderProbability = Slider(LabelLightning, weather.LightningThunderProbability, 0f, 1f, Theme.Percent(Mathf.RoundToInt(weather.LightningThunderProbability * 100f)));
+        weather.WindMagnitude = Slider(LabelWind, weather.WindMagnitude, 0f, 1f, Theme.Percent(Mathf.RoundToInt(weather.WindMagnitude * 100f)));
 
         GUILayout.BeginHorizontal();
-        GUILayout.Label("From", Theme.Label, GUILayout.Width(66f));
+        GUILayout.Label(LabelFrom, Theme.Label, GUILayout.Width(66f));
         int current = Mathf.Clamp((int)weather.WindDirection - 1, 0, WindNames.Length - 1);
         int picked = GUILayout.SelectionGrid(current, WindNames, 4, Theme.Tab);
         if (picked != current)
@@ -320,7 +390,7 @@ internal sealed class WeatherPanel
         }
         GUILayout.EndHorizontal();
 
-        weather.Temperature = Mathf.Round(Slider("Temp", weather.Temperature, -30f, 40f, Theme.Celsius(weather.Temperature)));
+        weather.Temperature = Mathf.Round(Slider(LabelTemp, weather.Temperature, -30f, 40f, Theme.Celsius(weather.Temperature)));
         GUI.enabled = true;
     }
 
@@ -337,7 +407,7 @@ internal sealed class WeatherPanel
     private static float FogSlider(float fog)
     {
         float amount = Mathf.Sqrt(Mathf.Clamp01((fog - 0.001f) / 0.254f));
-        amount = Slider("Fog", amount, 0f, 1f, Theme.Percent(Mathf.RoundToInt(amount * 100f)));
+        amount = Slider(LabelFog, amount, 0f, 1f, Theme.Percent(Mathf.RoundToInt(amount * 100f)));
         return 0.001f + amount * amount * 0.254f;
     }
 

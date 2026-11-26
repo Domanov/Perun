@@ -8,16 +8,47 @@ namespace Perun.Client.UI;
 
 internal sealed class GroupEditor
 {
+    private const string ChipAuto = "AUTO";
+    private const string ChipManual = "MANUAL";
+    private const string ChipDelete = "Delete";
+    private const string ChipCancel = "Cancel";
+    private const string ChipSave = "Save";
+    private const string ChipDiscard = "Discard";
+    private const string ChipSaveAs = "Save as";
+    private const string ChipClose = "Close";
+    private const string ChipPlaceGroup = "PLACE GROUP";
+
+    private const string LabelEasy = "Easy";
+    private const string LabelNormal = "Normal";
+    private const string LabelHard = "Hard";
+    private const string LabelImpossible = "Impossible";
+    private const string LabelGroupName = "Group name…";
+    private const string LabelLeader = "Leader";
+    private const string LabelAddTypesHint = "<color=#9fb4c8>Add types from the list on the right.</color>";
+    private const string LabelAddType = "ADD TYPE";
+    private const string LabelSearchTypes = "Search types…";
+    private const string LabelNothingMatches = "Nothing matches.";
+    private const string LabelHostileBlocked = "<color=#7f8a95>Hostile types are blocked by the setting.</color>";
+    private const string LabelNewGroup = "NEW GROUP";
+    private const string LabelGroupEditorUnsaved = "GROUP EDITOR · {0} <color=#7f8a95>· not saved</color>";
+    private const string LabelGroupEditor = "GROUP EDITOR · {0}";
+    private const string LabelMembersMax = "MEMBERS ({0} / max {1})";
+    private const string LabelHostileMembers = "⚠ {0} member type(s) can be hostile to {1}. Inside one group they fight as allies; other groups see each by its own role.";
+    private const string LabelOverUnitLimit = "⚠ {0} members, but only {1} Perun units can be alive at once; the rest won't spawn.";
+    private const string LabelConfirmDelete = "Delete \"{0}\"?";
+    private const string LabelUnsavedChanges = "Unsaved changes.";
+
     public const string NameControl = "PerunGroupName";
-    public const string SearchControl = "PerunGroupAddSearch";
+
+    public const string ControlSearch = "PerunGroupAddSearch";
 
     private const float RowHeight = 22f;
     private const float AddWidth = 240f;
     private const float ColumnGap = 12f;
 
-    private static readonly string[] LeaderModes = { "AUTO", "MANUAL" };
+    private static readonly string[] LeaderModes = { ChipAuto, ChipManual };
     private static readonly BotDifficulty[] Difficulties = { BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
-    private static readonly string[] DifficultyNames = { "Easy", "Normal", "Hard", "Impossible" };
+    private static readonly string[] DifficultyNames = { LabelEasy, LabelNormal, LabelHard, LabelImpossible };
     private static readonly string[] CountNames = BuildCountNames();
 
     private enum Confirm
@@ -188,14 +219,14 @@ internal sealed class GroupEditor
         if (string.IsNullOrEmpty(name) && GUI.GetNameOfFocusedControl() != NameControl && Event.current.type == EventType.Repaint)
         {
             Rect field = GUILayoutUtility.GetLastRect();
-            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), "Group name…", Theme.Small);
+            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), LabelGroupName, Theme.Small);
         }
         if (name != _draft.Name)
         {
             _draft.Name = name;
         }
 
-        GUILayout.Label("Leader", Theme.Small, GUILayout.Width(44f));
+        GUILayout.Label(LabelLeader, Theme.Small, GUILayout.Width(44f));
         int mode = _draft.Leader.HasValue ? 1 : 0;
         int picked = GUILayout.Toolbar(mode, LeaderModes, Theme.Tab, GUILayout.Width(150f));
         if (picked != mode && Event.current.type != EventType.Layout)
@@ -211,7 +242,7 @@ internal sealed class GroupEditor
         _memberScroll = GUILayout.BeginScrollView(_memberScroll, false, false, GUIStyle.none, GUI.skin.verticalScrollbar, GUILayout.ExpandHeight(true));
         if (_draft.Members.Count == 0)
         {
-            GUILayout.Label("<color=#9fb4c8>Add types from the list on the right.</color>", Theme.Label);
+            GUILayout.Label(LabelAddTypesHint, Theme.Label);
         }
 
         bool manual = _draft.Leader.HasValue;
@@ -255,19 +286,19 @@ internal sealed class GroupEditor
 
     private void DrawAddList()
     {
-        GUILayout.Label("ADD TYPE", Theme.Header);
+        GUILayout.Label(LabelAddType, Theme.Header);
         int category = GUILayout.SelectionGrid(_category, _catalog.CategoryNames, 3, Theme.Tab);
         if (category != _category)
         {
             _pendingCategory = category;
         }
 
-        GUI.SetNextControlName(SearchControl);
+        GUI.SetNextControlName(ControlSearch);
         _search = GUILayout.TextField(_search ?? "", 40, Theme.Search);
-        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != SearchControl && Event.current.type == EventType.Repaint)
+        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != ControlSearch && Event.current.type == EventType.Repaint)
         {
             Rect field = GUILayoutUtility.GetLastRect();
-            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), "Search types…", Theme.Small);
+            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), LabelSearchTypes, Theme.Small);
         }
 
         List<WildSpawnType> roles;
@@ -309,13 +340,13 @@ internal sealed class GroupEditor
         _addList.SpaceAfter();
         if (roles.Count == 0)
         {
-            GUILayout.Label("Nothing matches.", Theme.Small);
+            GUILayout.Label(LabelNothingMatches, Theme.Small);
         }
         GUILayout.EndScrollView();
         _addList.MeasureView();
         if (_block)
         {
-            GUILayout.Label("<color=#7f8a95>Hostile types are blocked by the setting.</color>", Theme.Small);
+            GUILayout.Label(LabelHostileBlocked, Theme.Small);
         }
     }
 
@@ -326,7 +357,7 @@ internal sealed class GroupEditor
         {
             case Confirm.Delete:
                 GUILayout.Label(_confirmText, Theme.Label, GUILayout.ExpandWidth(true));
-                if (GUILayout.Button("Delete", Theme.DangerButton, GUILayout.Width(90f)))
+                if (GUILayout.Button(ChipDelete, Theme.DangerButton, GUILayout.Width(90f)))
                 {
                     _pending += () =>
                     {
@@ -340,7 +371,7 @@ internal sealed class GroupEditor
                         ShowConfirm(Confirm.None);
                     };
                 }
-                if (GUILayout.Button("Cancel", Theme.Button, GUILayout.Width(90f)))
+                if (GUILayout.Button(ChipCancel, Theme.Button, GUILayout.Width(90f)))
                 {
                     _pending += () => ShowConfirm(Confirm.None);
                 }
@@ -348,7 +379,7 @@ internal sealed class GroupEditor
 
             case Confirm.Unsaved:
                 GUILayout.Label(_confirmText, Theme.Label, GUILayout.ExpandWidth(true));
-                if (GUILayout.Button("Save", Theme.Button, GUILayout.Width(90f)))
+                if (GUILayout.Button(ChipSave, Theme.Button, GUILayout.Width(90f)))
                 {
                     _pending += () =>
                     {
@@ -362,11 +393,11 @@ internal sealed class GroupEditor
                         }
                     };
                 }
-                if (GUILayout.Button("Discard", Theme.DangerButton, GUILayout.Width(90f)))
+                if (GUILayout.Button(ChipDiscard, Theme.DangerButton, GUILayout.Width(90f)))
                 {
                     _pending += Close;
                 }
-                if (GUILayout.Button("Cancel", Theme.Button, GUILayout.Width(90f)))
+                if (GUILayout.Button(ChipCancel, Theme.Button, GUILayout.Width(90f)))
                 {
                     _pending += () => ShowConfirm(Confirm.None);
                 }
@@ -374,28 +405,28 @@ internal sealed class GroupEditor
 
             default:
                 GUI.enabled = Dirty;
-                if (GUILayout.Button("Save", Theme.Button, GUILayout.Width(80f)))
+                if (GUILayout.Button(ChipSave, Theme.Button, GUILayout.Width(80f)))
                 {
                     _pending += () => Save(_savedName);
                 }
                 GUI.enabled = true;
-                if (GUILayout.Button("Save as", Theme.Button, GUILayout.Width(80f)))
+                if (GUILayout.Button(ChipSaveAs, Theme.Button, GUILayout.Width(80f)))
                 {
                     _pending += () => Save(null);
                 }
                 GUI.enabled = _savedName != null;
-                if (GUILayout.Button("Delete", Theme.DangerButton, GUILayout.Width(80f)))
+                if (GUILayout.Button(ChipDelete, Theme.DangerButton, GUILayout.Width(80f)))
                 {
                     _pending += () => ShowConfirm(Confirm.Delete);
                 }
                 GUI.enabled = true;
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Close", Theme.Button, GUILayout.Width(80f)))
+                if (GUILayout.Button(ChipClose, Theme.Button, GUILayout.Width(80f)))
                 {
                     RequestClose();
                 }
                 GUI.enabled = _draft.Members.Count > 0;
-                if (GUILayout.Button("PLACE GROUP", Theme.Tab, GUILayout.Width(150f)))
+                if (GUILayout.Button(ChipPlaceGroup, Theme.Tab, GUILayout.Width(150f)))
                 {
                     _pending += Place;
                 }
@@ -423,9 +454,9 @@ internal sealed class GroupEditor
         _builtKey = key;
         _block = block;
 
-        string title = _savedName == null ? "NEW GROUP" : _savedName.ToUpperInvariant();
-        _header = Dirty ? $"GROUP EDITOR · {title} <color=#7f8a95>· not saved</color>" : $"GROUP EDITOR · {title}";
-        _membersTitle = $"MEMBERS ({_draft.Total} / max {Commands.MaxUnits})";
+        string title = _savedName == null ? LabelNewGroup : _savedName.ToUpperInvariant();
+        _header = Dirty ? string.Format(LabelGroupEditorUnsaved, title) : string.Format(LabelGroupEditor, title);
+        _membersTitle = string.Format(LabelMembersMax, _draft.Total, Commands.MaxUnits);
 
         int hostile = 0;
         _rows.Clear();
@@ -449,10 +480,10 @@ internal sealed class GroupEditor
 
         _warning = hostile == 0
             ? ""
-            : $"⚠ {hostile} member type(s) can be hostile to {SpawnNames.Of(leader)}. Inside one group they fight as allies; other groups see each by its own role.";
+            : string.Format(LabelHostileMembers, hostile, SpawnNames.Of(leader));
         if (_draft.Total > Commands.MaxUnits)
         {
-            _warning += (_warning.Length > 0 ? "\n" : "") + $"⚠ {_draft.Total} members, but only {Commands.MaxUnits} Perun units can be alive at once; the rest won't spawn.";
+            _warning += (_warning.Length > 0 ? "\n" : "") + string.Format(LabelOverUnitLimit, _draft.Total, Commands.MaxUnits);
         }
         _warningContent.text = _warning;
     }
@@ -526,8 +557,8 @@ internal sealed class GroupEditor
         _confirm = confirm;
         _confirmText = confirm switch
         {
-            Confirm.Delete => $"Delete \"{_savedName}\"?",
-            Confirm.Unsaved => "Unsaved changes.",
+            Confirm.Delete => string.Format(LabelConfirmDelete, _savedName),
+            Confirm.Unsaved => LabelUnsavedChanges,
             _ => ""
         };
     }
@@ -538,7 +569,7 @@ internal sealed class GroupEditor
         _confirm = Confirm.None;
         _error = "";
         string focused = GUI.GetNameOfFocusedControl();
-        if (focused == NameControl || focused == SearchControl)
+        if (focused == NameControl || focused == ControlSearch)
         {
             GUIUtility.keyboardControl = 0;
         }

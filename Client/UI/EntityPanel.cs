@@ -12,6 +12,26 @@ namespace Perun.Client.UI;
 
 internal sealed class EntityPanel
 {
+    private const string LabelPlayers = "Players";
+    private const string LabelUsec = "USEC";
+    private const string LabelBear = "BEAR";
+    private const string LabelScavs = "Scavs";
+    private const string LabelRaidersRogues = "Raiders & rogues";
+    private const string LabelBosses = "Bosses";
+    private const string LabelFollowers = "Followers";
+    private const string LabelCultists = "Cultists";
+    private const string LabelInfected = "Infected";
+    private const string LabelFactions = "Factions";
+    private const string LabelOther = "Other";
+    private const string LabelMine = "★ Mine";
+    private const string LabelNoPerunUnits = "No Perun units yet.";
+    private const string LabelNobodyHere = "Nobody here.";
+    private const string LabelHint = "Click select · Shift add · double-click fly to · Shift+click group selects all";
+    private const string LabelEntities = "ENTITIES  <color=#9fb4c8>{0}</color>";
+    private const string LabelYou = "  <color=#7f8a95>(you)</color>";
+
+    private const string MarkupColorOpen = "<color=";
+
     private const float Refresh = 0.5f;
     private const float DoubleClick = 0.35f;
 
@@ -23,7 +43,7 @@ internal sealed class EntityPanel
     }
 
     private static readonly BotKind[] Order = (BotKind[])Enum.GetValues(typeof(BotKind));
-    private static readonly string[] KindNames = { "Players", "USEC", "BEAR", "Scavs", "Raiders & rogues", "Bosses", "Followers", "Cultists", "Infected", "Factions", "Other" };
+    private static readonly string[] KindNames = { LabelPlayers, LabelUsec, LabelBear, LabelScavs, LabelRaidersRogues, LabelBosses, LabelFollowers, LabelCultists, LabelInfected, LabelFactions, LabelOther };
 
     private const float RowHeight = 22f;
 
@@ -81,7 +101,7 @@ internal sealed class EntityPanel
 
         GUILayout.BeginHorizontal();
         GUILayout.Label(_header, Theme.Header, GUILayout.ExpandWidth(true));
-        _oursOnlyWanted = GUILayout.Toggle(_oursOnlyWanted, "★ Mine", Theme.Tab, GUILayout.Width(64f));
+        _oursOnlyWanted = GUILayout.Toggle(_oursOnlyWanted, LabelMine, Theme.Tab, GUILayout.Width(64f));
         GUILayout.EndHorizontal();
 
         _list.Plan(_rows.Count, _scroll);
@@ -115,11 +135,11 @@ internal sealed class EntityPanel
         _list.SpaceAfter();
         if (_total == 0)
         {
-            GUILayout.Label(_oursOnly ? "No Perun units yet." : "Nobody here.", Theme.Small);
+            GUILayout.Label(_oursOnly ? LabelNoPerunUnits : LabelNobodyHere, Theme.Small);
         }
         GUILayout.EndScrollView();
         _list.MeasureView();
-        GUILayout.Label("Click select · Shift add · double-click fly to · Shift+click group selects all", Theme.Small);
+        GUILayout.Label(LabelHint, Theme.Small);
     }
 
     private void Clicked(PerunMode mode, Player player)
@@ -222,7 +242,7 @@ internal sealed class EntityPanel
         if (_headerTotal != _total)
         {
             _headerTotal = _total;
-            _header = $"ENTITIES  <color=#9fb4c8>{_total}</color>";
+            _header = string.Format(LabelEntities, _total);
         }
 
         _rows.Clear();
@@ -272,14 +292,14 @@ internal sealed class EntityPanel
             b.Append("<color=#ffc847>★</color> ");
         }
         Profile profile = player.Profile;
-        b.Append("<color=").Append(BotKinds.Hex(kind)).Append('>').Append(profile?.Nickname ?? "?").Append("</color>");
+        b.Append(MarkupColorOpen).Append(BotKinds.Hex(kind)).Append('>').Append(profile?.Nickname ?? "?").Append("</color>");
         if (profile != null && Bots.IsBot(player))
         {
             b.Append("  <color=#7f8a95>").Append(SpawnNames.Of(profile.Info.Settings.Role)).Append("</color>");
         }
         else if (player.IsYourPlayer)
         {
-            b.Append("  <color=#7f8a95>(you)</color>");
+            b.Append(LabelYou);
         }
         if (ordered)
         {

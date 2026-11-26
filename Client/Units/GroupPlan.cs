@@ -38,6 +38,8 @@ internal sealed class GroupMember
 
 internal sealed class GroupPlan
 {
+    private const string MatchBoss = "boss";
+
     public GroupPlan(GroupSource source, string name, IReadOnlyList<GroupMember> members, IReadOnlyList<string> maps, int? leaderChoice, string faction = null)
     {
         Source = source;
@@ -80,7 +82,7 @@ internal sealed class GroupPlan
         return 0;
     }
 
-    internal static bool IsBossRole(WildSpawnType role) => SpawnNames.Id(role).StartsWith("boss", StringComparison.Ordinal);
+    internal static bool IsBossRole(WildSpawnType role) => SpawnNames.Id(role).StartsWith(MatchBoss, StringComparison.Ordinal);
 
     // The n-th member in spawn order: the leader first, the others as listed.
     public GroupMember InSpawnOrder(int n) => Members[n == 0 ? LeaderIndex : n <= LeaderIndex ? n - 1 : n];

@@ -30,7 +30,9 @@ public class PossessedWeaponDirectionPatch : ModulePatch
 // and the check throws on every trigger pull (seen on Shturman), so the gun never fires. A player's weapon has no check.
 public class PossessedMalfunctionPatch : ModulePatch
 {
-    private static readonly AccessTools.FieldRef<BotData, BotOwner> Owner = AccessTools.FieldRefAccess<BotData, BotOwner>("_owner");
+    private const string FieldOwner = "_owner";
+
+    private static readonly AccessTools.FieldRef<BotData, BotOwner> Owner = AccessTools.FieldRefAccess<BotData, BotOwner>(FieldOwner);
 
     protected override MethodBase GetTargetMethod() =>
         AccessTools.Method(typeof(BotMalfunctionData), nameof(BotMalfunctionData.ValidateMalfunction));
@@ -100,6 +102,22 @@ public class PossessedRotatePatch : ModulePatch
 
 internal static class PossessedGuard
 {
+    private const string MatchSain = "SAIN";
+    private const string MatchBigBrain = "DrakiaXYZ";
+    private const string MatchOrbit = "Orbit";
+    private const string MatchBot = "Bot";
+    private const string MatchAiCore = "AICore";
+    private const string MatchAiming = "Aiming";
+    private const string MatchStandartBotBrain = "StandartBotBrain";
+
+    public const string DumpMove = "move";
+    public const string DumpPose = "pose";
+    public const string DumpProne = "prone";
+    public const string DumpSprint = "sprint";
+    public const string DumpJump = "jump";
+    public const string DumpAim = "aim";
+    public const string DumpTrigger = "trigger";
+
     private static readonly System.Collections.Generic.HashSet<string> Logged = new();
 
     public static bool AllowHands(Player.FirearmController hands, string action)
@@ -133,7 +151,7 @@ internal static class PossessedGuard
             }
             string space = type.Namespace ?? "";
             string name = type.Name;
-            if (space.StartsWith("SAIN") || space.StartsWith("DrakiaXYZ") || space.StartsWith("Orbit") || name.StartsWith("Bot") || name.StartsWith("AICore") || name.StartsWith("Aiming") || name == "StandartBotBrain")
+            if (space.StartsWith(MatchSain) || space.StartsWith(MatchBigBrain) || space.StartsWith(MatchOrbit) || name.StartsWith(MatchBot) || name.StartsWith(MatchAiCore) || name.StartsWith(MatchAiming) || name == MatchStandartBotBrain)
             {
                 if (Logged.Add(action + type.FullName))
                 {
@@ -151,7 +169,7 @@ public class PossessedMovePatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.Move), new[] { typeof(Vector2) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, "move");
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpMove);
 }
 
 public class PossessedPosePatch : ModulePatch
@@ -159,7 +177,7 @@ public class PossessedPosePatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.ChangePose), new[] { typeof(float) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, "pose");
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpPose);
 }
 
 public class PossessedPronePatch : ModulePatch
@@ -167,7 +185,7 @@ public class PossessedPronePatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.ToggleProne));
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, "prone");
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpProne);
 }
 
 public class PossessedSprintPatch : ModulePatch
@@ -175,7 +193,7 @@ public class PossessedSprintPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.EnableSprint), new[] { typeof(bool) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, "sprint");
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpSprint);
 }
 
 public class PossessedJumpPatch : ModulePatch
@@ -183,7 +201,7 @@ public class PossessedJumpPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.Jump));
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, "jump");
+    public static bool PatchPrefix(Player __instance) => PossessedGuard.Allow(__instance, PossessedGuard.DumpJump);
 }
 
 public class PossessedAimPatch : ModulePatch
@@ -191,7 +209,7 @@ public class PossessedAimPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player.FirearmController), nameof(Player.FirearmController.SetAim), new[] { typeof(bool) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, "aim");
+    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, PossessedGuard.DumpAim);
 }
 
 public class PossessedTriggerPatch : ModulePatch
@@ -199,7 +217,7 @@ public class PossessedTriggerPatch : ModulePatch
     protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player.FirearmController), nameof(Player.FirearmController.SetTriggerPressed), new[] { typeof(bool) });
 
     [PatchPrefix]
-    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, "trigger");
+    public static bool PatchPrefix(Player.FirearmController __instance) => PossessedGuard.AllowHands(__instance, PossessedGuard.DumpTrigger);
 }
 
 public class KeepCameraPatch : ModulePatch

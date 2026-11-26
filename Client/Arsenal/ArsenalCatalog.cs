@@ -17,9 +17,24 @@ internal sealed class ArsenalEntry
 
 internal static class ArsenalCatalog
 {
+    private const string LabelWeapons = "Weapons";
+    private const string LabelMelee = "Melee";
+    private const string LabelGrenades = "Grenades";
+    private const string LabelMagazines = "Magazines";
+    private const string LabelAmmo = "Ammo";
+    private const string LabelArmor = "Armor";
+    private const string LabelHeadgear = "Headgear";
+    private const string LabelRigs = "Rigs";
+    private const string LabelBackpacks = "Backpacks";
+    private const string LabelMedical = "Medical";
+    private const string LabelFood = "Food";
+    private const string LabelKeys = "Keys";
+    private const string LabelMods = "Mods";
+    private const string LabelOther = "Other";
+
     public static readonly string[] CategoryNames =
     {
-        "Weapons", "Melee", "Grenades", "Magazines", "Ammo", "Armor", "Headgear", "Rigs", "Backpacks", "Medical", "Food", "Keys", "Mods", "Other"
+        LabelWeapons, LabelMelee, LabelGrenades, LabelMagazines, LabelAmmo, LabelArmor, LabelHeadgear, LabelRigs, LabelBackpacks, LabelMedical, LabelFood, LabelKeys, LabelMods, LabelOther
     };
 
     private static ItemFactory _builtFor;

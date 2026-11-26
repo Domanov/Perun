@@ -10,7 +10,11 @@ namespace Perun.Client.Compat;
 // "your player" while you control it, so when it dies hand that back to your parked character first.
 internal static class FikaDeathGuard
 {
-    private const string PlayerType = "Fika.Core.Main.Players.FikaPlayer";
+    private const string MethodOnDead = "OnDead";
+
+    private const string HarmonyFikaDeath = ".fikadeath";
+
+    private const string TypeFikaPlayer = "Fika.Core.Main.Players.FikaPlayer";
 
     public static void Enable()
     {
@@ -19,7 +23,7 @@ internal static class FikaDeathGuard
             return;
         }
 
-        MethodInfo onDead = AccessTools.Method(AccessTools.TypeByName(PlayerType), "OnDead", new[] { typeof(EDamageType) });
+        MethodInfo onDead = AccessTools.Method(AccessTools.TypeByName(TypeFikaPlayer), MethodOnDead, new[] { typeof(EDamageType) });
         if (onDead == null)
         {
             Plugin.Log.LogWarning("Fika: its player death handler wasn't found; a controlled bot dying could end your raid");
@@ -27,7 +31,7 @@ internal static class FikaDeathGuard
         }
         try
         {
-            new Harmony(Plugin.Guid + ".fikadeath").Patch(onDead, prefix: new HarmonyMethod(typeof(FikaDeathGuard), nameof(NotYourDeath)));
+            new Harmony(Plugin.Guid + HarmonyFikaDeath).Patch(onDead, prefix: new HarmonyMethod(typeof(FikaDeathGuard), nameof(NotYourDeath)));
         }
         catch (Exception ex)
         {

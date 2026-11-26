@@ -28,14 +28,14 @@ internal static partial class SpawnService
         }
         if (!Singleton<IBotGame>.Instantiated || Singleton<IBotGame>.Instance.BotsController?.BotSpawner == null)
         {
-            LastResult = "No bot system in this raid";
+            LastResult = LabelNoBotSystem;
             return false;
         }
 
         int budget = Plugin.MaxUnits.Value - UnitRegistry.AliveCount - Pending;
         if (budget <= 0)
         {
-            LastResult = $"Unit limit reached ({Plugin.MaxUnits.Value})";
+            LastResult = string.Format(LabelUnitLimit, Plugin.MaxUnits.Value);
             return false;
         }
 
@@ -82,10 +82,10 @@ internal static partial class SpawnService
     {
         int total = parts.Sum(p => p.count);
         Pending += total;
-        string label = $"{name} ({total})";
-        LoadJob job = new($"Spawning {label}", true, total);
+        string label = string.Format(LabelGroupLabel, name, total);
+        LoadJob job = new(string.Format(LabelSpawning, label), true, total);
         ActiveJobs.Add(job);
-        LastResult = $"Spawning {label}…";
+        LastResult = string.Format(LabelSpawningProgress, label);
         Stopwatch clock = Stopwatch.StartNew();
         Plugin.Log.LogInfo($"Group {label}: requested {string.Join(", ", parts.Select(p => $"{p.role} ×{p.count} ({p.difficulty})"))}");
         var lease = BeginBusy();
@@ -100,7 +100,7 @@ internal static partial class SpawnService
             BotZone zone = spawner.GetClosestZone(position, out _);
             if (zone == null)
             {
-                LastResult = "No bot zone on this map";
+                LastResult = LabelNoBotZone;
                 return;
             }
 
@@ -111,7 +111,7 @@ internal static partial class SpawnService
                 int missing = part.count - (data?.Count ?? 0);
                 if (missing > 0)
                 {
-                    LastResult = $"Loading {part.role} ×{missing} from the server…";
+                    LastResult = string.Format(LabelLoadingFromServer, part.role, missing);
                     BotCreationData extra = await CreateData(part.role, part.difficulty, missing, job);
                     if (Stale())
                     {
@@ -135,7 +135,7 @@ internal static partial class SpawnService
                 {
                     if (datas.Count == 0)
                     {
-                        LastResult = $"The server sent no {part.role} profile for the leader";
+                        LastResult = string.Format(LabelNoLeaderProfile, part.role);
                         Plugin.Log.LogWarning($"Group {label}: no leader profile ({part.role})");
                         return;
                     }
@@ -167,7 +167,7 @@ internal static partial class SpawnService
 
             leaderData.SpawnParams.ShallBeGroup = new ShallBeGroupParams(true, true, followers);
             Plugin.Log.LogInfo($"Group {label}: profiles ready after {clock.ElapsedMilliseconds / 1000f:F1} s, creating at {position}");
-            LastResult = $"Creating {label}…";
+            LastResult = string.Format(LabelCreating, label);
             job.Enter(LoadStage.Creating);
 
             int spawned = 0;
@@ -203,7 +203,7 @@ internal static partial class SpawnService
             }
             if (leader == null || group == null)
             {
-                LastResult = $"{name}: the leader didn't spawn (see log)";
+                LastResult = string.Format(LabelLeaderMissing, name);
                 Plugin.Log.LogWarning($"Group {label}: the leader was not created");
                 return;
             }
@@ -236,7 +236,7 @@ internal static partial class SpawnService
                     UnitRegistry.Add(bot);
                     spawned++;
                     job.Spawned();
-                    LastResult = $"Spawned {name} {spawned}/{total}";
+                    LastResult = string.Format(LabelSpawnedCount, name, spawned, total);
                     Plugin.Log.LogInfo($"Group {label}: {bot.Profile.Nickname} ({bot.Profile.Info.Settings.Role}) in after {clock.ElapsedMilliseconds / 1000f:F1} s");
                 }, token);
                 if (Stale())
@@ -245,12 +245,12 @@ internal static partial class SpawnService
                 }
             }
 
-            LastResult = spawned < total ? $"Only {spawned}/{total} of {name} spawned (see log)" : $"Spawned {name} ({spawned})";
+            LastResult = spawned < total ? string.Format(LabelGroupSpawnedPartly, spawned, total, name) : string.Format(LabelGroupSpawned, name, spawned);
             Plugin.Log.LogInfo($"Group {label}: {spawned}/{total} in, leader {leader.Profile.Nickname}; followers attach once each bot is active");
         }
         catch (Exception ex)
         {
-            LastResult = $"Group spawn failed: {ex.Message}";
+            LastResult = string.Format(LabelGroupSpawnFailed, ex.Message);
             Plugin.Log.LogError($"Group {label} failed: {ex}");
         }
         finally

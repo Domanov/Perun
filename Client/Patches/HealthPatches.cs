@@ -7,6 +7,8 @@ namespace Perun.Client.Patches;
 
 internal static class HealthPatches
 {
+    private const string HarmonyHealth = ".health";
+
     private static readonly string[] Blocked =
     {
         nameof(ActiveHealthController.Kill),
@@ -25,7 +27,7 @@ internal static class HealthPatches
 
     public static void Enable()
     {
-        Harmony harmony = new(Plugin.Guid + ".health");
+        Harmony harmony = new(Plugin.Guid + HarmonyHealth);
         HarmonyMethod block = new(typeof(HealthPatches), nameof(BlockPrefix));
         int count = 0;
 

@@ -11,7 +11,9 @@ namespace Perun.Client.Units;
 
 internal static class Teleporting
 {
-    private static readonly FieldInfo LinkedFromField = Mode.Reflect.Field(Mode.Feature.TeleportHold, typeof(BotMover), "_prevSuccessLinkedFrom");
+    private const string FieldPrevSuccessLinkedFrom = "_prevSuccessLinkedFrom";
+
+    private static readonly FieldInfo LinkedFromField = Mode.Reflect.Field(Mode.Feature.TeleportHold, typeof(BotMover), FieldPrevSuccessLinkedFrom);
     private static readonly List<Player> Buffer = new();
 
     public static int Teleport(IReadOnlyList<Player> units, Vector3 point)

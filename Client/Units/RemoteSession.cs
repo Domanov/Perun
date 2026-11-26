@@ -6,6 +6,10 @@ namespace Perun.Client.Units;
 
 internal sealed class RemoteSession : IRemoteSession
 {
+    private const string LabelAskedSpawn = "Asked the host for {0} ×{1}…";
+    private const string LabelAskedGroup = "Asked the host for {0}…";
+    private const string LabelGroupTooLarge = "{0} can't be sent to the host (at most {1} member types)";
+
     private const float WatchRefresh = 2f;
 
     private sealed class RemoteJob : IJobView
@@ -127,21 +131,21 @@ internal sealed class RemoteSession : IRemoteSession
     public void Spawn(WildSpawnType role, BotDifficulty difficulty, int count, Vector3 position, float yaw)
     {
         _link.Spawn((int)role, (int)difficulty, count, position, yaw);
-        LastResult = $"Asked the host for {SpawnNames.Of(role)} ×{count}…";
+        LastResult = string.Format(LabelAskedSpawn, SpawnNames.Of(role), count);
     }
 
     public bool SpawnGroup(PerunGroupSpawn group)
     {
         if (!PerunRules.IsSaneGroup(group))
         {
-            LastResult = $"{group.Name} can't be sent to the host (at most {PerunRules.MaxGroupMembers} member types)";
+            LastResult = string.Format(LabelGroupTooLarge, group.Name, PerunRules.MaxGroupMembers);
             return true;
         }
         if (!_link.SpawnGroup(group))
         {
             return false;
         }
-        LastResult = $"Asked the host for {group.Name}…";
+        LastResult = string.Format(LabelAskedGroup, group.Name);
         return true;
     }
 

@@ -16,6 +16,36 @@ namespace Perun.Client.Units;
 
 internal static partial class SpawnService
 {
+    private const string NameSpawnPoint = "Perun";
+    private const string NameSpawnPointPrefix = "perun_";
+
+    private const string FieldLastAggressor = "LastAggressor";
+
+    private const string LabelNoBotSystem = "No bot system in this raid";
+    private const string LabelNoBotZone = "No bot zone on this map";
+    private const string LabelOnlyBotsRemoved = "Only bots can be removed";
+    private const string LabelUnitLimit = "Unit limit reached ({0})";
+    private const string LabelPreparing = "Preparing {0} ×{1}";
+    private const string LabelCount = "{0} ×{1}";
+    private const string LabelSpawning = "Spawning {0}";
+    private const string LabelSpawningProgress = "Spawning {0}…";
+    private const string LabelLoadingFromServer = "Loading {0} ×{1} from the server…";
+    private const string LabelNoProfile = "The server sent no {0} profile";
+    private const string LabelNoLeaderProfile = "The server sent no {0} profile for the leader";
+    private const string LabelCreating = "Creating {0}…";
+    private const string LabelSpawnedCount = "Spawned {0} {1}/{2}";
+    private const string LabelSpawnedPartly = "Only {0}/{1} {2} spawned (see log)";
+    private const string LabelGroupSpawnedPartly = "Only {0}/{1} of {2} spawned (see log)";
+    private const string LabelGroupSpawned = "Spawned {0} ({1})";
+    private const string LabelLeaderMissing = "{0}: the leader didn't spawn (see log)";
+    private const string LabelGroupLabel = "{0} ({1})";
+    private const string LabelSpawnFailed = "Spawn failed: {0}";
+    private const string LabelGroupSpawnFailed = "Group spawn failed: {0}";
+    private const string LabelRemoved = "Removed {0}";
+    private const string LabelKilled = "Killed {0}";
+
+    private const string DumpNone = "none";
+
     private const float LoadingSpeed = 3f;
 
     private const float GroupSpacing = 1.3f;
@@ -97,7 +127,7 @@ internal static partial class SpawnService
     private static async Task WarmAsync((WildSpawnType role, BotDifficulty difficulty) key, int count)
     {
         GameWorld world = _world;
-        LoadJob job = new($"Preparing {Units.SpawnNames.Of(key.role)} ×{count}", false, count);
+        LoadJob job = new(string.Format(LabelPreparing, Units.SpawnNames.Of(key.role), count), false, count);
         ActiveJobs.Add(job);
         var lease = BeginBusy(key);
         try
@@ -184,13 +214,13 @@ internal static partial class SpawnService
         return result;
     }
 
-    private const string SpawnId = "perun";
+    private const string NameSpawnId = "perun";
 
     private static async Task<BotCreationData> CreateData(WildSpawnType role, BotDifficulty difficulty, int count, LoadJob job)
     {
         BotSpawner spawner = Singleton<IBotGame>.Instance.BotsController.BotSpawner;
         // Map spawns always name their wave; mods read it on every new bot (MoreBotsAPI's hunts call Id_spawn.ToLower()).
-        PerunProfileData profileData = new(new GetProfileDataParams(SideFor(role), role, difficulty, 0f, new BotSpawnParams { Id_spawn = SpawnId }));
+        PerunProfileData profileData = new(new GetProfileDataParams(SideFor(role), role, difficulty, 0f, new BotSpawnParams { Id_spawn = NameSpawnId }));
 
         BotProfileClient profiles = (spawner._botCreator as BotCreatorClient)?._creatorProfile as BotProfileClient;
         if (profiles?._backEndSession == null)
@@ -305,14 +335,14 @@ internal static partial class SpawnService
     {
         if (!Singleton<IBotGame>.Instantiated || Singleton<IBotGame>.Instance.BotsController?.BotSpawner == null)
         {
-            LastResult = "No bot system in this raid";
+            LastResult = LabelNoBotSystem;
             return false;
         }
 
         int budget = Plugin.MaxUnits.Value - UnitRegistry.AliveCount - Pending;
         if (budget <= 0)
         {
-            LastResult = $"Unit limit reached ({Plugin.MaxUnits.Value})";
+            LastResult = string.Format(LabelUnitLimit, Plugin.MaxUnits.Value);
             return false;
         }
 
@@ -326,10 +356,10 @@ internal static partial class SpawnService
     private static async Task SpawnAsync(WildSpawnType role, BotDifficulty difficulty, int count, Vector3 position, float yaw)
     {
         Pending += count;
-        string label = $"{role} ×{count}";
-        LoadJob job = new($"Spawning {Units.SpawnNames.Of(role)} ×{count}", true, count);
+        string label = string.Format(LabelCount, role, count);
+        LoadJob job = new(string.Format(LabelSpawning, string.Format(LabelCount, Units.SpawnNames.Of(role), count)), true, count);
         ActiveJobs.Add(job);
-        LastResult = $"Spawning {label}…";
+        LastResult = string.Format(LabelSpawningProgress, label);
         Stopwatch clock = Stopwatch.StartNew();
         Plugin.Log.LogInfo($"Spawn {label}: requested ({ReadyCount(role, difficulty)} prepared)");
         var lease = BeginBusy();
@@ -345,7 +375,7 @@ internal static partial class SpawnService
             BotZone zone = spawner.GetClosestZone(position, out _);
             if (zone == null)
             {
-                LastResult = "No bot zone on this map";
+                LastResult = LabelNoBotZone;
                 return;
             }
 
@@ -354,7 +384,7 @@ internal static partial class SpawnService
             int missing = count - (data?.Count ?? 0);
             if (missing > 0)
             {
-                LastResult = $"Loading {role} ×{missing} from the server…";
+                LastResult = string.Format(LabelLoadingFromServer, role, missing);
                 BotCreationData extra = await CreateData(role, difficulty, missing, job);
                 if (Stale())
                 {
@@ -376,7 +406,7 @@ internal static partial class SpawnService
 
             if (data == null || data.Count == 0)
             {
-                LastResult = $"The server sent no {role} profile";
+                LastResult = string.Format(LabelNoProfile, role);
                 Plugin.Log.LogWarning($"Spawn {label}: the server returned no matching profile");
                 return;
             }
@@ -390,8 +420,8 @@ internal static partial class SpawnService
             {
                 points.Add(new SpawnPoint
                 {
-                    Id = $"perun_{Guid.NewGuid():N}",
-                    Name = "Perun",
+                    Id = NameSpawnPointPrefix + Guid.NewGuid().ToString("N"),
+                    Name = NameSpawnPoint,
                     Position = Slot(position, i),
                     Rotation = rotation,
                     Sides = EPlayerSideMask.All,
@@ -415,7 +445,7 @@ internal static partial class SpawnService
 
             float profilesAt = clock.ElapsedMilliseconds / 1000f;
             Plugin.Log.LogInfo($"Spawn {label}: {data.Count} profile(s) ready after {profilesAt:F1} s{(fromCache > 0 ? $" ({fromCache} prepared)" : "")}, creating at {position}");
-            LastResult = $"Creating {label}…";
+            LastResult = string.Format(LabelCreating, label);
             job.Enter(LoadStage.Creating);
 
             int total = data.Count;
@@ -441,7 +471,7 @@ internal static partial class SpawnService
                 created.Add(bot);
                 spawned++;
                 job.Spawned();
-                LastResult = $"Spawned {role} {spawned}/{total}";
+                LastResult = string.Format(LabelSpawnedCount, role, spawned, total);
                 Plugin.Log.LogInfo($"Spawn {label}: {bot.Profile.Nickname} ({bot.Profile.Info.Settings.Role}) in after {clock.ElapsedMilliseconds / 1000f:F1} s");
             }, spawner.GetCancelToken());
 
@@ -452,14 +482,14 @@ internal static partial class SpawnService
             }
             if (spawned < total)
             {
-                LastResult = $"Only {spawned}/{total} {role} spawned (see log)";
+                LastResult = string.Format(LabelSpawnedPartly, spawned, total, role);
                 Plugin.Log.LogWarning($"Spawn {label}: only {spawned}/{total} created");
             }
             GroupLeadership.Form(created, label);
         }
         catch (Exception ex)
         {
-            LastResult = $"Spawn failed: {ex.Message}";
+            LastResult = string.Format(LabelSpawnFailed, ex.Message);
             Plugin.Log.LogError($"Spawn {label} failed: {ex}");
         }
         finally
@@ -479,15 +509,15 @@ internal static partial class SpawnService
         BotOwner bot = player != null ? player.AIData?.BotOwner : null;
         if (bot == null || bot.LeaveData == null)
         {
-            LastResult = "Only bots can be removed";
+            LastResult = LabelOnlyBotsRemoved;
             return;
         }
 
         bot.LeaveData.RemoveFromMap();
-        LastResult = $"Removed {player.Profile.Nickname}";
+        LastResult = string.Format(LabelRemoved, player.Profile.Nickname);
     }
 
-    private static readonly AccessTools.FieldRef<Player, IPlayer> LastAggressor = AccessTools.FieldRefAccess<Player, IPlayer>("LastAggressor");
+    private static readonly AccessTools.FieldRef<Player, IPlayer> LastAggressor = AccessTools.FieldRefAccess<Player, IPlayer>(FieldLastAggressor);
 
     public static void Kill(Player player)
     {
@@ -496,12 +526,12 @@ internal static partial class SpawnService
             return;
         }
 
-        string hands = player.HandsController?.GetType().Name ?? "none";
+        string hands = player.HandsController?.GetType().Name ?? DumpNone;
         // Fika's corpse sync turns the killer's profile id into a MongoID and throws without one, which left the bot
         // dead but frozen. A kill from the game master has no killer, so the bot is its own.
         LastAggressor(player) ??= player;
         player.ActiveHealthController.Kill(EDamageType.Undefined);
-        LastResult = $"Killed {player.Profile.Nickname}";
+        LastResult = string.Format(LabelKilled, player.Profile.Nickname);
         Plugin.Log.LogInfo($"Killed {player.Profile.Nickname} (hands: {hands})");
     }
 

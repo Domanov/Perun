@@ -12,9 +12,22 @@ namespace Perun.Client.Compat;
 // stops updating (stance keys, poses) when it isn't.
 internal static class RealismCompat
 {
-    private const string PluginType = "RealismCommonLib.Plugin";
-    private const string StancePluginType = "StanceOverhaul.Plugin";
-    private const string GameStateType = "RealismCommonLib.StateControllers.GlobalState.GameState";
+    private const string MethodCheckIsReady = "CheckIsReady";
+    private const string MethodSetChosen = "SetChosen";
+    private const string MethodReconcile = "Reconcile";
+
+    private const string PropertyPlayerIsReady = "PlayerIsReady";
+    private const string PropertyPlayer = "Player";
+
+    private const string FieldPlayerStateInstance = "PlayerStateInstance";
+    private const string FieldStanceControllerInstance = "StanceControllerInstance";
+    private const string FieldInputHandler = "_inputHandler";
+
+    private const string HarmonyRealism = ".realism";
+
+    private const string TypeRealismPlugin = "RealismCommonLib.Plugin";
+    private const string TypeStancePlugin = "StanceOverhaul.Plugin";
+    private const string TypeGameState = "RealismCommonLib.StateControllers.GlobalState.GameState";
 
     private static FieldInfo _state;
     private static PropertyInfo _player;
@@ -68,39 +81,39 @@ internal static class RealismCompat
 
     public static void Enable()
     {
-        Type plugin = AccessTools.TypeByName(PluginType);
+        Type plugin = AccessTools.TypeByName(TypeRealismPlugin);
         if (plugin == null)
         {
             return;
         }
 
-        Type gameState = AccessTools.TypeByName(GameStateType);
-        MethodInfo check = gameState != null ? AccessTools.Method(gameState, "CheckIsReady") : null;
-        _setReady = gameState != null ? AccessTools.PropertySetter(gameState, "PlayerIsReady") : null;
+        Type gameState = AccessTools.TypeByName(TypeGameState);
+        MethodInfo check = gameState != null ? AccessTools.Method(gameState, MethodCheckIsReady) : null;
+        _setReady = gameState != null ? AccessTools.PropertySetter(gameState, PropertyPlayerIsReady) : null;
         if (check != null && _setReady != null)
         {
-            new Harmony(Plugin.Guid + ".realism").Patch(check, postfix: new HarmonyMethod(typeof(RealismCompat), nameof(KeepRaidRunning)));
+            new Harmony(Plugin.Guid + HarmonyRealism).Patch(check, postfix: new HarmonyMethod(typeof(RealismCompat), nameof(KeepRaidRunning)));
         }
         else
         {
             Plugin.Log.LogWarning("Realism: its raid check wasn't found; Stance Overhaul may stop working on a controlled bot");
         }
-        _state = AccessTools.Field(plugin, "PlayerStateInstance");
-        _player = _state != null ? AccessTools.Property(_state.FieldType, "Player") : null;
+        _state = AccessTools.Field(plugin, FieldPlayerStateInstance);
+        _player = _state != null ? AccessTools.Property(_state.FieldType, PropertyPlayer) : null;
         if (_player == null)
         {
             Plugin.Log.LogWarning("Realism: its player state wasn't found; stances may misbehave on a controlled bot");
         }
 
-        Type stancePlugin = AccessTools.TypeByName(StancePluginType);
+        Type stancePlugin = AccessTools.TypeByName(TypeStancePlugin);
         if (stancePlugin == null)
         {
             return;
         }
-        _stanceController = AccessTools.Field(stancePlugin, "StanceControllerInstance");
-        _inputHandler = _stanceController != null ? AccessTools.Field(_stanceController.FieldType, "_inputHandler") : null;
-        _setChosen = _inputHandler != null ? AccessTools.Method(_inputHandler.FieldType, "SetChosen") : null;
-        _reconcile = _inputHandler != null ? AccessTools.Method(_inputHandler.FieldType, "Reconcile") : null;
+        _stanceController = AccessTools.Field(stancePlugin, FieldStanceControllerInstance);
+        _inputHandler = _stanceController != null ? AccessTools.Field(_stanceController.FieldType, FieldInputHandler) : null;
+        _setChosen = _inputHandler != null ? AccessTools.Method(_inputHandler.FieldType, MethodSetChosen) : null;
+        _reconcile = _inputHandler != null ? AccessTools.Method(_inputHandler.FieldType, MethodReconcile) : null;
         if (_setChosen == null || _reconcile == null)
         {
             Plugin.Log.LogWarning("Stance Overhaul: its stance input wasn't found; a controlled bot may keep your character's stance");

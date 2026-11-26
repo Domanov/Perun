@@ -32,6 +32,13 @@ internal sealed class LoadoutOutcome
 // then, so every way out of the run, including an abort or an exception, must put back all slots still waiting.
 internal static class LoadoutRun
 {
+    private const string LabelStoppedUnexpectedly = "stopped unexpectedly";
+    private const string LabelSlotFailed = "{0}: {1}";
+    private const string LabelSlotFailedNotRestored = "{0}: {1}; couldn't put back {2}";
+    private const string LabelSlotError = "{0} ({1})";
+    private const string LabelNotRestored = "{0}; couldn't put back {1}";
+    private const string LabelSlotsKept = "{0}; {1} slot(s) left as they were";
+
     public static async Task<LoadoutOutcome> Run<TSlot>(IReadOnlyList<TSlot> takeOff, IReadOnlyList<TSlot> give, LoadoutSteps<TSlot> steps) where TSlot : notnull
     {
         LoadoutOutcome outcome = new();
@@ -66,11 +73,11 @@ internal static class LoadoutRun
                 if (lost != null)
                 {
                     outcome.RollbackFailed = true;
-                    outcome.Failures.Add($"{slot}: {result.Message}; couldn't put back {lost}");
+                    outcome.Failures.Add(string.Format(LabelSlotFailedNotRestored, slot, result.Message, lost));
                 }
                 else
                 {
-                    outcome.Failures.Add($"{slot}: {result.Message}");
+                    outcome.Failures.Add(string.Format(LabelSlotFailed, slot, result.Message));
                 }
             }
 
@@ -81,7 +88,7 @@ internal static class LoadoutRun
         {
             if (pending.Count > 0 && outcome.Aborted == null)
             {
-                outcome.Aborted = Abort(steps, pending, ArsenalResult.Failed("stopped unexpectedly"));
+                outcome.Aborted = Abort(steps, pending, ArsenalResult.Failed(LabelStoppedUnexpectedly));
             }
         }
     }
@@ -118,7 +125,7 @@ internal static class LoadoutRun
         return (result, result.Status == ArsenalStatus.Cancelled);
     }
 
-    private static ArsenalResult Prefixed<TSlot>(TSlot slot, ArsenalResult result) => new(result.Status, $"{slot}: {result.Message}");
+    private static ArsenalResult Prefixed<TSlot>(TSlot slot, ArsenalResult result) => new(result.Status, string.Format(LabelSlotFailed, slot, result.Message));
 
     private static string? Restored<TSlot>(LoadoutSteps<TSlot> steps, TSlot slot) where TSlot : notnull
     {
@@ -128,7 +135,7 @@ internal static class LoadoutRun
         }
         catch (Exception ex)
         {
-            return $"{slot} ({ex.Message})";
+            return string.Format(LabelSlotError, slot, ex.Message);
         }
     }
 
@@ -151,8 +158,8 @@ internal static class LoadoutRun
         pending.Clear();
         if (lost.Count > 0)
         {
-            return ArsenalResult.RollbackFailed($"{cause.Message}; couldn't put back {string.Join(", ", lost)}");
+            return ArsenalResult.RollbackFailed(string.Format(LabelNotRestored, cause.Message, string.Join(", ", lost)));
         }
-        return restored == 0 ? cause : new ArsenalResult(cause.Status, $"{cause.Message}; {restored} slot(s) left as they were");
+        return restored == 0 ? cause : new ArsenalResult(cause.Status, string.Format(LabelSlotsKept, cause.Message, restored));
     }
 }

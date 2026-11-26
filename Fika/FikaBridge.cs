@@ -11,6 +11,25 @@ namespace Perun.Fika;
 
 internal sealed class FikaBridge : IGameMasterLink
 {
+    private const string LabelNotConnected = "Perun hasn't finished connecting yet, try again";
+    private const string LabelNoPassword = "The headless host has no game master password set";
+    private const string LabelHostOnly = "Only the host can use Perun";
+    private const string LabelPasswordLocked = "Too many wrong passwords, wait {0} s";
+    private const string LabelWrongPassword = "Wrong game master password";
+    private const string LabelAlreadyGameMaster = "{0} is already the game master";
+    private const string LabelReasonDisconnected = "disconnected";
+    private const string LabelReasonLeftRts = "left RTS mode";
+    private const string LabelReasonRaidEnded = "raid ended";
+    private const string LabelReasonHostLost = "the connection to the host ended";
+
+    private const string DumpPause = "pause";
+    private const string DumpWeather = "weather";
+    private const string DumpTime = "time";
+    private const string DumpAnswer = "game master answer";
+    private const string DumpStatus = "status";
+    private const string DumpTeleport = "teleport";
+    private const string DumpHeal = "heal";
+
     private const DeliveryMethod Reliable = DeliveryMethod.ReliableOrdered;
     private const byte Protocol = 7;
     private const byte EnvironmentProtocol = 2;
@@ -123,7 +142,7 @@ internal sealed class FikaBridge : IGameMasterLink
         _failures.Remove(e.Peer);
         if (e.Peer == _gameMaster)
         {
-            ReleaseGameMaster("disconnected");
+            ReleaseGameMaster(LabelReasonDisconnected);
         }
     }
 
@@ -442,7 +461,7 @@ internal sealed class FikaBridge : IGameMasterLink
             Invalid(peer);
             return;
         }
-        if (_isServer || !FromHost(packet.Token, "pause"))
+        if (_isServer || !FromHost(packet.Token, DumpPause))
         {
             return;
         }
@@ -482,7 +501,7 @@ internal sealed class FikaBridge : IGameMasterLink
             return;
         }
 
-        if (!FromHost(packet.Token, "weather"))
+        if (!FromHost(packet.Token, DumpWeather))
         {
             return;
         }
@@ -518,7 +537,7 @@ internal sealed class FikaBridge : IGameMasterLink
             return;
         }
 
-        if (!FromHost(packet.Token, "time"))
+        if (!FromHost(packet.Token, DumpTime))
         {
             return;
         }
@@ -548,19 +567,19 @@ internal sealed class FikaBridge : IGameMasterLink
 
         if (!_readyPeers.ContainsKey(peer))
         {
-            Answer(peer, false, "Perun hasn't finished connecting yet, try again");
+            Answer(peer, false, LabelNotConnected);
             return;
         }
 
         if (!PerunHost.AcceptsGameMaster)
         {
-            Answer(peer, false, PerunHost.IsHeadless ? "The headless host has no game master password set" : "Only the host can use Perun");
+            Answer(peer, false, PerunHost.IsHeadless ? LabelNoPassword : LabelHostOnly);
             return;
         }
 
         if (_failures.TryGetValue(peer, out var record) && _now < record.lockedUntil)
         {
-            Answer(peer, false, $"Too many wrong passwords, wait {Mathf.CeilToInt(record.lockedUntil - _now)} s");
+            Answer(peer, false, string.Format(LabelPasswordLocked, Mathf.CeilToInt(record.lockedUntil - _now)));
             return;
         }
 
@@ -570,13 +589,13 @@ internal sealed class FikaBridge : IGameMasterLink
             float lockedUntil = failures >= MaxPasswordFailures ? _now + LockoutSeconds : 0f;
             _failures[peer] = (failures >= MaxPasswordFailures ? 0 : failures, lockedUntil);
             Plugin.Log.LogWarning($"Peer {peer.Id}: wrong game master password");
-            Answer(peer, false, "Wrong game master password");
+            Answer(peer, false, LabelWrongPassword);
             return;
         }
 
         if (_gameMaster != null && _gameMaster != peer)
         {
-            Answer(peer, false, $"{PerunHost.NameOf(_gameMasterId)} is already the game master");
+            Answer(peer, false, string.Format(LabelAlreadyGameMaster, PerunHost.NameOf(_gameMasterId)));
             return;
         }
 
@@ -602,7 +621,7 @@ internal sealed class FikaBridge : IGameMasterLink
             Invalid(peer);
             return;
         }
-        if (_isServer || !FromHost(packet.Token, "game master answer"))
+        if (_isServer || !FromHost(packet.Token, DumpAnswer))
         {
             return;
         }
@@ -627,7 +646,7 @@ internal sealed class FikaBridge : IGameMasterLink
         }
         if (_isServer && peer == _gameMaster)
         {
-            ReleaseGameMaster("left RTS mode");
+            ReleaseGameMaster(LabelReasonLeftRts);
         }
     }
 
@@ -701,7 +720,7 @@ internal sealed class FikaBridge : IGameMasterLink
 
     private void OnStatus(PerunStatusPacket packet, NetPeer peer)
     {
-        if (!_isServer && _granted && packet.Valid && FromHost(packet.Token, "status"))
+        if (!_isServer && _granted && packet.Valid && FromHost(packet.Token, DumpStatus))
         {
             PerunGameMaster.OnStatus(packet.Status);
         }
@@ -890,7 +909,7 @@ internal sealed class FikaBridge : IGameMasterLink
             Invalid(peer);
             return;
         }
-        if (!_isServer && FromHost(packet.Token, "teleport"))
+        if (!_isServer && FromHost(packet.Token, DumpTeleport))
         {
             PerunNetwork.TeleportFromHost(packet.ProfileId, packet.Position);
         }
@@ -903,7 +922,7 @@ internal sealed class FikaBridge : IGameMasterLink
             Invalid(peer);
             return;
         }
-        if (!_isServer && FromHost(packet.Token, "heal"))
+        if (!_isServer && FromHost(packet.Token, DumpHeal))
         {
             PerunNetwork.HealFromHost(packet.ProfileId);
         }
@@ -930,7 +949,7 @@ internal sealed class FikaBridge : IGameMasterLink
             PerunNetwork.TimeBroadcast = null;
             PerunNetwork.HealRemote = null;
             PerunNetwork.TeleportRemote = null;
-            ReleaseGameMaster("raid ended");
+            ReleaseGameMaster(LabelReasonRaidEnded);
         }
         else if (_manager != null)
         {
@@ -943,7 +962,7 @@ internal sealed class FikaBridge : IGameMasterLink
             }
             if (wasGranted)
             {
-                PerunGameMaster.OnLost("the connection to the host ended");
+                PerunGameMaster.OnLost(LabelReasonHostLost);
             }
         }
 

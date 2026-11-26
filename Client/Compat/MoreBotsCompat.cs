@@ -10,12 +10,27 @@ namespace Perun.Client.Compat;
 
 internal static class MoreBotsCompat
 {
-    private const string PluginGuid = "com.morebotsapi.tacticaltoaster";
-    private const string ManagerType = "MoreBotsAPI.CustomWildSpawnTypeManager";
+    private const string TypeHuntManager = "MoreBotsAPI.Components.HuntManager";
+    private const string TypeFactionManager = "MoreBotsAPI.Components.FactionManager";
+    private const string TypeWildSpawnTypeManager = "MoreBotsAPI.CustomWildSpawnTypeManager";
+
+    private const string MethodFindFirstHuntTarget = "FindFirstHuntTarget";
+    private const string MethodFindNewHuntTarget = "FindNewHuntTarget";
+    private const string MethodOnKill = "OnKill";
+    private const string MethodGetCustomWildSpawnTypes = "GetCustomWildSpawnTypes";
+
+    private const string PropertyWildSpawnTypeValue = "WildSpawnTypeValue";
+    private const string PropertyScavRole = "ScavRole";
+
+    private const string LabelCustomFaction = "Custom";
+
+    private const string HarmonyMoreBots = ".morebots";
+
+    private const string GuidMoreBots = "com.morebotsapi.tacticaltoaster";
 
     private static Dictionary<int, string> _factions;
 
-    public static bool Present => Chainloader.PluginInfos.ContainsKey(PluginGuid);
+    public static bool Present => Chainloader.PluginInfos.ContainsKey(GuidMoreBots);
 
     public static IReadOnlyDictionary<int, string> Factions => _factions ??= Load();
 
@@ -24,9 +39,9 @@ internal static class MoreBotsCompat
     // MoreBots hunts and takes revenge on players that aren't AI; a controlled bot must still count as a bot there.
     private static readonly (string type, string method)[] HumanChecks =
     {
-        ("MoreBotsAPI.Components.HuntManager", "FindFirstHuntTarget"),
-        ("MoreBotsAPI.Components.HuntManager", "FindNewHuntTarget"),
-        ("MoreBotsAPI.Components.FactionManager", "OnKill"),
+        (TypeHuntManager, MethodFindFirstHuntTarget),
+        (TypeHuntManager, MethodFindNewHuntTarget),
+        (TypeFactionManager, MethodOnKill),
     };
 
     public static void Enable()
@@ -35,7 +50,7 @@ internal static class MoreBotsCompat
         {
             return;
         }
-        Harmony harmony = new(Plugin.Guid + ".morebots");
+        Harmony harmony = new(Plugin.Guid + HarmonyMoreBots);
         foreach ((string type, string method) in HumanChecks)
         {
             try
@@ -59,7 +74,7 @@ internal static class MoreBotsCompat
     private static Dictionary<int, string> Load()
     {
         Dictionary<int, string> result = new();
-        Type manager = FindType(ManagerType);
+        Type manager = FindType(TypeWildSpawnTypeManager);
         if (manager == null)
         {
             if (Present)
@@ -71,7 +86,7 @@ internal static class MoreBotsCompat
 
         try
         {
-            MethodInfo getTypes = manager.GetMethod("GetCustomWildSpawnTypes", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo getTypes = manager.GetMethod(MethodGetCustomWildSpawnTypes, BindingFlags.Public | BindingFlags.Static);
             if (getTypes?.Invoke(null, null) is not IEnumerable types)
             {
                 return result;
@@ -80,9 +95,9 @@ internal static class MoreBotsCompat
             foreach (object custom in types)
             {
                 Type type = custom.GetType();
-                int value = (int)type.GetProperty("WildSpawnTypeValue").GetValue(custom);
-                string faction = type.GetProperty("ScavRole")?.GetValue(custom) as string;
-                result[value] = string.IsNullOrWhiteSpace(faction) ? "Custom" : faction;
+                int value = (int)type.GetProperty(PropertyWildSpawnTypeValue).GetValue(custom);
+                string faction = type.GetProperty(PropertyScavRole)?.GetValue(custom) as string;
+                result[value] = string.IsNullOrWhiteSpace(faction) ? LabelCustomFaction : faction;
             }
 
             Plugin.Log.LogInfo($"MoreBotsAPI: {result.Count} custom bot type(s) in {new HashSet<string>(result.Values).Count} faction(s)");

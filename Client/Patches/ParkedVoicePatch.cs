@@ -19,7 +19,9 @@ public class ParkedVoicePatch : ModulePatch
 // through Say; the hit's slowdown doesn't matter under the map either.
 public class ParkedHitPatch : ModulePatch
 {
-    protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), "ApplyHitDebuff");
+    private const string MethodApplyHitDebuff = "ApplyHitDebuff";
+
+    protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), MethodApplyHitDebuff);
 
     [PatchPrefix]
     public static bool PatchPrefix(Player __instance) => Plugin.Mode?.IsParked(__instance) != true;

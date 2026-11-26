@@ -11,7 +11,47 @@ namespace Perun.Client.Compat;
 
 internal static class SmoothieControl
 {
-    public const string PluginGuid = "com.tominocz.smoothie";
+    private const string TypeAnimatorThrottle = "Smoothie.AnimatorThrottle";
+    private const string TypeAnimatorPause = "Smoothie.AnimatorPause";
+    private const string TypeDistantDetail = "Smoothie.DistantDetail";
+    private const string TypeHandsCulling = "Smoothie.HandsCulling";
+    private const string TypeLodCulling = "Smoothie.LodCulling";
+    private const string TypeState = "State";
+
+    private const string MethodShowAll = "ShowAll";
+    private const string MethodBeforeLateUpdateSafe = "BeforeLateUpdateSafe";
+    private const string MethodTryGetValue = "TryGetValue";
+    private const string MethodRemove = "Remove";
+    private const string MethodFinishUnityStep = "FinishUnityStep";
+    private const string MethodGiveBack = "GiveBack";
+    private const string MethodRelease = "Release";
+    private const string MethodForget = "Forget";
+    private const string MethodAfterCullerChange = "AfterCullerChange";
+    private const string MethodApply = "Apply";
+
+    private const string FieldStates = "States";
+    private const string FieldBody = "Body";
+    private const string FieldArms = "Arms";
+    private const string FieldStepScale = "StepScale";
+    private const string FieldReleasing = "Releasing";
+    private const string FieldEntries = "Entries";
+
+    private const string DumpFullRate = "full-rate animation";
+    private const string DumpThrottleRelease = "throttle release";
+    private const string DumpPausedRelease = "paused animator release";
+    private const string DumpDistantDetail = "distant detail";
+    private const string DumpWeaponVisible = "weapon visible";
+    private const string DumpLodRefresh = "LOD refresh";
+
+    private const string LabelSlowedAnimator = "a controlled bot may keep a slowed animator for a moment after you take it";
+    private const string LabelFrozen = "a bot Smoothie had paused may stay frozen when you take it";
+    private const string LabelLowDetail = "a controlled bot far from your character may stay at low detail";
+    private const string LabelWeaponHidden = "a controlled bot's weapon may be hidden";
+    private const string LabelBuildingsHidden = "buildings may stay partly hidden after entering RTS mode until Smoothie's A/B switch is toggled";
+
+    private const string HarmonySmoothie = ".smoothie";
+
+    public const string GuidSmoothie = "com.tominocz.smoothie";
 
     private static bool _enabled;
     private static object _states;
@@ -32,22 +72,22 @@ internal static class SmoothieControl
 
     public static void Enable()
     {
-        if (!Chainloader.PluginInfos.ContainsKey(PluginGuid))
+        if (!Chainloader.PluginInfos.ContainsKey(GuidSmoothie))
         {
             return;
         }
 
         try
         {
-            Harmony harmony = new Harmony(Plugin.Guid + ".smoothie");
-            Type throttle = AccessTools.TypeByName("Smoothie.AnimatorThrottle");
-            Type pause = AccessTools.TypeByName("Smoothie.AnimatorPause");
-            Type detail = AccessTools.TypeByName("Smoothie.DistantDetail");
-            Type hands = AccessTools.TypeByName("Smoothie.HandsCulling");
-            Type lod = AccessTools.TypeByName("Smoothie.LodCulling");
-            _lodShowAll = lod != null ? AccessTools.Method(lod, "ShowAll", Type.EmptyTypes) : null;
+            Harmony harmony = new Harmony(Plugin.Guid + HarmonySmoothie);
+            Type throttle = AccessTools.TypeByName(TypeAnimatorThrottle);
+            Type pause = AccessTools.TypeByName(TypeAnimatorPause);
+            Type detail = AccessTools.TypeByName(TypeDistantDetail);
+            Type hands = AccessTools.TypeByName(TypeHandsCulling);
+            Type lod = AccessTools.TypeByName(TypeLodCulling);
+            _lodShowAll = lod != null ? AccessTools.Method(lod, MethodShowAll, Type.EmptyTypes) : null;
 
-            MethodInfo beforeLate = throttle != null ? AccessTools.Method(throttle, "BeforeLateUpdateSafe", new[] { typeof(Player) }) : null;
+            MethodInfo beforeLate = throttle != null ? AccessTools.Method(throttle, MethodBeforeLateUpdateSafe, new[] { typeof(Player) }) : null;
             if (beforeLate == null)
             {
                 Plugin.Log.LogWarning("Smoothie found but its bot animation throttle isn't; controlled bots may freeze");
@@ -55,23 +95,23 @@ internal static class SmoothieControl
             }
             harmony.Patch(beforeLate, prefix: new HarmonyMethod(typeof(SmoothieControl), nameof(SkipControlled)));
 
-            Type stateType = AccessTools.Inner(throttle, "State");
-            _states = AccessTools.Field(throttle, "States")?.GetValue(null);
-            _statesTryGet = _states?.GetType().GetMethod("TryGetValue");
-            _statesRemove = _states?.GetType().GetMethod("Remove");
-            _stateBody = AccessTools.Field(stateType, "Body");
-            _stateArms = AccessTools.Field(stateType, "Arms");
-            _stateStepScale = AccessTools.Field(stateType, "StepScale");
-            _stateReleasing = AccessTools.Field(stateType, "Releasing");
-            _finishStep = AccessTools.Method(throttle, "FinishUnityStep");
-            _giveBack = AccessTools.Method(throttle, "GiveBack");
-            _pauseRelease = pause != null ? AccessTools.Method(pause, "Release", new[] { typeof(Animator) }) : null;
+            Type stateType = AccessTools.Inner(throttle, TypeState);
+            _states = AccessTools.Field(throttle, FieldStates)?.GetValue(null);
+            _statesTryGet = _states?.GetType().GetMethod(MethodTryGetValue);
+            _statesRemove = _states?.GetType().GetMethod(MethodRemove);
+            _stateBody = AccessTools.Field(stateType, FieldBody);
+            _stateArms = AccessTools.Field(stateType, FieldArms);
+            _stateStepScale = AccessTools.Field(stateType, FieldStepScale);
+            _stateReleasing = AccessTools.Field(stateType, FieldReleasing);
+            _finishStep = AccessTools.Method(throttle, MethodFinishUnityStep);
+            _giveBack = AccessTools.Method(throttle, MethodGiveBack);
+            _pauseRelease = pause != null ? AccessTools.Method(pause, MethodRelease, new[] { typeof(Animator) }) : null;
 
             if (detail != null)
             {
-                _detailEntries = AccessTools.Field(detail, "Entries")?.GetValue(null) as IDictionary;
-                _detailForget = AccessTools.Method(detail, "Forget");
-                MethodInfo afterCuller = AccessTools.Method(detail, "AfterCullerChange", new[] { typeof(Player) });
+                _detailEntries = AccessTools.Field(detail, FieldEntries)?.GetValue(null) as IDictionary;
+                _detailForget = AccessTools.Method(detail, MethodForget);
+                MethodInfo afterCuller = AccessTools.Method(detail, MethodAfterCullerChange, new[] { typeof(Player) });
                 if (afterCuller != null)
                 {
                     harmony.Patch(afterCuller, prefix: new HarmonyMethod(typeof(SmoothieControl), nameof(SkipControlled)));
@@ -80,7 +120,7 @@ internal static class SmoothieControl
 
             if (hands != null)
             {
-                _handsApply = AccessTools.Method(hands, "Apply", new[] { typeof(Player), typeof(bool) });
+                _handsApply = AccessTools.Method(hands, MethodApply, new[] { typeof(Player), typeof(bool) });
                 if (_handsApply != null)
                 {
                     harmony.Patch(_handsApply, prefix: new HarmonyMethod(typeof(SmoothieControl), nameof(ShowControlledHands)));
@@ -89,12 +129,12 @@ internal static class SmoothieControl
 
             _enabled = true;
             Report(
-                ("full-rate animation", true, null),
-                ("throttle release", _statesTryGet != null && _stateBody != null && _giveBack != null, "a controlled bot may keep a slowed animator for a moment after you take it"),
-                ("paused animator release", pause == null || _pauseRelease != null, "a bot Smoothie had paused may stay frozen when you take it"),
-                ("distant detail", detail == null || (_detailEntries != null && _detailForget != null), "a controlled bot far from your character may stay at low detail"),
-                ("weapon visible", hands == null || _handsApply != null, "a controlled bot's weapon may be hidden"),
-                ("LOD refresh", lod == null || _lodShowAll != null, "buildings may stay partly hidden after entering RTS mode until Smoothie's A/B switch is toggled"));
+                (DumpFullRate, true, null),
+                (DumpThrottleRelease, _statesTryGet != null && _stateBody != null && _giveBack != null, LabelSlowedAnimator),
+                (DumpPausedRelease, pause == null || _pauseRelease != null, LabelFrozen),
+                (DumpDistantDetail, detail == null || (_detailEntries != null && _detailForget != null), LabelLowDetail),
+                (DumpWeaponVisible, hands == null || _handsApply != null, LabelWeaponHidden),
+                (DumpLodRefresh, lod == null || _lodShowAll != null, LabelBuildingsHidden));
         }
         catch (Exception ex)
         {

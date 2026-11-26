@@ -8,9 +8,14 @@ namespace Perun.Client.Compat;
 
 internal static class Animators
 {
-    private static readonly FieldInfo PlayerAnimators = Mode.Reflect.Field(Mode.Feature.SmoothieControl, typeof(Player), "_animators");
-    private static readonly Type WrapperType = Mode.Reflect.Type(Mode.Feature.SmoothieControl, "AnimationSystem.UnityAnimatorWrapper");
-    private static readonly FieldInfo WrapperAnimator = WrapperType != null ? Mode.Reflect.Field(Mode.Feature.SmoothieControl, WrapperType, "_animator") : null;
+    private const string TypeUnityAnimatorWrapper = "AnimationSystem.UnityAnimatorWrapper";
+
+    private const string FieldAnimators = "_animators";
+    private const string FieldAnimator = "_animator";
+
+    private static readonly FieldInfo PlayerAnimators = Mode.Reflect.Field(Mode.Feature.SmoothieControl, typeof(Player), FieldAnimators);
+    private static readonly Type WrapperType = Mode.Reflect.Type(Mode.Feature.SmoothieControl, TypeUnityAnimatorWrapper);
+    private static readonly FieldInfo WrapperAnimator = WrapperType != null ? Mode.Reflect.Field(Mode.Feature.SmoothieControl, WrapperType, FieldAnimator) : null;
 
     public static Array All(Player player) => player != null && PlayerAnimators != null ? PlayerAnimators.GetValue(player) as Array : null;
 

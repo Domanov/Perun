@@ -9,6 +9,9 @@ namespace Perun.Client.Compat;
 
 internal static class SainCompat
 {
+    private const string DumpWeaponRefresh = "dropped {0} stale, now {1} weapon(s)";
+    private const string DumpNoComponent = "no SAIN component";
+
     public const string GuidSain = "me.sol.sain";
 
     private const string TypeBotComponent = "SAIN.Components.BotComponent";
@@ -40,8 +43,6 @@ internal static class SainCompat
     private const string FieldBotUnstuckCoroutine = "_botUnstuckCoroutine";
 
     private const string HarmonySain = ".sain";
-
-    private const string DumpNoComponent = "no SAIN component";
 
     public static void Enable()
     {
@@ -369,7 +370,7 @@ internal static class SainCompat
             _getAllWeapons.Invoke(equipment, null);
             _recalcPower?.Invoke(equipment, null);
             int count = _weaponInfosProperty.GetValue(equipment) is System.Collections.IDictionary refreshed ? refreshed.Count : -1;
-            return $"dropped {dropped} stale, now {count} weapon(s)";
+            return string.Format(DumpWeaponRefresh, dropped, count);
         }
         catch (Exception ex)
         {

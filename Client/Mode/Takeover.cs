@@ -16,16 +16,46 @@ namespace Perun.Client.Mode;
 
 internal sealed class Takeover
 {
+    private const string FieldMyPlayer = "_myPlayer";
+    private const string FieldInsurance = "_insurance";
+    private const string FieldGameDateTime = "_gameDateTime";
+    private const string FieldLocation = "_location";
+    private const string FieldBattleUiScreenController = "BattleUIScreenController";
+    private const string FieldRemoveItemEvent = "_removeItemEvent";
+    private const string FieldAction = "_action";
+
+    private const string MethodShowScreen = "ShowScreen";
+    private const string MethodOwnerCreate = "EftGamePlayerOwner.Create<T>";
+
+    private const string LabelUnsupportedVersion = "this game version isn't supported for taking control";
+    private const string LabelNoControls = "your character's controls weren't found";
+    private const string LabelInfected = "infected can't be controlled";
+    private const string LabelInterfaceNotReady = "the raid interface isn't ready";
+    private const string LabelNoCamera = "your character's camera wasn't found";
+    private const string LabelNoArms = "no first-person arms could be found for that bot";
+    private const string LabelTakeFailed = "taking control failed (see log)";
+    private const string LabelStepYourPlayer = "hand 'your player' back";
+    private const string LabelStepStopControls = "stop the bot's controls";
+    private const string LabelStepRemoveCamera = "remove the bot's camera";
+    private const string LabelStepClearDeath = "clear the bot's death from the screen";
+    private const string LabelStepGiveBack = "give the bot back to its AI";
+    private const string LabelStepThirdPerson = "return the bot to third person";
+    private const string LabelStepHideHud = "hide the raid HUD again";
+    private const string LabelStepControlsBack = "give your character its controls back";
+    private const string LabelStepSound = "match the sound to your character's surroundings";
+
+    private const string DumpNewHands = "new hands while controlled";
+
     // A bot gets its own GamePlayerOwner; the raid context the game gives yours (player, insurance, date, location,
     // battle screen) lives in private fields and has to be copied across.
-    private static readonly FieldInfo MyPlayerField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), "_myPlayer");
+    private static readonly FieldInfo MyPlayerField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), FieldMyPlayer);
     private static readonly MethodInfo CreateOwner = FindCreate();
-    private static readonly FieldInfo InsuranceField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), "_insurance");
-    private static readonly FieldInfo DateTimeField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), "_gameDateTime");
-    private static readonly FieldInfo LocationField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), "_location");
-    private static readonly FieldInfo BattleScreenField = Reflect.Field(Feature.ControlScreenEffects, typeof(GamePlayerOwner), "BattleUIScreenController");
-    private static readonly FieldInfo RemoveItemField = Reflect.Field(Feature.Control, typeof(ItemController), "_removeItemEvent");
-    private static readonly FieldInfo VisorActionField = Reflect.Field(Feature.ControlScreenEffects, typeof(HysteresisFilter), "_action");
+    private static readonly FieldInfo InsuranceField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), FieldInsurance);
+    private static readonly FieldInfo DateTimeField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), FieldGameDateTime);
+    private static readonly FieldInfo LocationField = Reflect.Field(Feature.Control, typeof(GamePlayerOwner), FieldLocation);
+    private static readonly FieldInfo BattleScreenField = Reflect.Field(Feature.ControlScreenEffects, typeof(GamePlayerOwner), FieldBattleUiScreenController);
+    private static readonly FieldInfo RemoveItemField = Reflect.Field(Feature.Control, typeof(ItemController), FieldRemoveItemEvent);
+    private static readonly FieldInfo VisorActionField = Reflect.Field(Feature.ControlScreenEffects, typeof(HysteresisFilter), FieldAction);
 
     public static bool KeepCamera;
 
@@ -77,7 +107,7 @@ internal sealed class Takeover
         _tracedHands = hands;
         if (hands != null && !first)
         {
-            Arsenal.ArsenalTrace.Watch(_bot, "new hands while controlled");
+            Arsenal.ArsenalTrace.Watch(_bot, DumpNewHands);
         }
     }
 
@@ -92,29 +122,29 @@ internal sealed class Takeover
     {
         if (Reflect.Lacks(Feature.Control))
         {
-            return "this game version isn't supported for taking control";
+            return LabelUnsupportedVersion;
         }
 
         if (mainOwner is not EftGamePlayerOwner eftOwner)
         {
-            return "your character's controls weren't found";
+            return LabelNoControls;
         }
 
         if (bot.Profile?.Info?.Settings != null && bot.Profile.Info.Settings.UseSimpleAnimator)
         {
-            return "infected can't be controlled";
+            return LabelInfected;
         }
 
         GameUI gameUI = MonoBehaviourSingleton<GameUI>.Instantiated ? MonoBehaviourSingleton<GameUI>.Instance : null;
         if (gameUI == null || mainOwner.Session is not IEftSession session)
         {
-            return "the raid interface isn't ready";
+            return LabelInterfaceNotReady;
         }
 
         PlayerCameraController mainCamera = main.GetComponent<PlayerCameraController>();
         if (mainCamera == null)
         {
-            return "your character's camera wasn't found";
+            return LabelNoCamera;
         }
 
         _mainOwner = eftOwner;
@@ -129,7 +159,7 @@ internal sealed class Takeover
             if (!ControlHands.Ensure(bot, main))
             {
                 End();
-                return "no first-person arms could be found for that bot";
+                return LabelNoArms;
             }
             _botMask = bot.ProceduralWeaponAnimation.Mask;
             bot.ProceduralWeaponAnimation.Mask = main.ProceduralWeaponAnimation.Mask;
@@ -180,7 +210,7 @@ internal sealed class Takeover
         {
             Plugin.Log.LogError($"Take control failed: {ex}");
             End();
-            return "taking control failed (see log)";
+            return LabelTakeFailed;
         }
     }
 
@@ -300,16 +330,16 @@ internal sealed class Takeover
         _botOwner = null;
         _mainOwner = null;
 
-        Step("hand 'your player' back", true, () => ControlAudio.SwitchYourPlayer(bot, main));
+        Step(LabelStepYourPlayer, true, () => ControlAudio.SwitchYourPlayer(bot, main));
 
-        Step("stop the bot's controls", true, () =>
+        Step(LabelStepStopControls, true, () =>
         {
             if (botOwner != null)
             {
                 botOwner.vmethod_1();
                 UnhookOwner(bot, botOwner);
                 // DestroyImmediate on purpose: GamePlayerOwner.CleanupOnDestroy sets the static _myPlayer to null.
-                // Deferred, it would run after "give your character its controls back" restores it to your character.
+                // Deferred, it would run after LabelStepControlsBack restores it to your character.
                 Object.DestroyImmediate(botOwner);
             }
             if (main != null && Singleton<BetterAudio>.Instantiated)
@@ -319,7 +349,7 @@ internal sealed class Takeover
             }
         });
 
-        Step("remove the bot's camera", true, () =>
+        Step(LabelStepRemoveCamera, true, () =>
         {
             if (bot != null)
             {
@@ -342,7 +372,7 @@ internal sealed class Takeover
             }
         });
 
-        Step("clear the bot's death from the screen", false, () =>
+        Step(LabelStepClearDeath, false, () =>
         {
             if (bot != null && (bot.HealthController == null || !bot.HealthController.IsAlive))
             {
@@ -351,7 +381,7 @@ internal sealed class Takeover
         });
 
         _weapon.Cancel();
-        Step("give the bot back to its AI", false, () =>
+        Step(LabelStepGiveBack, false, () =>
         {
             DisableOptics(bot);
             if (bot != null && bot.AIData is AIData aiData && _botWasAI)
@@ -366,7 +396,7 @@ internal sealed class Takeover
             _botWasAI = false;
         });
 
-        Step("return the bot to third person", false, () =>
+        Step(LabelStepThirdPerson, false, () =>
         {
             if (bot != null && bot.HealthController != null && bot.HealthController.IsAlive)
             {
@@ -379,7 +409,7 @@ internal sealed class Takeover
             }
         });
 
-        Step("hide the raid HUD again", false, () =>
+        Step(LabelStepHideHud, false, () =>
         {
             GameObject screen = _shownBattleScreen;
             _shownBattleScreen = null;
@@ -390,7 +420,7 @@ internal sealed class Takeover
         });
 
         bool mainAlive = main != null && main.HealthController != null && main.HealthController.IsAlive;
-        Step("give your character its controls back", true, () =>
+        Step(LabelStepControlsBack, true, () =>
         {
             if (main != null)
             {
@@ -411,7 +441,7 @@ internal sealed class Takeover
             }
         });
 
-        Step("match the sound to your character's surroundings", false, () =>
+        Step(LabelStepSound, false, () =>
         {
             Parked = null;
             Compat.RealismCompat.Follow(main);
@@ -432,7 +462,7 @@ internal sealed class Takeover
     private static void ShowScreen(GamePlayerOwner owner)
     {
         object controller = BattleScreenField?.GetValue(owner);
-        MethodInfo show = controller != null ? AccessTools.Method(controller.GetType(), "ShowScreen", new[] { typeof(EScreenState) }) : null;
+        MethodInfo show = controller != null ? AccessTools.Method(controller.GetType(), MethodShowScreen, new[] { typeof(EScreenState) }) : null;
         if (show != null)
         {
             show.Invoke(controller, new object[] { EScreenState.Root });
@@ -448,7 +478,7 @@ internal sealed class Takeover
                 return method;
             }
         }
-        Reflect.Require(Feature.Control, false, "EftGamePlayerOwner.Create<T>");
+        Reflect.Require(Feature.Control, false, MethodOwnerCreate);
         return null;
     }
 }

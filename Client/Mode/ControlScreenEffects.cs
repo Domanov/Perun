@@ -10,7 +10,15 @@ namespace Perun.Client.Mode;
 
 internal static class ControlScreenEffects
 {
-    private static readonly FieldInfo EffectsPlayerField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), "player");
+    private const string FieldPlayer = "player";
+    private const string FieldDeathFade = "_deathFade";
+    private const string FieldBlur = "_blur";
+    private const string FieldEffectAccumulators = "_effectAccumulators";
+    private const string FieldBloodOnScreen = "_bloodOnScreen";
+    private const string FieldEyeBurn = "_eyeBurn";
+    private const string FieldStimulatorBuffs = "_stimulatorBuffs";
+
+    private static readonly FieldInfo EffectsPlayerField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldPlayer);
 
     // In RTS mode the camera belongs to nobody, so no body's effects may reach it. The game hooks a controller to a
     // player when that player's camera controller is created and never unhooks it, so Perun does both by hand.
@@ -42,8 +50,8 @@ internal static class ControlScreenEffects
         MatchGlasses(player);
     }
 
-    private static readonly FieldInfo DeathFadeField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), "_deathFade");
-    private static readonly FieldInfo BlurField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), "_blur");
+    private static readonly FieldInfo DeathFadeField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldDeathFade);
+    private static readonly FieldInfo BlurField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldBlur);
 
     public static void ClearDeath()
     {
@@ -119,7 +127,7 @@ internal static class ControlScreenEffects
         }
     }
 
-    private static readonly FieldInfo AccumulatorsField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), "_effectAccumulators");
+    private static readonly FieldInfo AccumulatorsField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldEffectAccumulators);
 
     public static void ClearAll()
     {
@@ -129,8 +137,8 @@ internal static class ControlScreenEffects
         }
     }
 
-    private static readonly FieldInfo BloodField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), "_bloodOnScreen");
-    private static readonly FieldInfo EyeBurnField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), "_eyeBurn");
+    private static readonly FieldInfo BloodField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldBloodOnScreen);
+    private static readonly FieldInfo EyeBurnField = Reflect.Field(Feature.ControlScreenEffects, typeof(EffectsController), FieldEyeBurn);
 
     // The camera effects (pain, painkillers, contusion, frostbite, ...) are shared by whoever the camera follows. An
     // effect that is removed only fades out over the next seconds in Update, and switching it off right away left its
@@ -157,7 +165,7 @@ internal static class ControlScreenEffects
                     accumulator.DeleteEffect(effect);
                     cleared++;
                 }
-                if (accumulator.GetType().GetField("_stimulatorBuffs", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(accumulator) is IList buffs && buffs.Count > 0)
+                if (accumulator.GetType().GetField(FieldStimulatorBuffs, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(accumulator) is IList buffs && buffs.Count > 0)
                 {
                     buffs.Clear();
                     cleared++;

@@ -11,13 +11,18 @@ namespace Perun.Client.Orders;
 // has an order his followers escort him to it, and once he arrives each follower still finishes the walk to its place.
 public class PerunEscortLayer : CustomLayer
 {
+    private const string BrainLayerEscort = "PerunEscort";
+    private const string BrainReasonEscort = "Perun escort";
+
+    private const string DumpEscortOf = "Perun escort of ";
+
     public const int LayerPriority = PerunOrderLayer.LayerPriority - 1;
 
     public PerunEscortLayer(BotOwner botOwner, int priority) : base(botOwner, priority)
     {
     }
 
-    public override string GetName() => "PerunEscort";
+    public override string GetName() => BrainLayerEscort;
 
     public override bool IsActive()
     {
@@ -37,7 +42,7 @@ public class PerunEscortLayer : CustomLayer
         return order.Forced || !PerunOrderLayer.InCombat(BotOwner);
     }
 
-    public override Action GetNextAction() => new(typeof(PerunEscortLogic), "Perun escort");
+    public override Action GetNextAction() => new(typeof(PerunEscortLogic), BrainReasonEscort);
 
     public override bool IsCurrentActionEnding() => !IsActive();
 
@@ -46,7 +51,7 @@ public class PerunEscortLayer : CustomLayer
         BotOwner leader = Bots.LeaderOf(BotOwner);
         if (leader != null)
         {
-            stringBuilder.AppendLine($"Perun escort of {leader.Profile?.Nickname}");
+            stringBuilder.AppendLine(DumpEscortOf + leader.Profile?.Nickname);
         }
     }
 }

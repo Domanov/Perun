@@ -6,7 +6,9 @@ namespace Perun.Client.Compat;
 
 internal static class ConfigManagerCompat
 {
-    private const string PluginGuid = "com.bepis.bepinex.configurationmanager";
+    private const string PropertyDisplayingWindow = "DisplayingWindow";
+
+    private const string GuidConfigManager = "com.bepis.bepinex.configurationmanager";
 
     private static bool _resolved;
     private static Func<bool> _displaying;
@@ -35,12 +37,12 @@ internal static class ConfigManagerCompat
     private static void Resolve()
     {
         _resolved = true;
-        if (!Chainloader.PluginInfos.TryGetValue(PluginGuid, out var info) || info.Instance == null)
+        if (!Chainloader.PluginInfos.TryGetValue(GuidConfigManager, out var info) || info.Instance == null)
         {
             return;
         }
 
-        MethodInfo getter = info.Instance.GetType().GetProperty("DisplayingWindow", BindingFlags.Public | BindingFlags.Instance)?.GetGetMethod();
+        MethodInfo getter = info.Instance.GetType().GetProperty(PropertyDisplayingWindow, BindingFlags.Public | BindingFlags.Instance)?.GetGetMethod();
         if (getter == null || getter.ReturnType != typeof(bool))
         {
             return;

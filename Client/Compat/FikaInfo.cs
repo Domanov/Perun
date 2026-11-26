@@ -6,11 +6,18 @@ namespace Perun.Client.Compat;
 
 internal static class FikaInfo
 {
+    private const string GuidFika = "com.fika.core";
+
+    private const string TypeFikaBackendUtils = "Fika.Core.Main.Utils.FikaBackendUtils, Fika.Core";
+
+    private const string PropertyIsServer = "IsServer";
+    private const string PropertyIsHeadless = "IsHeadless";
+
     private static bool _resolved;
     private static PropertyInfo _isServer;
     private static PropertyInfo _isHeadless;
 
-    public static bool Present => Chainloader.PluginInfos.ContainsKey("com.fika.core");
+    public static bool Present => Chainloader.PluginInfos.ContainsKey(GuidFika);
 
     public static bool IsServer => Present && Read(_isServer, false);
 
@@ -42,7 +49,7 @@ internal static class FikaInfo
         }
 
         _resolved = true;
-        Type utils = Type.GetType("Fika.Core.Main.Utils.FikaBackendUtils, Fika.Core");
+        Type utils = Type.GetType(TypeFikaBackendUtils);
         if (utils == null)
         {
             Plugin.Log.LogWarning("Fika found but FikaBackendUtils is missing; Perun stays off because the host can't be confirmed");
@@ -50,8 +57,8 @@ internal static class FikaInfo
         }
 
         const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-        _isServer = utils.GetProperty("IsServer", flags);
-        _isHeadless = utils.GetProperty("IsHeadless", flags);
+        _isServer = utils.GetProperty(PropertyIsServer, flags);
+        _isHeadless = utils.GetProperty(PropertyIsHeadless, flags);
         if (_isServer == null)
         {
             Plugin.Log.LogWarning("Fika found but FikaBackendUtils.IsServer is missing; Perun stays off because the host can't be confirmed");

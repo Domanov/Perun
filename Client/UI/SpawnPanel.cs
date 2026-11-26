@@ -7,13 +7,36 @@ namespace Perun.Client.UI;
 
 internal sealed class SpawnPanel
 {
-    private static readonly string[] DifficultyNames = { "Easy", "Normal", "Hard", "Impossible" };
+    private const string LabelEasy = "Easy";
+    private const string LabelNormal = "Normal";
+    private const string LabelHard = "Hard";
+    private const string LabelImpossible = "Impossible";
+    private const string LabelDifficulty = "Difficulty";
+    private const string LabelFaction = "FACTION";
+    private const string LabelSearchAllUnits = "Search all units…";
+    private const string LabelNothingMatches = "Nothing matches.";
+    private const string LabelCount = "COUNT";
+    private const string LabelSpawning = " · spawning {0}";
+    private const string LabelPerunUnits = "Perun units {0}/{1}{2}";
+    private const string LabelDifficultyHeader = "DIFFICULTY";
+    private const string LabelPickAUnit = "<color=#9fb4c8>Pick a unit, then click the map to place it.</color>";
+    private const string LabelClickTheMap = "<color=#ffc847>Click the map to place {0} ×{1}</color>  <color=#9fb4c8>· RMB stops</color>";
+    private const string LabelReadyToDrop = "<color=#8be38b>● Ready to drop: {0}</color> · spawns instantly";
+    private const string LabelPreparingInAdvance = "<color=#ffc847>◐ Preparing in advance… {0}/{1} ready</color>";
+    private const string LabelReadyTheRest = "<color=#ffc847>● {0}/{1} ready</color> · the rest loads when you place them";
+    private const string LabelBadgesAttitude = "\n<color=#7f8a95>Badges: attitude toward {0}</color>";
+    private const string LabelOnlyCount = "  <color=#ffd36f>(only {0})</color>";
+
+    private const string ChipBots = "BOTS";
+    private const string ChipGroups = "GROUPS";
+
+    private static readonly string[] DifficultyNames = { LabelEasy, LabelNormal, LabelHard, LabelImpossible };
     private static readonly BotDifficulty[] Difficulties = { BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
-    private static readonly string[] SubTabs = { "BOTS", "GROUPS" };
+    private static readonly string[] SubTabs = { ChipBots, ChipGroups };
     private static readonly string[] CountNames = { "1", "2", "3", "4", "5", "6", "8", "10" };
     private static readonly int[] CountValues = { 1, 2, 3, 4, 5, 6, 8, 10 };
 
-    public const string SearchControl = "PerunSearch";
+    public const string ControlSearch = "PerunSearch";
 
     private const float RowHeight = 22f;
 
@@ -33,7 +56,7 @@ internal sealed class SpawnPanel
     private float _nextStatus;
     private string _status = "";
     private string _prompt = "";
-    private string _difficultyLabel = "Difficulty";
+    private string _difficultyLabel = LabelDifficulty;
     private Vector2 _scroll;
     private int _category;
     private int _difficulty = 1;
@@ -120,19 +143,19 @@ internal sealed class SpawnPanel
             RefreshStatus();
         }
 
-        GUILayout.Label("FACTION", Theme.Header);
+        GUILayout.Label(LabelFaction, Theme.Header);
         int category = GUILayout.SelectionGrid(_category, _catalog.CategoryNames, 3, Theme.Tab);
         if (category != _category)
         {
             _pendingCategory = category;
         }
 
-        GUI.SetNextControlName(SearchControl);
+        GUI.SetNextControlName(ControlSearch);
         _search = GUILayout.TextField(_search ?? "", 40, Theme.Search);
-        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != SearchControl && Event.current.type == EventType.Repaint)
+        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != ControlSearch && Event.current.type == EventType.Repaint)
         {
             Rect field = GUILayoutUtility.GetLastRect();
-            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), "Search all units…", Theme.Small);
+            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), LabelSearchAllUnits, Theme.Small);
         }
 
         List<WildSpawnType> roles;
@@ -184,7 +207,7 @@ internal sealed class SpawnPanel
         _list.SpaceAfter();
         if (roles.Count == 0)
         {
-            GUILayout.Label("Nothing matches.", Theme.Small);
+            GUILayout.Label(LabelNothingMatches, Theme.Small);
         }
         GUILayout.EndScrollView();
         _list.MeasureView();
@@ -192,7 +215,7 @@ internal sealed class SpawnPanel
         GUILayout.Space(6f);
         GUILayout.Label(_difficultyLabel, Theme.Header);
         int difficulty = GUILayout.Toolbar(_difficulty, DifficultyNames, Theme.Tab);
-        GUILayout.Label("COUNT", Theme.Header);
+        GUILayout.Label(LabelCount, Theme.Header);
         int countIndex = GUILayout.Toolbar(_countIndex, CountNames, Theme.Tab);
 
         if ((difficulty != _difficulty || countIndex != _countIndex) && Event.current.type != EventType.Layout)
@@ -225,14 +248,14 @@ internal sealed class SpawnPanel
         }
         _nextStatus = now + StatusRefresh;
 
-        string pending = Commands.Pending > 0 ? $" · spawning {Commands.Pending}" : "";
-        string units = $"Perun units {Commands.AliveCount}/{Commands.MaxUnits}{pending}";
+        string pending = Commands.Pending > 0 ? string.Format(LabelSpawning, Commands.Pending) : "";
+        string units = string.Format(LabelPerunUnits, Commands.AliveCount, Commands.MaxUnits, pending);
         string result = string.IsNullOrEmpty(Commands.LastResult) ? "" : "\n" + Commands.LastResult;
 
         if (!_selected.HasValue)
         {
-            _difficultyLabel = "DIFFICULTY";
-            _prompt = "<color=#9fb4c8>Pick a unit, then click the map to place it.</color>";
+            _difficultyLabel = LabelDifficultyHeader;
+            _prompt = LabelPickAUnit;
             _status = units + result;
             _prompt += _badgeNote;
             return;
@@ -242,14 +265,14 @@ internal sealed class SpawnPanel
         BotDifficulty difficulty = Difficulty;
         Commands.Prewarm(role, difficulty, Count);
 
-        _difficultyLabel = "DIFFICULTY" + AllowedNote(role);
-        _prompt = $"<color=#ffc847>Click the map to place {_selectedName} ×{Count}</color>  <color=#9fb4c8>· RMB stops</color>";
+        _difficultyLabel = LabelDifficultyHeader + AllowedNote(role);
+        _prompt = string.Format(LabelClickTheMap, _selectedName, Count);
         int ready = Commands.ReadyCount(role, difficulty);
         string readiness = ready >= Count
-            ? $"<color=#8be38b>● Ready to drop: {ready}</color> · spawns instantly"
+            ? string.Format(LabelReadyToDrop, ready)
             : Commands.IsWarming(role, difficulty)
-                ? $"<color=#ffc847>◐ Preparing in advance… {ready}/{Count} ready</color>"
-                : $"<color=#ffc847>● {ready}/{Count} ready</color> · the rest loads when you place them";
+                ? string.Format(LabelPreparingInAdvance, ready, Count)
+                : string.Format(LabelReadyTheRest, ready, Count);
         _status = $"{readiness}\n{units}{result}";
         _prompt += _badgeNote;
     }
@@ -279,7 +302,7 @@ internal sealed class SpawnPanel
         _badgeKey = key;
         _badges.Clear();
         string who = bot ? $"{target.Profile.Nickname} ({SpawnNames.Of(role)})" : target.Profile.Nickname;
-        _badgeNote = $"\n<color=#7f8a95>Badges: attitude toward {who}</color>";
+        _badgeNote = string.Format(LabelBadgesAttitude, who);
         _nextStatus = 0f;
     }
 
@@ -303,6 +326,6 @@ internal sealed class SpawnPanel
     {
         BotDifficulty picked = Difficulties[_difficulty];
         BotDifficulty used = SpawnService.AllowedDifficulty(role, picked);
-        return used == picked ? "" : $"  <color=#ffd36f>(only {used})</color>";
+        return used == picked ? "" : string.Format(LabelOnlyCount, used);
     }
 }

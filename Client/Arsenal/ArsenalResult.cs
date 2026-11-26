@@ -15,6 +15,10 @@ internal enum ArsenalStatus
 
 internal readonly struct ArsenalResult
 {
+    private const string LabelRaidEnded = "the raid ended";
+
+    private const string DumpOk = "ok";
+
     public static readonly ArsenalResult Ok = new(ArsenalStatus.Ok, "");
 
     public ArsenalResult(ArsenalStatus status, string message)
@@ -39,11 +43,11 @@ internal readonly struct ArsenalResult
 
     public static ArsenalResult NoRoom(string message) => new(ArsenalStatus.NoRoom, message);
 
-    public static ArsenalResult Cancelled() => new(ArsenalStatus.Cancelled, "the raid ended");
+    public static ArsenalResult Cancelled() => new(ArsenalStatus.Cancelled, LabelRaidEnded);
 
     public static ArsenalResult Failed(string message) => new(ArsenalStatus.Failed, message);
 
     public static ArsenalResult RollbackFailed(string message) => new(ArsenalStatus.RollbackFailed, message);
 
-    public override string ToString() => IsOk ? "ok" : $"{Message} ({Status})";
+    public override string ToString() => IsOk ? DumpOk : $"{Message} ({Status})";
 }

@@ -30,9 +30,13 @@ internal sealed class WeatherSnapshot
 
 internal static class WeatherSnapshots
 {
+    private const string FileWeather = "com.dmnv.perun.weather.json";
+
+    private const string LabelSummary = "Clouds {0:0}% · Fog {1:0}% · Rain {2:0}% · Lightning {3:0}%\nWind {4:0}% from {5} · {6:0} °C · time {7}";
+
     private const int Limit = 16;
 
-    private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, "com.dmnv.perun.weather.json");
+    private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, FileWeather);
     private static List<WeatherSnapshot> _items;
 
     public static List<WeatherSnapshot> Items
@@ -121,8 +125,7 @@ internal static class WeatherSnapshots
         string from = Enum.IsDefined(typeof(WeatherDebug.Direction), s.WindFrom) ? ((WeatherDebug.Direction)s.WindFrom).ToString() : "?";
         string time = s.Hour >= 0f ? $"{(int)s.Hour:00}:{(int)(s.Hour % 1f * 60f):00}" : "-";
         s.Summary =
-            $"Clouds {(s.Clouds + 1f) * 50f:0}% · Fog {FogPercent(s.Fog):0}% · Rain {s.Rain * 100f:0}% · Lightning {s.Lightning * 100f:0}%\n" +
-            $"Wind {s.Wind * 100f:0}% from {from} · {s.Temperature:0} °C · time {time}";
+            string.Format(LabelSummary, (s.Clouds + 1f) * 50f, FogPercent(s.Fog), s.Rain * 100f, s.Lightning * 100f, s.Wind * 100f, from, s.Temperature, time);
         return s.Summary;
     }
 

@@ -211,6 +211,22 @@ internal sealed class RoleMind
 
 internal static class HostilityRules
 {
+    private const string ColorAlly = "#8be38b";
+    private const string ColorNeutral = "#9fb4c8";
+    private const string ColorWarns = "#ffd36f";
+    private const string ColorChance = "#ffa04d";
+    private const string ColorEnemy = "#ff8080";
+
+    private const string LabelAlly = "ally";
+    private const string LabelNeutral = "neutral";
+    private const string LabelWarns = "warns";
+    private const string LabelHostileChance = "hostile ";
+    private const string LabelHostile = "hostile";
+
+    private const string MarkupColorOpen = "<color=";
+    private const string MarkupTagEnd = ">";
+    private const string MarkupColorClose = "</color>";
+
     public static Stance Between(WildSpawnType a, RoleMind aMind, EPlayerSide aSide, WildSpawnType b, RoleMind bMind, EPlayerSide bSide, bool sameFamily)
     {
         if (a == b || sameFamily)
@@ -233,23 +249,23 @@ internal static class HostilityRules
 
     public static string Hex(Attitude kind) => kind switch
     {
-        Attitude.Ally => "#8be38b",
-        Attitude.Neutral => "#9fb4c8",
-        Attitude.Warns => "#ffd36f",
-        Attitude.Chance => "#ffa04d",
-        Attitude.Enemy => "#ff8080",
+        Attitude.Ally => ColorAlly,
+        Attitude.Neutral => ColorNeutral,
+        Attitude.Warns => ColorWarns,
+        Attitude.Chance => ColorChance,
+        Attitude.Enemy => ColorEnemy,
         _ => null
     };
 
     public static string Badge(Stance stance) => stance.Kind switch
     {
-        Attitude.Ally => Tint(stance.Kind, "ally"),
-        Attitude.Neutral => Tint(stance.Kind, "neutral"),
-        Attitude.Warns => Tint(stance.Kind, "warns"),
-        Attitude.Chance => Tint(stance.Kind, "hostile " + stance.Chance + "%"),
-        Attitude.Enemy => Tint(stance.Kind, "hostile"),
+        Attitude.Ally => Tint(stance.Kind, LabelAlly),
+        Attitude.Neutral => Tint(stance.Kind, LabelNeutral),
+        Attitude.Warns => Tint(stance.Kind, LabelWarns),
+        Attitude.Chance => Tint(stance.Kind, LabelHostileChance + stance.Chance + "%"),
+        Attitude.Enemy => Tint(stance.Kind, LabelHostile),
         _ => ""
     };
 
-    private static string Tint(Attitude kind, string text) => "<color=" + Hex(kind) + ">" + text + "</color>";
+    private static string Tint(Attitude kind, string text) => MarkupColorOpen + Hex(kind) + MarkupTagEnd + text + MarkupColorClose;
 }

@@ -6,6 +6,10 @@ namespace Perun.Client.View;
 
 internal sealed class RtsCamera
 {
+    private const string LayerTerrain = "Terrain";
+    private const string LayerHighPolyCollider = "HighPolyCollider";
+    private const string LayerLowPolyCollider = "LowPolyCollider";
+
     private const float MinPitch = 12f;
     private const float MaxPitch = 88f;
     private const float FloorStep = 3f;
@@ -51,8 +55,8 @@ internal sealed class RtsCamera
     public void Begin(Camera camera, Vector3 focus, Vector3 cameraPosition, float yaw)
     {
         _camera = camera;
-        _solidMask = LayerMask.GetMask("Terrain", "HighPolyCollider", "LowPolyCollider");
-        _terrainMask = LayerMask.GetMask("Terrain");
+        _solidMask = LayerMask.GetMask(LayerTerrain, LayerHighPolyCollider, LayerLowPolyCollider);
+        _terrainMask = LayerMask.GetMask(LayerTerrain);
 
         _targetPivot = focus;
         _targetYaw = yaw;

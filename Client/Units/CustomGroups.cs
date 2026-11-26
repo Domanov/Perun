@@ -22,10 +22,23 @@ internal sealed class SavedMember
 
 internal static class CustomGroups
 {
+    private const string FileGroups = "com.dmnv.perun.groups.json";
+    private const string FileBadSuffix = ".bad";
+
+    private const string LabelNeedMember = "Add at least one member";
+    private const string LabelTooManyGroups = "Too many saved groups ({0}); delete one first";
+    private const string LabelNeedName = "Give the group a name";
+    private const string LabelNameTooLong = "Name is longer than {0} characters";
+    private const string LabelNameTaken = "A group named \"{0}\" already exists";
+    private const string LabelGroupSkipped = "Group \"{0}\": unnamed or duplicate, skipped";
+    private const string LabelRoleSkipped = "Group \"{0}\": unknown role \"{1}\" skipped";
+    private const string LabelNoMembersSkipped = "Group \"{0}\": no members left, skipped";
+    private const string LabelCouldNotWrite = "Couldn't write {0}: {1}";
+
     public const int Limit = 64;
     public const int MaxNameLength = 32;
 
-    private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, "com.dmnv.perun.groups.json");
+    private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, FileGroups);
     private static List<GroupPlan> _all;
 
     public static IReadOnlyList<GroupPlan> All => _all ??= Read();
@@ -43,11 +56,11 @@ internal static class CustomGroups
         error = CheckName(draft.Name, replacing);
         if (error == null && draft.Members.Count == 0)
         {
-            error = "Add at least one member";
+            error = LabelNeedMember;
         }
         if (error == null && Find(replacing) == null && All.Count >= Limit)
         {
-            error = $"Too many saved groups ({Limit}); delete one first";
+            error = string.Format(LabelTooManyGroups, Limit);
         }
         if (error != null)
         {
@@ -95,15 +108,15 @@ internal static class CustomGroups
         string trimmed = name?.Trim() ?? "";
         if (trimmed.Length == 0)
         {
-            return "Give the group a name";
+            return LabelNeedName;
         }
         if (trimmed.Length > MaxNameLength)
         {
-            return $"Name is longer than {MaxNameLength} characters";
+            return string.Format(LabelNameTooLong, MaxNameLength);
         }
         if (!Same(trimmed, replacing) && Find(plans, trimmed) != null)
         {
-            return $"A group named \"{trimmed}\" already exists";
+            return string.Format(LabelNameTaken, trimmed);
         }
         return null;
     }
@@ -136,7 +149,7 @@ internal static class CustomGroups
         {
             if (group == null || string.IsNullOrWhiteSpace(group.Name) || Find(plans, group.Name.Trim()) != null)
             {
-                problems.Add($"Group \"{group?.Name}\": unnamed or duplicate, skipped");
+                problems.Add(string.Format(LabelGroupSkipped, group?.Name));
                 continue;
             }
             List<GroupMember> members = new();
@@ -146,7 +159,7 @@ internal static class CustomGroups
                 SavedMember member = group.Members[i];
                 if (member == null || string.IsNullOrEmpty(member.Role) || !Enum.TryParse(member.Role, true, out WildSpawnType role))
                 {
-                    problems.Add($"Group \"{group.Name}\": unknown role \"{member?.Role}\" skipped");
+                    problems.Add(string.Format(LabelRoleSkipped, group.Name, member?.Role));
                     continue;
                 }
                 if (group.Leader == i)
@@ -159,7 +172,7 @@ internal static class CustomGroups
             }
             if (members.Count == 0)
             {
-                problems.Add($"Group \"{group.Name}\": no members left, skipped");
+                problems.Add(string.Format(LabelNoMembersSkipped, group.Name));
                 continue;
             }
             plans.Add(new GroupPlan(GroupSource.Custom, group.Name.Trim(), members, null, leader));
@@ -179,7 +192,7 @@ internal static class CustomGroups
         catch (Exception ex)
         {
             Plugin.Log.LogWarning($"Saved groups could not be written: {ex.Message}");
-            return $"Couldn't write {Path.GetFileName(FilePath)}: {ex.Message}";
+            return string.Format(LabelCouldNotWrite, Path.GetFileName(FilePath), ex.Message);
         }
         _all = all;
         Version++;
@@ -205,7 +218,7 @@ internal static class CustomGroups
         }
         catch (Exception ex)
         {
-            string aside = FilePath + ".bad";
+            string aside = FilePath + FileBadSuffix;
             Plugin.Log.LogWarning($"Saved groups could not be read ({ex.Message}); the file was copied to {aside}");
             try
             {

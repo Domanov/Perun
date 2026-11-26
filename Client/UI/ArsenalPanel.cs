@@ -14,11 +14,81 @@ namespace Perun.Client.UI;
 
 internal sealed class ArsenalPanel
 {
-    public const string SearchControl = "PerunArsenalSearch";
+    private const string ChipLoadouts = "LOADOUTS";
+    private const string ChipItems = "ITEMS";
+    private const string ChipCrate = "CRATE";
+    private const string ChipSaveCopied = "Save copied";
+    private const string ChipCopy = "Copy {0}";
+    private const string ChipCopySelectOne = "Copy (select one unit)";
+    private const string ChipPasteTo = "Paste to {0}";
+    private const string ChipApplyCount = "Apply ×{0}";
+    private const string ChipApply = "Apply";
+    private const string ChipGiveRandomKit = "Give {0} a random {1} kit";
+    private const string ChipPickRole = "Pick a role in UNITS first";
+    private const string ChipEmpty = "Empty";
+
+    private const string LabelPrimary = "Primary";
+    private const string LabelSecondary = "Secondary";
+    private const string LabelHolster = "Holster";
+    private const string LabelMelee = "Melee";
+    private const string LabelHeadwear = "Headwear";
+    private const string LabelEarpiece = "Earpiece";
+    private const string LabelFaceCover = "Face cover";
+    private const string LabelEyewear = "Eyewear";
+    private const string LabelArmband = "Armband";
+    private const string LabelBodyArmor = "Body armor";
+    private const string LabelRig = "Rig";
+    private const string LabelBackpack = "Backpack";
+    private const string LabelPockets = "Pockets";
+    private const string LabelSecure = "Secure";
+    private const string LabelArsenalHeader = "ARSENAL";
+    private const string LabelSinglePlayerOnly = "The arsenal works in single player for now.";
+    private const string LabelSavedLoadouts = "SAVED LOADOUTS";
+    private const string LabelNothingSavedYet = "Nothing saved yet. Copy a unit's loadout, name it and save it.";
+    private const string LabelRandomKitFrom = "RANDOM KIT FROM A ROLE";
+    private const string LabelWorking = "<color=#ffc847>Working… {0}</color>";
+    private const string LabelCrateHint = "Click items to put them in the crate. Take control of a bot ({0}) and press {1} to open its inventory with the crate beside it, then drag and drop. Anything dropped back in the crate leaves the bot.";
+    private const string LabelCrateHeader = "ARSENAL CRATE · {0} item(s)";
+    private const string LabelOneUnit = "1 unit";
+    private const string LabelUnits = "{0} units";
+    private const string LabelLoadoutsSelectUnits = "LOADOUTS · select units";
+    private const string LabelLoadoutsSelected = "LOADOUTS · {0} selected";
+    private const string LabelCopiedSlots = "Copied: {0} ({1} slots)";
+    private const string LabelNothingCopiedYet = "Nothing copied yet";
+    private const string LabelUnitLoadout = "{0}'s loadout";
+    private const string LabelCouldNotReadGear = "<color=#ff8a7a>Couldn't read that unit's gear</color>";
+    private const string LabelCopiedLoadout = "<color=#8be38b>Copied {0}'s loadout</color>";
+    private const string LabelSaved = "<color=#8be38b>Saved \"{0}\"</color>";
+    private const string LabelDeleted = "Deleted \"{0}\"";
+    private const string LabelKit = "{0} kit";
+    private const string LabelAskingKits = "asking the server for {0} kits";
+    private const string LabelNoKits = "the server sent no kits for that role";
+    private const string LabelFailedSeeLog = "it failed (see log)";
+    private const string LabelAppliedNotRestored = "<b><color=#ff5a4a>Applied {0} on {1}/{2} unit(s). Gear not put back: {3}</color></b>";
+    private const string LabelAppliedOn = "{0} on {1}/{2} unit(s)";
+    private const string LabelApplied = "<color=#8be38b>Applied {0}</color>";
+    private const string LabelAppliedWithProblems = "<color=#ff8a7a>Applied {0}. {1}</color>";
+    private const string LabelSelectOneUnit = "Select one unit (a bot, or click a player) to edit its gear.";
+    private const string LabelWorkingPlain = "<color=#ffc847>Working…</color>";
+    private const string LabelSearchItems = "Search items…";
+    private const string LabelNothingMatches = "Nothing matches.";
+    private const string LabelCrateEmptied = "Crate emptied";
+    private const string LabelAddToCrate = "ADD TO THE CRATE";
+    private const string LabelCannotCreate = "<color=#ff8a7a>Can't create {0}</color>";
+    private const string LabelAddedToCrate = "Added {0} to the crate";
+    private const string LabelArsenalUnitHeader = "ARSENAL · {0}";
+    private const string LabelEmptySlot = "<color=#5d6873>empty</color>";
+    private const string LabelAddToInventory = "ADD TO INVENTORY";
+    private const string LabelPutIn = "PUT IN {0}  <color=#7f8a95>(click it again for inventory)</color>";
+    private const string LabelGave = "Gave {0}";
+    private const string LabelCleared = "Cleared {0}";
+
+    public const string ControlSearch = "PerunArsenalSearch";
+
     public const string NameControl = "PerunLoadoutName";
 
     private const int CrateView = 2;
-    private static readonly string[] Views = { "LOADOUTS", "ITEMS", "CRATE" };
+    private static readonly string[] Views = { ChipLoadouts, ChipItems, ChipCrate };
 
     private const float RowHeight = 22f;
     private const float SlotRefresh = 0.5f;
@@ -26,20 +96,20 @@ internal sealed class ArsenalPanel
 
     private static readonly (string label, EquipmentSlot slot)[] Slots =
     {
-        ("Primary", EquipmentSlot.FirstPrimaryWeapon),
-        ("Secondary", EquipmentSlot.SecondPrimaryWeapon),
-        ("Holster", EquipmentSlot.Holster),
-        ("Melee", EquipmentSlot.Scabbard),
-        ("Headwear", EquipmentSlot.Headwear),
-        ("Earpiece", EquipmentSlot.Earpiece),
-        ("Face cover", EquipmentSlot.FaceCover),
-        ("Eyewear", EquipmentSlot.Eyewear),
-        ("Armband", EquipmentSlot.ArmBand),
-        ("Body armor", EquipmentSlot.ArmorVest),
-        ("Rig", EquipmentSlot.TacticalVest),
-        ("Backpack", EquipmentSlot.Backpack),
-        ("Pockets", EquipmentSlot.Pockets),
-        ("Secure", EquipmentSlot.SecuredContainer)
+        (LabelPrimary, EquipmentSlot.FirstPrimaryWeapon),
+        (LabelSecondary, EquipmentSlot.SecondPrimaryWeapon),
+        (LabelHolster, EquipmentSlot.Holster),
+        (LabelMelee, EquipmentSlot.Scabbard),
+        (LabelHeadwear, EquipmentSlot.Headwear),
+        (LabelEarpiece, EquipmentSlot.Earpiece),
+        (LabelFaceCover, EquipmentSlot.FaceCover),
+        (LabelEyewear, EquipmentSlot.Eyewear),
+        (LabelArmband, EquipmentSlot.ArmBand),
+        (LabelBodyArmor, EquipmentSlot.ArmorVest),
+        (LabelRig, EquipmentSlot.TacticalVest),
+        (LabelBackpack, EquipmentSlot.Backpack),
+        (LabelPockets, EquipmentSlot.Pockets),
+        (LabelSecure, EquipmentSlot.SecuredContainer)
     };
 
     private readonly VirtualList _list = new(RowHeight);
@@ -96,8 +166,8 @@ internal sealed class ArsenalPanel
 
         if (Commands.IsRemote || FikaInfo.Present)
         {
-            GUILayout.Label("ARSENAL", Theme.Header);
-            GUILayout.Label("The arsenal works in single player for now.", Theme.Label);
+            GUILayout.Label(LabelArsenalHeader, Theme.Header);
+            GUILayout.Label(LabelSinglePlayerOnly, Theme.Label);
             return;
         }
 
@@ -148,7 +218,7 @@ internal sealed class ArsenalPanel
         GUI.SetNextControlName(NameControl);
         _saveName = GUILayout.TextField(_saveName ?? "", 32, Theme.Search);
         GUI.enabled = idle && Loadouts.Clipboard != null;
-        if (GUILayout.Button("Save copied", Theme.Button, GUILayout.Width(96f)))
+        if (GUILayout.Button(ChipSaveCopied, Theme.Button, GUILayout.Width(96f)))
         {
             string name = _saveName;
             _pendingAction = () => SaveClipboard(name);
@@ -157,7 +227,7 @@ internal sealed class ArsenalPanel
         GUILayout.EndHorizontal();
 
         GUILayout.Space(4f);
-        GUILayout.Label("SAVED LOADOUTS", Theme.Header);
+        GUILayout.Label(LabelSavedLoadouts, Theme.Header);
         _savedScroll = GUILayout.BeginScrollView(_savedScroll, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUILayout.ExpandHeight(true));
         for (int i = 0; i < _savedRows.Length; i++)
         {
@@ -179,12 +249,12 @@ internal sealed class ArsenalPanel
         }
         if (_savedRows.Length == 0)
         {
-            GUILayout.Label("Nothing saved yet. Copy a unit's loadout, name it and save it.", Theme.Small);
+            GUILayout.Label(LabelNothingSavedYet, Theme.Small);
         }
         GUILayout.EndScrollView();
 
         GUILayout.Space(4f);
-        GUILayout.Label("RANDOM KIT FROM A ROLE", Theme.Header);
+        GUILayout.Label(LabelRandomKitFrom, Theme.Header);
         GUI.enabled = idle && count > 0 && _role.HasValue;
         if (GUILayout.Button(_kitLabel, Theme.Button))
         {
@@ -194,7 +264,7 @@ internal sealed class ArsenalPanel
         }
         GUI.enabled = true;
 
-        GUILayout.Label(_busy ? $"<color=#ffc847>Working… {_progress}</color>" : _status, Theme.Label);
+        GUILayout.Label(_busy ? string.Format(LabelWorking, _progress) : _status, Theme.Label);
     }
 
     private void ApplyLoadoutPending(IReadOnlyList<Player> selection, WildSpawnType? role, string roleName)
@@ -210,7 +280,7 @@ internal sealed class ArsenalPanel
         if (_crateHintKey != Plugin.CrateKey.Value)
         {
             _crateHintKey = Plugin.CrateKey.Value;
-            _crateHint = $"Click items to put them in the crate. Take control of a bot ({Plugin.ControlKey.Value}) and press {_crateHintKey} to open its inventory with the crate beside it, then drag and drop. Anything dropped back in the crate leaves the bot.";
+            _crateHint = string.Format(LabelCrateHint, Plugin.ControlKey.Value, _crateHintKey);
         }
 
         if (_view == CrateView && Time.unscaledTime >= _nextCrate)
@@ -220,7 +290,7 @@ internal sealed class ArsenalPanel
             if (_crateCount != _crateItems.Count)
             {
                 _crateCount = _crateItems.Count;
-                _crateTitle = $"ARSENAL CRATE · {_crateCount} item(s)";
+                _crateTitle = string.Format(LabelCrateHeader, _crateCount);
             }
         }
 
@@ -255,13 +325,13 @@ internal sealed class ArsenalPanel
         _labelClipboard = Loadouts.Clipboard;
         _labelRole = role;
         int count = _units.Count;
-        string units = count == 1 ? "1 unit" : $"{count} units";
-        _loadoutTitle = count == 0 ? "LOADOUTS · select units" : $"LOADOUTS · {units} selected";
-        _copyLabel = count == 1 ? $"Copy {_units[0].Profile?.Nickname}" : "Copy (select one unit)";
-        _pasteLabel = $"Paste to {units}";
-        _applyLabel = count > 1 ? $"Apply ×{count}" : "Apply";
-        _clipboardLabel = Loadouts.Clipboard != null ? $"Copied: {Loadouts.Clipboard.Name} ({Loadouts.Clipboard.Slots.Count} slots)" : "Nothing copied yet";
-        _kitLabel = role.HasValue ? $"Give {units} a random {_roleName} kit" : "Pick a role in UNITS first";
+        string units = count == 1 ? LabelOneUnit : string.Format(LabelUnits, count);
+        _loadoutTitle = count == 0 ? LabelLoadoutsSelectUnits : string.Format(LabelLoadoutsSelected, units);
+        _copyLabel = count == 1 ? string.Format(ChipCopy, _units[0].Profile?.Nickname) : ChipCopySelectOne;
+        _pasteLabel = string.Format(ChipPasteTo, units);
+        _applyLabel = count > 1 ? string.Format(ChipApplyCount, count) : ChipApply;
+        _clipboardLabel = Loadouts.Clipboard != null ? string.Format(LabelCopiedSlots, Loadouts.Clipboard.Name, Loadouts.Clipboard.Slots.Count) : LabelNothingCopiedYet;
+        _kitLabel = role.HasValue ? string.Format(ChipGiveRandomKit, units, _roleName) : ChipPickRole;
     }
 
     private void CopySelected()
@@ -271,10 +341,10 @@ internal sealed class ArsenalPanel
             return;
         }
         Player unit = _units[0];
-        Loadout loadout = Loadouts.Capture(unit, $"{unit.Profile?.Nickname}'s loadout");
+        Loadout loadout = Loadouts.Capture(unit, string.Format(LabelUnitLoadout, unit.Profile?.Nickname));
         if (loadout == null)
         {
-            _status = "<color=#ff8a7a>Couldn't read that unit's gear</color>";
+            _status = LabelCouldNotReadGear;
             return;
         }
         Loadouts.Clipboard = loadout;
@@ -282,7 +352,7 @@ internal sealed class ArsenalPanel
         {
             _saveName = unit.Profile?.Nickname ?? "";
         }
-        _status = $"<color=#8be38b>Copied {unit.Profile?.Nickname}'s loadout</color>";
+        _status = string.Format(LabelCopiedLoadout, unit.Profile?.Nickname);
     }
 
     private void SaveClipboard(string name)
@@ -292,13 +362,13 @@ internal sealed class ArsenalPanel
             return;
         }
         SavedLoadout saved = Loadouts.Save(Loadouts.Clipboard, name);
-        _status = $"<color=#8be38b>Saved \"{saved.Name}\"</color>";
+        _status = string.Format(LabelSaved, saved.Name);
     }
 
     private void DeleteSaved(SavedLoadout saved)
     {
         Loadouts.Delete(saved);
-        _status = $"Deleted \"{saved.Name}\"";
+        _status = string.Format(LabelDeleted, saved.Name);
     }
 
     private void ApplyToUnits(Loadout loadout)
@@ -311,13 +381,13 @@ internal sealed class ArsenalPanel
 
     private void ApplyKit(WildSpawnType role, string roleName)
     {
-        string what = $"{roleName} kit";
-        RunOnUnits(what, $"asking the server for {roleName} kits", async count =>
+        string what = string.Format(LabelKit, roleName);
+        RunOnUnits(what, string.Format(LabelAskingKits, roleName), async count =>
         {
             List<Profile> profiles = await SpawnService.FetchProfiles(role, count);
             if (profiles.Count == 0)
             {
-                return (null, "the server sent no kits for that role");
+                return (null, LabelNoKits);
             }
             return (i => Loadouts.Capture(profiles[i % profiles.Count].Inventory.Equipment, what), null);
         });
@@ -361,12 +431,12 @@ internal sealed class ArsenalPanel
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Applying {what} failed: {ex}");
-            lastError = "it failed (see log)";
+            lastError = LabelFailedSeeLog;
         }
         Finish(done, units.Count, what, lastError);
         if (rollbacks.Count > 0)
         {
-            _status = $"<b><color=#ff5a4a>Applied {what} on {done}/{units.Count} unit(s). Gear not put back: {string.Join("; ", rollbacks)}</color></b>";
+            _status = string.Format(LabelAppliedNotRestored, what, done, units.Count, string.Join("; ", rollbacks));
         }
     }
 
@@ -375,9 +445,9 @@ internal sealed class ArsenalPanel
         _busy = false;
         _progress = "";
         _nextSlots = 0f;
-        string summary = $"{what} on {done}/{total} unit(s)";
+        string summary = string.Format(LabelAppliedOn, what, done, total);
         Plugin.Log.LogInfo($"Arsenal: {summary}{(error != null ? $"; {error}" : "")}");
-        _status = error == null ? $"<color=#8be38b>Applied {summary}</color>" : $"<color=#ff8a7a>Applied {summary}. {error}</color>";
+        _status = error == null ? string.Format(LabelApplied, summary) : string.Format(LabelAppliedWithProblems, summary, error);
     }
 
     private void DrawItems()
@@ -385,8 +455,8 @@ internal sealed class ArsenalPanel
         Event current = Event.current;
         if (_unit == null)
         {
-            GUILayout.Label("ARSENAL", Theme.Header);
-            GUILayout.Label("Select one unit (a bot, or click a player) to edit its gear.", Theme.Label);
+            GUILayout.Label(LabelArsenalHeader, Theme.Header);
+            GUILayout.Label(LabelSelectOneUnit, Theme.Label);
             return;
         }
 
@@ -410,7 +480,7 @@ internal sealed class ArsenalPanel
         GUILayout.Space(4f);
         GUILayout.Label(_targetLabel, Theme.Header);
         DrawCatalogue(Event.current, false);
-        GUILayout.Label(_busy ? "<color=#ffc847>Working…</color>" : _status, Theme.Label);
+        GUILayout.Label(_busy ? LabelWorkingPlain : _status, Theme.Label);
     }
 
     private void DrawCatalogue(Event current, bool crate)
@@ -423,12 +493,12 @@ internal sealed class ArsenalPanel
             _pendingCategory = category;
         }
 
-        GUI.SetNextControlName(SearchControl);
+        GUI.SetNextControlName(ControlSearch);
         _search = GUILayout.TextField(_search ?? "", 40, Theme.Search);
-        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != SearchControl && current.type == EventType.Repaint)
+        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != ControlSearch && current.type == EventType.Repaint)
         {
             Rect field = GUILayoutUtility.GetLastRect();
-            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), "Search items…", Theme.Small);
+            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), LabelSearchItems, Theme.Small);
         }
 
         _list.Plan(_shown.Count, _scroll);
@@ -451,7 +521,7 @@ internal sealed class ArsenalPanel
         _list.SpaceAfter();
         if (_shown.Count == 0)
         {
-            GUILayout.Label("Nothing matches.", Theme.Small);
+            GUILayout.Label(LabelNothingMatches, Theme.Small);
         }
         GUILayout.EndScrollView();
         _list.MeasureView();
@@ -473,13 +543,13 @@ internal sealed class ArsenalPanel
         GUILayout.BeginHorizontal();
         GUILayout.Label(_crateTitle, Theme.Header);
         GUI.enabled = !_busy && _crateCount > 0 && !ArsenalCrate.IsOpen;
-        if (GUILayout.Button("Empty", Theme.Button, GUILayout.Width(64f)))
+        if (GUILayout.Button(ChipEmpty, Theme.Button, GUILayout.Width(64f)))
         {
             _pendingAction = () =>
             {
                 ArsenalCrate.Empty();
                 _nextCrate = 0f;
-                _status = "Crate emptied";
+                _status = LabelCrateEmptied;
             };
         }
         GUI.enabled = true;
@@ -510,9 +580,9 @@ internal sealed class ArsenalPanel
         }
 
         GUILayout.Space(4f);
-        GUILayout.Label("ADD TO THE CRATE", Theme.Header);
+        GUILayout.Label(LabelAddToCrate, Theme.Header);
         DrawCatalogue(Event.current, true);
-        GUILayout.Label(_busy ? "<color=#ffc847>Working…</color>" : _status, Theme.Label);
+        GUILayout.Label(_busy ? LabelWorkingPlain : _status, Theme.Label);
     }
 
     private void RefreshCrate()
@@ -539,7 +609,7 @@ internal sealed class ArsenalPanel
         Item item = ArsenalOps.Build(entry.TemplateId, int.MaxValue);
         if (item == null)
         {
-            _status = $"<color=#ff8a7a>Can't create {entry.Name}</color>";
+            _status = string.Format(LabelCannotCreate, entry.Name);
             return;
         }
         _busy = true;
@@ -551,14 +621,14 @@ internal sealed class ArsenalPanel
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal crate add failed: {ex}");
-            result = ArsenalResult.Failed("it failed (see log)");
+            result = ArsenalResult.Failed(LabelFailedSeeLog);
         }
         finally
         {
             _busy = false;
             _nextCrate = 0f;
         }
-        _status = Describe(result, $"Added {entry.Name} to the crate");
+        _status = Describe(result, string.Format(LabelAddedToCrate, entry.Name));
     }
 
     private void ApplyPending(Player unit)
@@ -571,7 +641,7 @@ internal sealed class ArsenalPanel
         if (!ReferenceEquals(unit, _unit))
         {
             _unit = unit;
-            _unitTitle = unit != null ? $"ARSENAL · {unit.Profile?.Nickname}" : "";
+            _unitTitle = unit != null ? string.Format(LabelArsenalUnitHeader, unit.Profile?.Nickname) : "";
             System.Array.Clear(_slotText, 0, _slotText.Length);
             System.Array.Clear(_slotItem, 0, _slotItem.Length);
             _status = "";
@@ -626,7 +696,7 @@ internal sealed class ArsenalPanel
             }
             _slotItem[i] = item;
             _slotFilled[i] = item != null;
-            string name = item != null ? item.ShortName.Localized() : "<color=#5d6873>empty</color>";
+            string name = item != null ? item.ShortName.Localized() : LabelEmptySlot;
             _slotText[i] = $"<color=#9fb4c8>{Slots[i].label}</color>  {name}";
         }
 
@@ -634,8 +704,8 @@ internal sealed class ArsenalPanel
         {
             _labelTarget = _target;
             _targetLabel = _target == Inventory
-                ? "ADD TO INVENTORY"
-                : $"PUT IN {Slots[_target].label.ToUpperInvariant()}  <color=#7f8a95>(click it again for inventory)</color>";
+                ? LabelAddToInventory
+                : string.Format(LabelPutIn, Slots[_target].label.ToUpperInvariant());
         }
     }
 
@@ -685,19 +755,19 @@ internal sealed class ArsenalPanel
         Item item = ArsenalOps.Build(entry.TemplateId, int.MaxValue);
         if (item == null)
         {
-            _status = $"<color=#ff8a7a>Can't create {entry.Name}</color>";
+            _status = string.Format(LabelCannotCreate, entry.Name);
             return;
         }
 
         EquipmentSlot? slot = _target == Inventory ? null : Slots[_target].slot;
-        Run(() => ArsenalOps.GiveAsync(unit, item, slot), $"Gave {entry.Name}");
+        Run(() => ArsenalOps.GiveAsync(unit, item, slot), string.Format(LabelGave, entry.Name));
     }
 
     private void Clear(int index)
     {
         Player unit = _unit;
         EquipmentSlot slot = Slots[index].slot;
-        Run(() => ArsenalOps.ClearSlotAsync(unit, slot), $"Cleared {Slots[index].label}");
+        Run(() => ArsenalOps.ClearSlotAsync(unit, slot), string.Format(LabelCleared, Slots[index].label));
     }
 
     private async void Run(Func<Task<ArsenalResult>> work, string success)
@@ -711,7 +781,7 @@ internal sealed class ArsenalPanel
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal action failed: {ex}");
-            result = ArsenalResult.Failed("it failed (see log)");
+            result = ArsenalResult.Failed(LabelFailedSeeLog);
         }
         finally
         {

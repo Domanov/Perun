@@ -23,6 +23,13 @@ internal enum BotKind
 
 internal static class BotKinds
 {
+    private const string MatchInfected = "infected";
+    private const string MatchSectant = "sectant";
+    private const string MatchSectantPriestEvent = "sectactPriestEvent";
+    private const string MatchFollower = "follower";
+    private const string MatchTagillaHelperAgro = "tagillaHelperAgro";
+    private const string MatchBoss = "boss";
+
     private static readonly Dictionary<int, BotKind> Cache = new();
     private static readonly string[] HexCache = new string[Enum.GetValues(typeof(BotKind)).Length];
 
@@ -87,19 +94,19 @@ internal static class BotKinds
         }
 
         string name = Units.SpawnNames.Id(role);
-        if (name.StartsWith("infected", StringComparison.Ordinal))
+        if (name.StartsWith(MatchInfected, StringComparison.Ordinal))
         {
             return BotKind.Infected;
         }
-        if (name.StartsWith("sectant", StringComparison.Ordinal) || name == "sectactPriestEvent")
+        if (name.StartsWith(MatchSectant, StringComparison.Ordinal) || name == MatchSectantPriestEvent)
         {
             return BotKind.Cultist;
         }
-        if (name.StartsWith("follower", StringComparison.Ordinal) || name == "tagillaHelperAgro")
+        if (name.StartsWith(MatchFollower, StringComparison.Ordinal) || name == MatchTagillaHelperAgro)
         {
             return BotKind.Follower;
         }
-        if (name.StartsWith("boss", StringComparison.Ordinal))
+        if (name.StartsWith(MatchBoss, StringComparison.Ordinal))
         {
             return BotKind.Boss;
         }

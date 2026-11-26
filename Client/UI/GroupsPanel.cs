@@ -10,13 +10,52 @@ namespace Perun.Client.UI;
 
 internal sealed class GroupsPanel
 {
-    public const string SearchControl = "PerunGroupSearch";
+    private const string LabelAsSet = "As set";
+    private const string LabelEasy = "Easy";
+    private const string LabelNormal = "Normal";
+    private const string LabelHard = "Hard";
+    private const string LabelImpossibleShort = "Imposs.";
+    private const string LabelGroupHeader = "GROUP";
+    private const string LabelSearchGroups = "Search groups…";
+    private const string LabelNoGroups = "No groups: the server sent no boss data and nothing is saved.";
+    private const string LabelNothingMatches = "Nothing matches.";
+    private const string LabelDifficulty = "DIFFICULTY";
+    private const string LabelCopySuffix = " (copy)";
+    private const string LabelSptPresets = "SPT PRESETS";
+    private const string LabelCustom = "CUSTOM";
+    private const string LabelAlone = "alone";
+    private const string LabelMoreKinds = "+ {0} kinds";
+    private const string LabelSpawning = " · spawning {0}";
+    private const string LabelPerunUnits = "Perun units {0}/{1}{2}";
+    private const string LabelPlaceFromEditor = "<color=#9fb4c8>Place the group from the editor, or close it to place from here.</color>";
+    private const string LabelLinkHint = "<color=#ffc847>Drag from a bot onto another: the second one leads the first. Drop it on the ground: it leaves its group</color>  <color=#9fb4c8>· LINK LEADERS again stops</color>";
+    private const string LabelPickAGroup = "<color=#9fb4c8>Pick a group, then click the map to place it.</color>";
+    private const string LabelClickTheMap = "<color=#ffc847>Click the map to place {0} ({1})</color>  <color=#9fb4c8>· RMB stops</color>";
+    private const string LabelPlaceGroupHint = "<color=#9fb4c8>PLACE GROUP to place it on the map.</color>";
+    private const string LabelHostLoads = "<color=#9fb4c8>The host loads the members when you place the group</color>";
+    private const string LabelReadyToDrop = "<color=#8be38b>● Ready to drop: {0}</color> · spawns instantly";
+    private const string LabelPreparingInAdvance = "<color=#ffc847>◐ Preparing in advance… {0}/{1} ready</color>";
+    private const string LabelOverUnitLimit = "\n<color=#ff8080>Only {0} more units fit (limit {1})</color>";
+    private const string LabelNothingSelected = "<color=#7f8a95>Nothing selected.</color>";
+    private const string LabelCustomLeader = "\n<color=#7f8a95>Custom · leader picked by hand</color>";
+    private const string LabelCustomLine = "\n<color=#7f8a95>Custom</color>";
+    private const string LabelSptSource = "SPT";
+
+    private const string ChipPlaceGroup = "PLACE GROUP";
+    private const string ChipEdit = "Edit";
+    private const string ChipEditCopy = "Edit copy";
+    private const string ChipNewGroup = "New group";
+    private const string ChipLinkLeaders = "LINK LEADERS";
+
+    private const string MarkupColorOpen = "<color=";
+
+    public const string ControlSearch = "PerunGroupSearch";
 
     private const float RowHeight = 22f;
     private const float StatusRefresh = 0.25f;
     private const float DoubleClick = 0.35f;
 
-    private static readonly string[] DifficultyNames = { "As set", "Easy", "Normal", "Hard", "Imposs." };
+    private static readonly string[] DifficultyNames = { LabelAsSet, LabelEasy, LabelNormal, LabelHard, LabelImpossibleShort };
     private static readonly BotDifficulty?[] Difficulties = { null, BotDifficulty.easy, BotDifficulty.normal, BotDifficulty.hard, BotDifficulty.impossible };
 
     private sealed class Row
@@ -41,7 +80,7 @@ internal sealed class GroupsPanel
     private bool _armed;
     private int _difficulty;
     private float _nextStatus;
-    private string _title = "GROUP";
+    private string _title = LabelGroupHeader;
     private string _summary = "";
     private string _prompt = "";
     private string _status = "";
@@ -109,12 +148,12 @@ internal sealed class GroupsPanel
             RefreshStatus();
         }
 
-        GUI.SetNextControlName(SearchControl);
+        GUI.SetNextControlName(ControlSearch);
         _search = GUILayout.TextField(_search ?? "", 40, Theme.Search);
-        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != SearchControl && Event.current.type == EventType.Repaint)
+        if (string.IsNullOrEmpty(_search) && GUI.GetNameOfFocusedControl() != ControlSearch && Event.current.type == EventType.Repaint)
         {
             Rect field = GUILayoutUtility.GetLastRect();
-            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), "Search groups…", Theme.Small);
+            GUI.Label(new Rect(field.x + 6f, field.y + 3f, field.width, field.height), LabelSearchGroups, Theme.Small);
         }
 
         _list.Plan(_rows.Count, _scroll);
@@ -161,7 +200,7 @@ internal sealed class GroupsPanel
         _list.SpaceAfter();
         if (_rows.Count == 0)
         {
-            GUILayout.Label(string.IsNullOrEmpty(_activeSearch) ? "No groups: the server sent no boss data and nothing is saved." : "Nothing matches.", Theme.Small);
+            GUILayout.Label(string.IsNullOrEmpty(_activeSearch) ? LabelNoGroups : LabelNothingMatches, Theme.Small);
         }
         GUILayout.EndScrollView();
         _list.MeasureView();
@@ -170,7 +209,7 @@ internal sealed class GroupsPanel
         GUILayout.Label(_title, Theme.Header);
         GUILayout.Label(_summary, Theme.Label);
 
-        GUILayout.Label("DIFFICULTY", Theme.Header);
+        GUILayout.Label(LabelDifficulty, Theme.Header);
         int difficulty = GUILayout.Toolbar(_difficulty, DifficultyNames, Theme.Tab);
         if (difficulty != _difficulty && Event.current.type != EventType.Layout)
         {
@@ -181,19 +220,19 @@ internal sealed class GroupsPanel
         GUILayout.Space(4f);
         GUI.enabled = _selected != null && !Editor.IsOpen;
         bool armed = Armed;
-        if (GUILayout.Toggle(armed, "PLACE GROUP", Theme.Tab) != armed)
+        if (GUILayout.Toggle(armed, ChipPlaceGroup, Theme.Tab) != armed)
         {
             _armed = !armed;
             Linking &= !_armed;
             _nextStatus = 0f;
         }
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button(_selected is { Source: GroupSource.Custom } ? "Edit" : "Edit copy", Theme.Button))
+        if (GUILayout.Button(_selected is { Source: GroupSource.Custom } ? ChipEdit : ChipEditCopy, Theme.Button))
         {
             OpenEditor(_selected);
         }
         GUI.enabled = !Editor.IsOpen;
-        if (GUILayout.Button("New group", Theme.Button))
+        if (GUILayout.Button(ChipNewGroup, Theme.Button))
         {
             _armed = false;
             Editor.Open(new GroupDraft(), null);
@@ -203,7 +242,7 @@ internal sealed class GroupsPanel
 
         GUI.enabled = !Commands.IsRemote;
         bool linking = Linking;
-        if (GUILayout.Toggle(linking, "LINK LEADERS", Theme.Tab) != linking)
+        if (GUILayout.Toggle(linking, ChipLinkLeaders, Theme.Tab) != linking)
         {
             Linking = !linking;
             _armed &= !Linking;
@@ -224,7 +263,7 @@ internal sealed class GroupsPanel
             Editor.Open(GroupDraft.From(plan, plan.Name), plan.Name);
             return;
         }
-        string name = plan.Name + " (copy)";
+        string name = plan.Name + LabelCopySuffix;
         Editor.Open(GroupDraft.From(plan, name.Length > CustomGroups.MaxNameLength ? name.Substring(0, CustomGroups.MaxNameLength) : name), null);
     }
 
@@ -234,13 +273,13 @@ internal sealed class GroupsPanel
         string needle = (_activeSearch ?? "").Trim();
         if (_plans != null)
         {
-            AddSection("SPT PRESETS", _plans.Where(p => p.Faction == null), needle);
+            AddSection(LabelSptPresets, _plans.Where(p => p.Faction == null), needle);
             foreach (var faction in _plans.Where(p => p.Faction != null).GroupBy(p => p.Faction).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
             {
                 AddSection(faction.Key.ToUpperInvariant(), faction, needle);
             }
         }
-        AddSection("CUSTOM", CustomGroups.All, needle);
+        AddSection(LabelCustom, CustomGroups.All, needle);
     }
 
     // A search shows every match, so collapsed sections open while it lasts.
@@ -295,7 +334,7 @@ internal sealed class GroupsPanel
     {
         string color = Hex(plan.Leader.Role);
         int others = plan.Members.Count - 1;
-        string tail = others == 0 ? "alone" : others == 1 ? "+ " + SpawnNames.Of(plan.Members[plan.LeaderIndex == 0 ? 1 : 0].Role) : $"+ {others} kinds";
+        string tail = others == 0 ? LabelAlone : others == 1 ? "+ " + SpawnNames.Of(plan.Members[plan.LeaderIndex == 0 ? 1 : 0].Role) : string.Format(LabelMoreKinds, others);
         return $"<color={color}>{plan.Name}</color>  <color=#7f8a95>{tail}</color>";
     }
 
@@ -318,27 +357,27 @@ internal sealed class GroupsPanel
         _nextStatus = now + StatusRefresh;
         Ready = false;
 
-        string pending = Commands.Pending > 0 ? $" · spawning {Commands.Pending}" : "";
-        string units = $"Perun units {Commands.AliveCount}/{Commands.MaxUnits}{pending}";
+        string pending = Commands.Pending > 0 ? string.Format(LabelSpawning, Commands.Pending) : "";
+        string units = string.Format(LabelPerunUnits, Commands.AliveCount, Commands.MaxUnits, pending);
         string result = string.IsNullOrEmpty(Commands.LastResult) ? "" : "\n" + Commands.LastResult;
 
         if (Editor.IsOpen)
         {
-            _prompt = "<color=#9fb4c8>Place the group from the editor, or close it to place from here.</color>";
+            _prompt = LabelPlaceFromEditor;
             _status = units + result;
             return;
         }
 
         if (Linking)
         {
-            _prompt = "<color=#ffc847>Drag from a bot onto another: the second one leads the first. Drop it on the ground: it leaves its group</color>  <color=#9fb4c8>· LINK LEADERS again stops</color>";
+            _prompt = LabelLinkHint;
             _status = units + result;
             return;
         }
 
         if (_selected == null)
         {
-            _prompt = "<color=#9fb4c8>Pick a group, then click the map to place it.</color>";
+            _prompt = LabelPickAGroup;
             _status = units + result;
             return;
         }
@@ -348,15 +387,15 @@ internal sealed class GroupsPanel
         int wanted = _selected.Max;
         Ready = ready >= wanted;
         _prompt = Armed
-            ? $"<color=#ffc847>Click the map to place {_selected.Name} ({_selected.CountText})</color>  <color=#9fb4c8>· RMB stops</color>"
-            : "<color=#9fb4c8>PLACE GROUP to place it on the map.</color>";
+            ? string.Format(LabelClickTheMap, _selected.Name, _selected.CountText)
+            : LabelPlaceGroupHint;
         string readiness = Commands.IsRemote
-            ? "<color=#9fb4c8>The host loads the members when you place the group</color>"
+            ? LabelHostLoads
             : Ready
-                ? $"<color=#8be38b>● Ready to drop: {wanted}</color> · spawns instantly"
-                : $"<color=#ffc847>◐ Preparing in advance… {ready}/{wanted} ready</color>";
+                ? string.Format(LabelReadyToDrop, wanted)
+                : string.Format(LabelPreparingInAdvance, ready, wanted);
         int room = Commands.MaxUnits - Commands.AliveCount - Commands.Pending;
-        string limit = room < _selected.Min ? $"\n<color=#ff8080>Only {Math.Max(room, 0)} more units fit (limit {Commands.MaxUnits})</color>" : "";
+        string limit = room < _selected.Min ? string.Format(LabelOverUnitLimit, Math.Max(room, 0), Commands.MaxUnits) : "";
         _status = $"{readiness}\n{units}{limit}{result}";
     }
 
@@ -364,8 +403,8 @@ internal sealed class GroupsPanel
     {
         if (_selected == null)
         {
-            _title = "GROUP";
-            _summary = "<color=#7f8a95>Nothing selected.</color>";
+            _title = LabelGroupHeader;
+            _summary = LabelNothingSelected;
             return;
         }
 
@@ -383,7 +422,7 @@ internal sealed class GroupsPanel
                 b.Append('\n');
             }
             b.Append(n == 0 ? "<color=#ffc847>♛</color> " : "   ");
-            b.Append("<color=").Append(Hex(member.Role)).Append('>').Append(SpawnNames.Of(member.Role)).Append("</color>");
+            b.Append(MarkupColorOpen).Append(Hex(member.Role)).Append('>').Append(SpawnNames.Of(member.Role)).Append("</color>");
             if (n > 0 || member.Max > 1)
             {
                 b.Append(" ×").Append(member.CountText);
@@ -400,11 +439,11 @@ internal sealed class GroupsPanel
         }
         if (plan.Source == GroupSource.Custom)
         {
-            b.Append(plan.LeaderChoice.HasValue ? "\n<color=#7f8a95>Custom · leader picked by hand</color>" : "\n<color=#7f8a95>Custom</color>");
+            b.Append(plan.LeaderChoice.HasValue ? LabelCustomLeader : LabelCustomLine);
         }
         else if (plan.Maps.Count > 0)
         {
-            b.Append("\n<color=#7f8a95>").Append(plan.Faction ?? "SPT").Append(" · ").Append(string.Join(", ", plan.Maps)).Append("</color>");
+            b.Append("\n<color=#7f8a95>").Append(plan.Faction ?? LabelSptSource).Append(" · ").Append(string.Join(", ", plan.Maps)).Append("</color>");
         }
         _summary = b.ToString();
     }

@@ -7,6 +7,56 @@ namespace Perun.Client.Units;
 
 internal static class BossPresets
 {
+    private const string NameReshala = "Reshala";
+    private const string NameShturman = "Shturman";
+    private const string NameGlukhar = "Glukhar";
+    private const string NameSanitar = "Sanitar";
+    private const string NameKilla = "Killa";
+    private const string NameTagilla = "Tagilla";
+    private const string NameGoons = "Goons";
+    private const string NameZryachiy = "Zryachiy";
+    private const string NameKaban = "Kaban";
+    private const string NameKabanSnipers = "Kaban's snipers";
+    private const string NameKollontay = "Kollontay";
+    private const string NamePartisan = "Partisan";
+    private const string NameKillaLabyrinth = "Killa (Labyrinth)";
+    private const string NameTagillaLabyrinth = "Tagilla (Labyrinth)";
+    private const string NameLabyrinthShadows = "Labyrinth shadows";
+    private const string NameRaiders = "Raiders";
+    private const string NameRogues = "Rogues";
+    private const string NameCultists = "Cultists";
+    private const string NamePeacemakers = "Peacemakers";
+    private const string NameCrazyScavs = "Crazy scavs";
+    private const string NameBloodhounds = "Bloodhounds";
+    private const string NameMapCustoms = "Customs";
+    private const string NameMapFactory = "Factory";
+    private const string NameMapNightFactory = "Night Factory";
+    private const string NameMapInterchange = "Interchange";
+    private const string NameMapLabs = "Labs";
+    private const string NameMapLighthouse = "Lighthouse";
+    private const string NameMapReserve = "Reserve";
+    private const string NameMapShoreline = "Shoreline";
+    private const string NameMapWoods = "Woods";
+    private const string NameMapStreets = "Streets";
+    private const string NameMapGroundZero = "Ground Zero";
+    private const string NameMapLabyrinth = "Labyrinth";
+
+    private const string LocationCustoms = "bigmap";
+    private const string LocationFactoryDay = "factory4_day";
+    private const string LocationFactoryNight = "factory4_night";
+    private const string LocationInterchange = "interchange";
+    private const string LocationLabs = "laboratory";
+    private const string LocationLighthouse = "lighthouse";
+    private const string LocationReserve = "rezervbase";
+    private const string LocationShoreline = "shoreline";
+    private const string LocationWoods = "woods";
+    private const string LocationStreets = "tarkovstreets";
+    private const string LocationGroundZero = "sandbox";
+    private const string LocationGroundZeroHigh = "sandbox_high";
+    private const string LocationLabyrinth = "labyrinth";
+
+    private const string KeyFactionPrefix = "faction|";
+
     private static readonly HashSet<WildSpawnType> Skipped = new()
     {
         WildSpawnType.pmcUSEC,
@@ -16,44 +66,44 @@ internal static class BossPresets
 
     private static readonly Dictionary<WildSpawnType, string> Names = new()
     {
-        { WildSpawnType.bossBully, "Reshala" },
-        { WildSpawnType.bossKojaniy, "Shturman" },
-        { WildSpawnType.bossGluhar, "Glukhar" },
-        { WildSpawnType.bossSanitar, "Sanitar" },
-        { WildSpawnType.bossKilla, "Killa" },
-        { WildSpawnType.bossTagilla, "Tagilla" },
-        { WildSpawnType.bossKnight, "Goons" },
-        { WildSpawnType.bossZryachiy, "Zryachiy" },
-        { WildSpawnType.bossBoar, "Kaban" },
-        { WildSpawnType.bossBoarSniper, "Kaban's snipers" },
-        { WildSpawnType.bossKolontay, "Kollontay" },
-        { WildSpawnType.bossPartisan, "Partisan" },
-        { WildSpawnType.bossKillaAgro, "Killa (Labyrinth)" },
-        { WildSpawnType.bossTagillaAgro, "Tagilla (Labyrinth)" },
-        { WildSpawnType.tagillaHelperAgro, "Labyrinth shadows" },
-        { WildSpawnType.pmcBot, "Raiders" },
-        { WildSpawnType.exUsec, "Rogues" },
-        { WildSpawnType.sectantPriest, "Cultists" },
-        { WildSpawnType.peacemaker, "Peacemakers" },
-        { WildSpawnType.crazyAssaultEvent, "Crazy scavs" },
-        { WildSpawnType.arenaFighterEvent, "Bloodhounds" }
+        { WildSpawnType.bossBully, NameReshala },
+        { WildSpawnType.bossKojaniy, NameShturman },
+        { WildSpawnType.bossGluhar, NameGlukhar },
+        { WildSpawnType.bossSanitar, NameSanitar },
+        { WildSpawnType.bossKilla, NameKilla },
+        { WildSpawnType.bossTagilla, NameTagilla },
+        { WildSpawnType.bossKnight, NameGoons },
+        { WildSpawnType.bossZryachiy, NameZryachiy },
+        { WildSpawnType.bossBoar, NameKaban },
+        { WildSpawnType.bossBoarSniper, NameKabanSnipers },
+        { WildSpawnType.bossKolontay, NameKollontay },
+        { WildSpawnType.bossPartisan, NamePartisan },
+        { WildSpawnType.bossKillaAgro, NameKillaLabyrinth },
+        { WildSpawnType.bossTagillaAgro, NameTagillaLabyrinth },
+        { WildSpawnType.tagillaHelperAgro, NameLabyrinthShadows },
+        { WildSpawnType.pmcBot, NameRaiders },
+        { WildSpawnType.exUsec, NameRogues },
+        { WildSpawnType.sectantPriest, NameCultists },
+        { WildSpawnType.peacemaker, NamePeacemakers },
+        { WildSpawnType.crazyAssaultEvent, NameCrazyScavs },
+        { WildSpawnType.arenaFighterEvent, NameBloodhounds }
     };
 
     private static readonly Dictionary<string, string> MapNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        { "bigmap", "Customs" },
-        { "factory4_day", "Factory" },
-        { "factory4_night", "Night Factory" },
-        { "interchange", "Interchange" },
-        { "laboratory", "Labs" },
-        { "lighthouse", "Lighthouse" },
-        { "rezervbase", "Reserve" },
-        { "shoreline", "Shoreline" },
-        { "woods", "Woods" },
-        { "tarkovstreets", "Streets" },
-        { "sandbox", "Ground Zero" },
-        { "sandbox_high", "Ground Zero" },
-        { "labyrinth", "Labyrinth" }
+        { LocationCustoms, NameMapCustoms },
+        { LocationFactoryDay, NameMapFactory },
+        { LocationFactoryNight, NameMapNightFactory },
+        { LocationInterchange, NameMapInterchange },
+        { LocationLabs, NameMapLabs },
+        { LocationLighthouse, NameMapLighthouse },
+        { LocationReserve, NameMapReserve },
+        { LocationShoreline, NameMapShoreline },
+        { LocationWoods, NameMapWoods },
+        { LocationStreets, NameMapStreets },
+        { LocationGroundZero, NameMapGroundZero },
+        { LocationGroundZeroHigh, NameMapGroundZero },
+        { LocationLabyrinth, NameMapLabyrinth }
     };
 
     private static List<GroupPlan> _cached;
@@ -144,7 +194,7 @@ internal static class BossPresets
             }
 
             string faction = factionOf?.Invoke(boss);
-            string key = faction != null ? "faction|" + boss : string.Join("|", members.Select(m => m.role.ToString()));
+            string key = faction != null ? KeyFactionPrefix + boss : string.Join("|", members.Select(m => m.role.ToString()));
             if (!entries.TryGetValue(key, out Entry entry))
             {
                 entry = new Entry { Boss = boss, Members = members, Faction = faction };

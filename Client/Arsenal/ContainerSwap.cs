@@ -29,6 +29,12 @@ internal sealed class SwapSteps<T>
 // failure other than "this item doesn't fit" puts the container back the way it was. Items that don't fit are skipped.
 internal static class ContainerSwap
 {
+    private const string LabelItemsLeftOut = "{0} item(s) didn't fit and were left out: {1}";
+    private const string LabelItemError = "{0} ({1})";
+    private const string LabelNewItemStayed = "{0} (new, stayed in the container)";
+    private const string LabelContentsKept = "{0}; contents left as they were";
+    private const string LabelContentsNotRestored = "{0}; contents not fully restored: {1}";
+
     public static async Task<ArsenalResult> Run<T>(IReadOnlyList<T> old, IReadOnlyList<T> fresh, SwapSteps<T> steps)
     {
         List<T> held = new();
@@ -59,7 +65,7 @@ internal static class ContainerSwap
             skipped.Add(steps.Name(item));
         }
 
-        return skipped.Count == 0 ? ArsenalResult.Ok : ArsenalResult.NoRoom($"{skipped.Count} item(s) didn't fit and were left out: {string.Join(", ", skipped)}");
+        return skipped.Count == 0 ? ArsenalResult.Ok : ArsenalResult.NoRoom(string.Format(LabelItemsLeftOut, skipped.Count, string.Join(", ", skipped)));
     }
 
     private static bool Skippable(ArsenalResult result) => result.Status is ArsenalStatus.NoRoom or ArsenalStatus.Incompatible;
@@ -119,7 +125,7 @@ internal static class ContainerSwap
             }
             catch (Exception ex)
             {
-                problem = $"{steps.Name(held[i])} ({ex.Message})";
+                problem = string.Format(LabelItemError, steps.Name(held[i]), ex.Message);
             }
             if (problem != null)
             {
@@ -128,12 +134,12 @@ internal static class ContainerSwap
         }
         foreach (T item in stuck)
         {
-            lost.Add($"{steps.Name(item)} (new, stayed in the container)");
+            lost.Add(string.Format(LabelNewItemStayed, steps.Name(item)));
         }
         if (lost.Count == 0)
         {
-            return new ArsenalResult(cause.Status, $"{cause.Message}; contents left as they were");
+            return new ArsenalResult(cause.Status, string.Format(LabelContentsKept, cause.Message));
         }
-        return ArsenalResult.RollbackFailed($"{cause.Message}; contents not fully restored: {string.Join(", ", lost)}");
+        return ArsenalResult.RollbackFailed(string.Format(LabelContentsNotRestored, cause.Message, string.Join(", ", lost)));
     }
 }

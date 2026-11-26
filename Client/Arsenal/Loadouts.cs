@@ -47,6 +47,24 @@ internal sealed class ContentItem
 
 internal static class Loadouts
 {
+    private const string FileLoadouts = "com.dmnv.perun.loadouts.json";
+
+    private const string JsonX = "x";
+    private const string JsonY = "y";
+    private const string JsonRotation = "r";
+
+    private const string LabelNoLoadout = "no loadout";
+    private const string LabelContainerGone = "the container is gone";
+    private const string LabelProgressGear = "{0}: loading gear";
+    private const string LabelProgressTakeOff = "{0}: taking off {1}";
+    private const string LabelProgressStep = "{0}: {1}";
+    private const string LabelProgressAmmo = "{0}: ammo";
+    private const string LabelProgressDraw = "{0}: drawing a weapon";
+    private const string LabelFailure = "{0}: {1}";
+    private const string LabelItemGone = "{0}: its item no longer exists, left as it was";
+    private const string LabelSkippedUnknown = "skipped unknown items {0}";
+    private const string LabelProblems = "{0} problems, first {1}";
+
     public static readonly EquipmentSlot[] Covered =
     {
         EquipmentSlot.Headwear, EquipmentSlot.Earpiece, EquipmentSlot.FaceCover, EquipmentSlot.Eyewear, EquipmentSlot.ArmBand,
@@ -57,7 +75,7 @@ internal static class Loadouts
     public static readonly EquipmentSlot[] ContentsOnly = { EquipmentSlot.SecuredContainer };
 
     private const int Limit = 64;
-    private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, "com.dmnv.perun.loadouts.json");
+    private static readonly string FilePath = Path.Combine(BepInEx.Paths.ConfigPath, FileLoadouts);
     private static List<SavedLoadout> _saved;
 
     public static Loadout Clipboard { get; set; }
@@ -252,7 +270,7 @@ internal static class Loadouts
     {
         if (loadout == null)
         {
-            return ArsenalResult.Invalid("no loadout");
+            return ArsenalResult.Invalid(LabelNoLoadout);
         }
         string name = unit?.Profile?.Nickname;
         ArsenalResult blocked = ArsenalOps.Blocked(unit);
@@ -267,7 +285,7 @@ internal static class Loadouts
         {
             ArsenalTrace.Note(unit, $"plan: gear {string.Join(", ", plan.Gear.Select(g => $"{g.Key}={g.Value.ShortName.Localized()}"))}; whole containers {string.Join(", ", plan.WholeContainers.Keys)}; contents {string.Join(", ", plan.Contents.Select(c => $"{c.Key}: {c.Value.Count} item(s)"))}; unbuildable {string.Join(", ", plan.Unbuildable)}");
         }
-        progress?.Invoke($"{name}: loading gear");
+        progress?.Invoke(string.Format(LabelProgressGear, name));
         foreach (Item tree in plan.AllTrees())
         {
             await ArsenalOps.Load(tree);
@@ -292,7 +310,7 @@ internal static class Loadouts
             () => ArsenalOps.Blocked(unit),
             async slot =>
             {
-                progress?.Invoke($"{name}: taking off {slot}");
+                progress?.Invoke(string.Format(LabelProgressTakeOff, name, slot));
                 ArsenalTrace.Log(unit, $"step: take off {slot}");
                 (ArsenalResult result, ArsenalOps.Held item) = await ArsenalOps.HoldAsync(unit, slot);
                 ArsenalTrace.Log(unit, $"step: take off {slot} -> {result.Status} {result.Message}");
@@ -304,7 +322,7 @@ internal static class Loadouts
             },
             slot =>
             {
-                progress?.Invoke($"{name}: {slot}");
+                progress?.Invoke(string.Format(LabelProgressStep, name, slot));
                 ArsenalTrace.Note(unit, $"step: give {slot}");
                 return ArsenalOps.GiveAsync(unit, plan.Gear[slot], slot, false);
             },
@@ -324,41 +342,41 @@ internal static class Loadouts
 
         foreach (KeyValuePair<EquipmentSlot, Item> whole in plan.WholeContainers)
         {
-            progress?.Invoke($"{name}: {whole.Key}");
+            progress?.Invoke(string.Format(LabelProgressStep, name, whole.Key));
             ArsenalResult result = unit.IsAI
                 ? await ArsenalOps.ReplaceRaidLockedAsync(unit, whole.Value, whole.Key)
                 : await ArsenalOps.GiveAsync(unit, whole.Value, whole.Key, false);
             if (!result.IsOk)
             {
-                failures.Add($"{whole.Key}: {result.Message}");
+                failures.Add(string.Format(LabelFailure, whole.Key, result.Message));
             }
         }
 
         foreach (KeyValuePair<EquipmentSlot, List<ContentItem>> contents in plan.Contents)
         {
-            progress?.Invoke($"{name}: {contents.Key}");
+            progress?.Invoke(string.Format(LabelProgressStep, name, contents.Key));
             ArsenalTrace.Note(unit, $"filling {contents.Key} with {contents.Value.Count} item(s)");
             ArsenalResult result = await FillContainer(unit, contents.Key, contents.Value);
             ArsenalTrace.Note(unit, $"filled {contents.Key}: {result.Status} {result.Message}");
             rollbackFailed |= result.Status == ArsenalStatus.RollbackFailed;
             if (!result.IsOk && (result.Status == ArsenalStatus.Cancelled || !ArsenalOps.Blocked(unit).IsOk))
             {
-                failures.Add($"{contents.Key}: {result.Message}");
+                failures.Add(string.Format(LabelFailure, contents.Key, result.Message));
                 return Summary(loadout, name, failures, rollbackFailed, result.Status);
             }
             if (!result.IsOk)
             {
-                failures.Add($"{contents.Key}: {result.Message}");
+                failures.Add(string.Format(LabelFailure, contents.Key, result.Message));
             }
         }
 
         if (unit.IsAI)
         {
-            progress?.Invoke($"{name}: ammo");
+            progress?.Invoke(string.Format(LabelProgressAmmo, name));
             await ArsenalOps.TopUpAmmoAsync(unit);
         }
 
-        progress?.Invoke($"{name}: drawing a weapon");
+        progress?.Invoke(string.Format(LabelProgressDraw, name));
         ArsenalOps.ReleaseDraws(unit);
         ArsenalOps.RefreshAi(unit);
         await ArsenalOps.EquipBest(unit);
@@ -367,11 +385,11 @@ internal static class Loadouts
 
         foreach (EquipmentSlot slot in plan.Unbuildable)
         {
-            failures.Add($"{slot}: its item no longer exists, left as it was");
+            failures.Add(string.Format(LabelItemGone, slot));
         }
         if (plan.Skipped.Count > 0)
         {
-            failures.Add($"skipped unknown items {string.Join(", ", plan.Skipped.Distinct())}");
+            failures.Add(string.Format(LabelSkippedUnknown, string.Join(", ", plan.Skipped.Distinct())));
         }
         return Summary(loadout, name, failures, rollbackFailed, ArsenalStatus.Failed);
     }
@@ -386,7 +404,7 @@ internal static class Loadouts
         {
             return ArsenalResult.Ok;
         }
-        string summary = failures.Count == 1 ? failures[0] : $"{failures.Count} problems, first {failures[0]}";
+        string summary = failures.Count == 1 ? failures[0] : string.Format(LabelProblems, failures.Count, failures[0]);
         return rollbackFailed ? ArsenalResult.RollbackFailed(summary) : new ArsenalResult(status, summary);
     }
 
@@ -394,7 +412,7 @@ internal static class Loadouts
     {
         if (ArsenalOps.InSlot(unit, slot) is not CompoundItem container)
         {
-            return ArsenalResult.Invalid("the container is gone");
+            return ArsenalResult.Invalid(LabelContainerGone);
         }
 
         Dictionary<Item, ArsenalOps.HeldContent> held = new();
@@ -434,15 +452,15 @@ internal static class Loadouts
     {
         try
         {
-            if (item.location?.JObject is not JObject json || json["x"] == null || json["y"] == null)
+            if (item.location?.JObject is not JObject json || json[JsonX] == null || json[JsonY] == null)
             {
                 return null;
             }
-            JToken rotation = json["r"];
+            JToken rotation = json[JsonRotation];
             ItemRotation r = rotation == null ? ItemRotation.Horizontal
                 : rotation.Type == JTokenType.Integer ? (ItemRotation)(int)rotation
                 : (ItemRotation)Enum.Parse(typeof(ItemRotation), (string)rotation, true);
-            return new LocationInGrid((int)json["x"], (int)json["y"], r);
+            return new LocationInGrid((int)json[JsonX], (int)json[JsonY], r);
         }
         catch (Exception)
         {

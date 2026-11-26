@@ -8,27 +8,38 @@ namespace Perun.Client.View;
 
 internal static class RtsVision
 {
+    private const string LabelGreen = "green";
+    private const string LabelWhite = "white";
+    private const string LabelAmber = "amber";
+    private const string LabelBlackHot = "black hot";
+    private const string LabelWhiteHot = "white hot";
+    private const string LabelFusion = "fusion";
+    private const string LabelRainbow = "rainbow";
+    private const string LabelVisionOff = "VISION  OFF";
+    private const string LabelNvg = "NVG  ";
+    private const string LabelThermal = "THERMAL  ";
+
     private static readonly (string name, Color color)[] NightModes =
     {
-        ("green", new Color(0.32f, 1f, 0.35f)),
-        ("white", new Color(0.85f, 0.92f, 1f)),
-        ("amber", new Color(1f, 0.7f, 0.25f))
+        (LabelGreen, new Color(0.32f, 1f, 0.35f)),
+        (LabelWhite, new Color(0.85f, 0.92f, 1f)),
+        (LabelAmber, new Color(1f, 0.7f, 0.25f))
     };
 
     private static readonly (string name, ThermalVisionComponent.SelectablePalette palette)[] ThermalModes =
     {
         // With the settings used here the game's two grey ramps come out the other way round from their names:
         // its WhiteHot ramp draws warm bodies black.
-        ("black hot", ThermalVisionComponent.SelectablePalette.WhiteHot),
-        ("white hot", ThermalVisionComponent.SelectablePalette.BlackHot),
-        ("fusion", ThermalVisionComponent.SelectablePalette.Fusion),
-        ("rainbow", ThermalVisionComponent.SelectablePalette.Rainbow)
+        (LabelBlackHot, ThermalVisionComponent.SelectablePalette.WhiteHot),
+        (LabelWhiteHot, ThermalVisionComponent.SelectablePalette.BlackHot),
+        (LabelFusion, ThermalVisionComponent.SelectablePalette.Fusion),
+        (LabelRainbow, ThermalVisionComponent.SelectablePalette.Rainbow)
     };
 
     private static int _night = -1;
     private static int _thermal = -1;
 
-    public static string Label { get; private set; } = "VISION  OFF";
+    public static string Label { get; private set; } = LabelVisionOff;
     public static bool On => _night >= 0 || _thermal >= 0;
 
     public static void Cycle()
@@ -54,9 +65,9 @@ internal static class RtsVision
         {
             SetNight(0);
         }
-        Label = _night >= 0 ? $"NVG  {NightModes[_night].name.ToUpperInvariant()}"
-            : _thermal >= 0 ? $"THERMAL  {ThermalModes[_thermal].name.ToUpperInvariant()}"
-            : "VISION  OFF";
+        Label = _night >= 0 ? LabelNvg + NightModes[_night].name.ToUpperInvariant()
+            : _thermal >= 0 ? LabelThermal + ThermalModes[_thermal].name.ToUpperInvariant()
+            : LabelVisionOff;
     }
 
     // BetterThermalNightVision applies its own palette whenever thermal switches on, replacing the mode picked here.
@@ -90,7 +101,7 @@ internal static class RtsVision
         {
             SetThermal(-1);
         }
-        Label = "VISION  OFF";
+        Label = LabelVisionOff;
     }
 
     private static void SetNight(int mode)

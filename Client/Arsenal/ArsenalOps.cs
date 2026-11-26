@@ -14,6 +14,41 @@ namespace Perun.Client.Arsenal;
 
 internal static class ArsenalOps
 {
+    private const string LabelUnitGone = "that unit is gone";
+    private const string LabelNoInventory = "that unit has no inventory";
+    private const string LabelGiveBackFirst = "give the bot back first";
+    private const string LabelUnknownItem = "unknown item";
+    private const string LabelWrongSlot = "{0} doesn't go in that slot";
+    private const string LabelNotRestored = "{0}; couldn't put back {1}";
+    private const string LabelFailedSeeLog = "it failed (see log)";
+    private const string LabelCouldNotTakeOut = "couldn't take out {0}";
+    private const string LabelCouldNotTakeOutError = "couldn't take out {0}: {1}";
+    private const string LabelItemNowhere = "that item isn't anywhere";
+    private const string LabelNoSuchSlot = "no such slot";
+    private const string LabelUnknownError = "unknown error";
+    private const string LabelDroppedNextToUnit = "{0} (dropped next to the unit)";
+    private const string LabelLost = "{0} (lost)";
+    private const string LabelHandsBusy = "the unit's hands are busy";
+    private const string LabelUnitNoSuchSlot = "that unit has no such slot";
+    private const string LabelNoRoomForItem = "no slot or free space for it";
+    private const string LabelCouldNotStage = "couldn't stage the item: {0}";
+    private const string LabelDoesNotFit = "it doesn't fit: {0}";
+    private const string LabelCouldNotPlace = "couldn't place it: {0}";
+    private const string LabelOnlySecureContainer = "only a bot's secure container can be swapped";
+    private const string LabelCouldNotPutIn = "couldn't put in {0}: {1}";
+    private const string LabelNoContainer = "no container";
+    private const string LabelNoRoomInContainers = "no room for it in {0} or the unit's other containers";
+    private const string LabelNothingToRemove = "nothing to remove";
+    private const string LabelCantRemove = "can't remove it: {0}";
+    private const string LabelUnitBusy = "the unit is busy, try again ({0})";
+
+    private const string ObjectHoldController = "Perun arsenal hold";
+    private const string ObjectArsenalController = "Perun arsenal";
+
+    private const string DumpOriginalSpot = "its original spot";
+    private const string DumpFreeSpot = "a free spot";
+    private const string DumpOverflow = "another container (overflow)";
+
     private static readonly EquipmentSlot[] SlotOrder =
     {
         EquipmentSlot.FirstPrimaryWeapon, EquipmentSlot.SecondPrimaryWeapon, EquipmentSlot.Holster, EquipmentSlot.Scabbard,
@@ -46,15 +81,15 @@ internal static class ArsenalOps
     {
         if (target == null || target.HealthController == null || !target.HealthController.IsAlive)
         {
-            return ArsenalResult.Invalid("that unit is gone");
+            return ArsenalResult.Invalid(LabelUnitGone);
         }
         if (target.InventoryController == null)
         {
-            return ArsenalResult.Invalid("that unit has no inventory");
+            return ArsenalResult.Invalid(LabelNoInventory);
         }
         if (ReferenceEquals(target, Possession.Body))
         {
-            return ArsenalResult.Busy("give the bot back first");
+            return ArsenalResult.Busy(LabelGiveBackFirst);
         }
         return ArsenalResult.Ok;
     }
@@ -64,7 +99,7 @@ internal static class ArsenalOps
         try
         {
             ArsenalTrace.Log(target, $"give {ArsenalTrace.Item(tree)} to {(slot.HasValue ? slot.Value.ToString() : "anywhere")}, equip {equip}");
-            ArsenalResult result = tree == null ? ArsenalResult.Invalid("unknown item") : Blocked(target);
+            ArsenalResult result = tree == null ? ArsenalResult.Invalid(LabelUnknownItem) : Blocked(target);
             if (result.IsOk)
             {
                 await Load(tree);
@@ -75,7 +110,7 @@ internal static class ArsenalOps
             {
                 if (!occupied.CheckCompatibility(tree))
                 {
-                    return ArsenalResult.Incompatible($"{tree.ShortName.Localized()} doesn't go in that slot");
+                    return ArsenalResult.Incompatible(string.Format(LabelWrongSlot, tree.ShortName.Localized()));
                 }
                 (result, held) = await HoldAsync(target, slot.Value);
             }
@@ -85,7 +120,7 @@ internal static class ArsenalOps
                 string lost = !result.IsOk && held != null ? Restore(target, held) : null;
                 if (lost != null)
                 {
-                    return ArsenalResult.RollbackFailed($"{result.Message}; couldn't put back {lost}");
+                    return ArsenalResult.RollbackFailed(string.Format(LabelNotRestored, result.Message, lost));
                 }
             }
             if (result.IsOk && equip && tree is Weapon && HandsEmpty(target))
@@ -106,7 +141,7 @@ internal static class ArsenalOps
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal give failed: {ex}");
-            return ArsenalResult.Failed("it failed (see log)");
+            return ArsenalResult.Failed(LabelFailedSeeLog);
         }
     }
 
@@ -131,7 +166,7 @@ internal static class ArsenalOps
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal clear failed: {ex}");
-            return ArsenalResult.Failed("it failed (see log)");
+            return ArsenalResult.Failed(LabelFailedSeeLog);
         }
     }
 
@@ -178,16 +213,16 @@ internal static class ArsenalOps
         ArsenalTrace.Log(target, $"holding {ArsenalTrace.Item(item)} from {item.CurrentAddress}");
         InventoryController controller = target.InventoryController;
         Stash stash = Singleton<ItemFactory>.Instance.CreateFakeStash();
-        new ItemController(stash, controller.ID, "Perun arsenal hold", false, EOwnerType.Profile);
+        new ItemController(stash, controller.ID, ObjectHoldController, false, EOwnerType.Profile);
         ItemAddress address = stash.Grid.FindLocationForItem(item);
         if (address == null || ItemManipulator.Move(item, address, controller, true).Failed)
         {
-            return (ArsenalResult.Failed($"couldn't take out {item.ShortName.Localized()}"), null);
+            return (ArsenalResult.Failed(string.Format(LabelCouldNotTakeOut, item.ShortName.Localized())), null);
         }
         var moved = ItemManipulator.Move(item, address, controller, false);
         if (moved.Failed)
         {
-            return (ArsenalResult.Failed($"couldn't take out {item.ShortName.Localized()}: {moved.Error}"), null);
+            return (ArsenalResult.Failed(string.Format(LabelCouldNotTakeOutError, item.ShortName.Localized(), moved.Error)), null);
         }
         AfterChange(target);
         return (ArsenalResult.Ok, stash.Grid);
@@ -209,7 +244,7 @@ internal static class ArsenalOps
         ItemAddress from = item?.CurrentAddress;
         if (from == null)
         {
-            return (ArsenalResult.Invalid("that item isn't anywhere"), null);
+            return (ArsenalResult.Invalid(LabelItemNowhere), null);
         }
         (ArsenalResult result, Grid grid) = await MoveToHolding(target, item);
         return (result, result.IsOk ? new HeldContent(item, from, grid) : null);
@@ -222,7 +257,7 @@ internal static class ArsenalOps
             return null;
         }
         ItemAddress address = SlotOf(target, held.Slot)?.CreateItemAddress();
-        string error = address == null ? "no such slot" : TryMove(target, held.Item, address);
+        string error = address == null ? LabelNoSuchSlot : TryMove(target, held.Item, address);
         if (error == null)
         {
             Plugin.Log.LogInfo($"Arsenal: put {held.Item.ShortName.Localized()} back on {target.Profile?.Nickname}'s {held.Slot}");
@@ -257,7 +292,7 @@ internal static class ArsenalOps
         var moved = ItemManipulator.Move(item, address, target.InventoryController, false);
         if (moved.Failed)
         {
-            return moved.Error?.ToString() ?? "unknown error";
+            return moved.Error?.ToString() ?? LabelUnknownError;
         }
         AfterChange(target);
         return null;
@@ -271,14 +306,14 @@ internal static class ArsenalOps
             if (grid != null && !grid.Remove(item, false).Failed && Singleton<GameWorld>.Instantiated && Singleton<GameWorld>.Instance.ThrowItem(item, target, null) != null)
             {
                 Plugin.Log.LogWarning($"Arsenal: dropped {name} next to {target.Profile?.Nickname} instead");
-                return $"{name} (dropped next to the unit)";
+                return string.Format(LabelDroppedNextToUnit, name);
             }
         }
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal: couldn't drop {name} either: {ex.Message}");
         }
-        return $"{name} (lost)";
+        return string.Format(LabelLost, name);
     }
 
     private static async Task<ArsenalResult> EmptyHandsIfHolding(Player target, Item item)
@@ -299,7 +334,7 @@ internal static class ArsenalOps
         if (finished != emptied.Task)
         {
             ArsenalTrace.Log(target, "emptying hands timed out after 4 s");
-            return ArsenalResult.Busy("the unit's hands are busy");
+            return ArsenalResult.Busy(LabelHandsBusy);
         }
         return Blocked(target);
     }
@@ -407,7 +442,7 @@ internal static class ArsenalOps
     }
 
     private static ArsenalResult Place(Player target, Item tree, EquipmentSlot? slot) =>
-        Place(target, tree, controller => slot.HasValue ? SlotOf(target, slot.Value)?.CreateItemAddress() : FindPlace(target, tree, controller), slot.HasValue ? ArsenalResult.Invalid("that unit has no such slot") : ArsenalResult.NoRoom("no slot or free space for it"));
+        Place(target, tree, controller => slot.HasValue ? SlotOf(target, slot.Value)?.CreateItemAddress() : FindPlace(target, tree, controller), slot.HasValue ? ArsenalResult.Invalid(LabelUnitNoSuchSlot) : ArsenalResult.NoRoom(LabelNoRoomForItem));
 
     private static ArsenalResult Place(Player target, Item tree, Func<InventoryController, ItemAddress> where, ArsenalResult nowhere)
     {
@@ -416,9 +451,9 @@ internal static class ArsenalOps
         var staged = stash.Grid.AddAnywhere(tree, EErrorHandlingType.Ignore);
         if (staged.Failed)
         {
-            return ArsenalResult.Failed($"couldn't stage the item: {staged.Error}");
+            return ArsenalResult.Failed(string.Format(LabelCouldNotStage, staged.Error));
         }
-        new ItemController(stash, controller.ID, "Perun arsenal", false, EOwnerType.Profile);
+        new ItemController(stash, controller.ID, ObjectArsenalController, false, EOwnerType.Profile);
 
         ItemAddress address = where(controller);
         if (address == null)
@@ -429,13 +464,13 @@ internal static class ArsenalOps
         var test = ItemManipulator.Move(tree, address, controller, true);
         if (test.Failed)
         {
-            return ArsenalResult.Incompatible($"it doesn't fit: {test.Error}");
+            return ArsenalResult.Incompatible(string.Format(LabelDoesNotFit, test.Error));
         }
 
         var moved = ItemManipulator.Move(tree, address, controller, false);
         if (moved.Failed)
         {
-            return ArsenalResult.Failed($"couldn't place it: {moved.Error}");
+            return ArsenalResult.Failed(string.Format(LabelCouldNotPlace, moved.Error));
         }
         AfterChange(target);
         Plugin.Log.LogInfo($"Arsenal: gave {tree.ShortName.Localized()} ({tree.TemplateId}) to {target.Profile?.Nickname} at {address}");
@@ -450,11 +485,11 @@ internal static class ArsenalOps
         {
             if (tree == null)
             {
-                return ArsenalResult.Invalid("unknown item");
+                return ArsenalResult.Invalid(LabelUnknownItem);
             }
             if (!target.IsAI)
             {
-                return ArsenalResult.Invalid("only a bot's secure container can be swapped");
+                return ArsenalResult.Invalid(LabelOnlySecureContainer);
             }
             ArsenalResult result = Blocked(target);
             if (!result.IsOk)
@@ -466,11 +501,11 @@ internal static class ArsenalOps
             Slot place = SlotOf(target, slot);
             if (!result.IsOk || place == null)
             {
-                return result.IsOk ? ArsenalResult.Invalid("that unit has no such slot") : result;
+                return result.IsOk ? ArsenalResult.Invalid(LabelUnitNoSuchSlot) : result;
             }
             if (!place.CheckCompatibility(tree))
             {
-                return ArsenalResult.Incompatible($"{tree.ShortName.Localized()} doesn't go in that slot");
+                return ArsenalResult.Incompatible(string.Format(LabelWrongSlot, tree.ShortName.Localized()));
             }
 
             Item old = place.ContainedItem;
@@ -484,18 +519,18 @@ internal static class ArsenalOps
                 var removed = place.RemoveItemWithoutRestrictions();
                 if (removed.Failed)
                 {
-                    return ArsenalResult.Failed($"couldn't take out {old.ShortName.Localized()}: {removed.Error}");
+                    return ArsenalResult.Failed(string.Format(LabelCouldNotTakeOutError, old.ShortName.Localized(), removed.Error));
                 }
             }
 
             var added = place.AddWithoutRestrictions(tree);
             if (added.Failed)
             {
-                string error = $"couldn't put in {tree.ShortName.Localized()}: {added.Error}";
+                string error = string.Format(LabelCouldNotPutIn, tree.ShortName.Localized(), added.Error);
                 if (old != null && place.AddWithoutRestrictions(old).Failed)
                 {
                     Plugin.Log.LogError($"Arsenal: {target.Profile?.Nickname} lost its {old.ShortName.Localized()}: {error}");
-                    return ArsenalResult.RollbackFailed($"{error}; couldn't put back {old.ShortName.Localized()}");
+                    return ArsenalResult.RollbackFailed(string.Format(LabelNotRestored, error, old.ShortName.Localized()));
                 }
                 return ArsenalResult.Failed(error);
             }
@@ -510,7 +545,7 @@ internal static class ArsenalOps
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal container swap failed: {ex}");
-            return ArsenalResult.Failed("it failed (see log)");
+            return ArsenalResult.Failed(LabelFailedSeeLog);
         }
     }
 
@@ -522,7 +557,7 @@ internal static class ArsenalOps
         {
             if (tree == null || container == null)
             {
-                return ArsenalResult.Invalid(tree == null ? "unknown item" : "no container");
+                return ArsenalResult.Invalid(tree == null ? LabelUnknownItem : LabelNoContainer);
             }
             ArsenalResult result = Blocked(target);
             if (!result.IsOk)
@@ -539,19 +574,19 @@ internal static class ArsenalOps
             result = Place(target, tree, controller =>
             {
                 ItemAddress address = OriginalSpot(container, tree, gridId, at, controller);
-                placedBy = "its original spot";
+                placedBy = DumpOriginalSpot;
                 if (address == null)
                 {
                     address = FindInContainer(container, tree, controller);
-                    placedBy = "a free spot";
+                    placedBy = DumpFreeSpot;
                 }
                 if (address == null)
                 {
                     address = FindInOtherContainers(target, tree, container, controller);
-                    placedBy = "another container (overflow)";
+                    placedBy = DumpOverflow;
                 }
                 return address;
-            }, ArsenalResult.NoRoom($"no room for it in {container.ShortName.Localized()} or the unit's other containers"));
+            }, ArsenalResult.NoRoom(string.Format(LabelNoRoomInContainers, container.ShortName.Localized())));
             ArsenalTrace.Note(target, result.IsOk ? $"content {ArsenalTrace.Item(tree)} went to {placedBy}" : $"content {ArsenalTrace.Item(tree)} not placed: {result.Message}");
             return result;
         }
@@ -562,7 +597,7 @@ internal static class ArsenalOps
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal give into a container failed: {ex}");
-            return ArsenalResult.Failed("it failed (see log)");
+            return ArsenalResult.Failed(LabelFailedSeeLog);
         }
     }
 
@@ -665,7 +700,7 @@ internal static class ArsenalOps
     {
         if (item == null)
         {
-            return ArsenalResult.Invalid("nothing to remove");
+            return ArsenalResult.Invalid(LabelNothingToRemove);
         }
 
         ArsenalResult hands = await EmptyHandsIfHolding(target, item);
@@ -678,7 +713,7 @@ internal static class ArsenalOps
         var discard = ItemManipulator.Discard(item, controller, true, true);
         if (discard.Failed)
         {
-            return ArsenalResult.Incompatible($"can't remove it: {discard.Error}");
+            return ArsenalResult.Incompatible(string.Format(LabelCantRemove, discard.Error));
         }
 
         IResult result = null;
@@ -694,7 +729,7 @@ internal static class ArsenalOps
                 discard = ItemManipulator.Discard(item, controller, true, true);
                 if (discard.Failed)
                 {
-                    return ArsenalResult.Incompatible($"can't remove it: {discard.Error}");
+                    return ArsenalResult.Incompatible(string.Format(LabelCantRemove, discard.Error));
                 }
             }
             result = await controller.TryRunNetworkTransaction(discard);
@@ -707,7 +742,7 @@ internal static class ArsenalOps
         }
         if (result == null || result.Failed)
         {
-            return ArsenalResult.Busy($"the unit is busy, try again ({result?.Error})");
+            return ArsenalResult.Busy(string.Format(LabelUnitBusy, result?.Error));
         }
         AfterChange(target);
         Plugin.Log.LogInfo($"Arsenal: removed {item.ShortName.Localized()} from {target.Profile?.Nickname}");

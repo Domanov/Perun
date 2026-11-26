@@ -7,6 +7,11 @@ namespace Perun.Client.Mode;
 
 internal sealed class WeaponSwitch
 {
+    private const string MatchFika = "Fika";
+
+    private const string DumpLowering = "lowering";
+    private const string DumpDrawing = "drawing";
+
     private enum Stage
     {
         Idle,
@@ -70,7 +75,7 @@ internal sealed class WeaponSwitch
         }
 
         string operation = _player.HandsController is Player.FirearmController firearm ? firearm.CurrentOperation?.GetType().Name : "-";
-        string stage = _stage == Stage.Lowering ? "lowering" : "drawing";
+        string stage = _stage == Stage.Lowering ? DumpLowering : DumpDrawing;
         if (!_nudged && _player.HandsController != null)
         {
             // The hide and draw animations end on an animator event. A bot whose hands animator was culled or
@@ -96,7 +101,7 @@ internal sealed class WeaponSwitch
     // again when you take control. Giving the bot back leaves it alone: switching there could leave it empty-handed.
     private static bool NeedsSwitch(Player player, Player.FirearmController firearm)
     {
-        if ((firearm.GetType().Namespace ?? "").StartsWith("Fika"))
+        if ((firearm.GetType().Namespace ?? "").StartsWith(MatchFika))
         {
             return !player.IsAI;
         }

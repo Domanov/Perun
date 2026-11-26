@@ -17,6 +17,67 @@ namespace Perun.Client.Mode;
 
 internal sealed class PerunMode
 {
+    private const string LabelForcedMove = "forced move";
+    private const string LabelRun = "run";
+    private const string LabelMove = "move";
+    private const string LabelLeavesGroup = "{0} leaves its group";
+    private const string LabelStays = "{0} stays: {1}";
+    private const string LabelOnlyBotsLinked = "Only bots can be linked";
+    private const string LabelCantLink = "Can't link: {0}";
+    private const string LabelFollows = "{0} follows {1}";
+    private const string LabelInterfaceHidden = "Interface hidden · H shows it again";
+    private const string LabelPickReturn = "Click where your character should return · right-click cancels";
+    private const string LabelSelectUnitsFirst = "Select units first";
+    private const string LabelPickTeleport = "Click where to teleport the selection · right-click cancels";
+    private const string LabelCantTeleport = "Can't teleport there";
+    private const string LabelReturnHere = "Your character will return here";
+    private const string LabelNothingToTeleport = "Nothing to teleport";
+    private const string LabelTeleported = "Teleported {0} unit(s){1}";
+    private const string LabelControlUnsupported = "Taking control doesn't work with this game version (see the log)";
+    private const string LabelFikaControlHostOnly = "Taking control in Fika: only the host, with \"Allow take control in Fika\" on (F12)";
+    private const string LabelControlUnavailable = "Taking control of a bot isn't available here";
+    private const string LabelResumeFirst = "Resume the world first (P)";
+    private const string LabelSelectOneBot = "Select one bot first";
+    private const string LabelOrbitAsleep = "ORBIT has {0} asleep; it wakes when the camera gets close, then try again";
+    private const string LabelLoadingArms = "Loading {0}'s arms…";
+    private const string LabelCantControl = "That bot can't be controlled";
+    private const string LabelBusy = "{0} is busy, try again";
+    private const string LabelCantTakeControl = "Can't take control: {0}";
+    private const string LabelYouControl = "You control {0} · {1} gives it back";
+    private const string LabelCrateSinglePlayer = "The arsenal crate works in single player for now";
+    private const string LabelCantOpenCrate = "Can't open the arsenal crate: {0}";
+    private const string LabelCrateEmpty = "The arsenal crate is empty: fill it in the ARSENAL tab (CRATE view)";
+    private const string LabelCrateFailed = "Can't open the arsenal crate (see log)";
+    private const string LabelControlEndedDied = "Control ended: the bot died";
+    private const string LabelControlEndedPaused = "Control ended: the world was paused";
+    private const string LabelGiveBackFailed = "Giving the bot back failed ({0}); back to your character";
+    private const string LabelBackToAi = "{0} is back to its AI";
+    private const string LabelBackToAiFailed = "{0} is back to its AI, but {1} cleanup step(s) failed (see the log)";
+    private const string LabelNobodyToHeal = "Nobody to heal";
+    private const string LabelHealed = "Healed {0} unit(s){1}";
+    private const string LabelHalted = "Halted {0} unit(s){1}";
+    private const string LabelConfirmKillSelf = "Kill your own character? Press Kill again to confirm · it ends your raid";
+    private const string LabelCantRemoveSelf = "Your character can't be removed";
+    private const string LabelCantReturnThere = "Your character can't return there";
+    private const string LabelHostTooOld = "The host's Perun is too old to spawn groups for a game master";
+    private const string LabelCantMoveThere = "Can't move there";
+    private const string LabelSelectBotsFirst = "Select bots first";
+    private const string LabelOrdered = "{0} unit(s): {1}{2}";
+    private const string LabelReturnUnchanged = "Return point unchanged";
+    private const string LabelTeleportCancelled = "Teleport cancelled";
+    private const string LabelNoLivingCharacter = "Perun: no living character";
+    private const string LabelHostOnly = "Perun is for the Fika host only (with a headless host: set the game master password in F12)";
+    private const string LabelBridgeMissing = "Perun.Fika.dll is missing, so Perun can't reach the host";
+    private const string LabelHostNotConfirmed = "The host hasn't confirmed Perun yet, or runs a Perun without game master support";
+    private const string LabelAskingGameMaster = "Asking the host to make you game master…";
+    private const string LabelHostSaidNo = "The host said no";
+    private const string LabelYouAreGameMaster = "You are the game master";
+    private const string LabelGameMasterEnded = "Game master ended: {0}";
+    private const string LabelNoGameCamera = "Perun: no game camera";
+    private const string LabelWaitSpectator = "Wait until Fika's spectator camera is on, then try again";
+    private const string LabelBtrSkipped = " · BTR skipped";
+    private const string LabelBtrWatchOnly = "The BTR can only be watched (L locks the camera)";
+
     private const float GraceSeconds = 1.5f;
 
     public static bool OwnsCamera { get; private set; }
@@ -106,7 +167,7 @@ internal sealed class PerunMode
             return;
         }
         string error = GroupLeadership.Separate(member);
-        Notify(error == null ? $"{unit.Profile?.Nickname} leaves its group" : $"{unit.Profile?.Nickname} stays: {error}");
+        Notify(error == null ? string.Format(LabelLeavesGroup, unit.Profile?.Nickname) : string.Format(LabelStays, unit.Profile?.Nickname, error));
     }
 
     private void LinkUnits(Player from, Player to)
@@ -115,16 +176,16 @@ internal sealed class PerunMode
         BotOwner target = to.AIData?.BotOwner;
         if (member == null || target == null || Bots.IsProtected(from) || Bots.IsProtected(to))
         {
-            Notify("Only bots can be linked");
+            Notify(LabelOnlyBotsLinked);
             return;
         }
         string error = GroupLeadership.Join(member, target, out BotOwner leader);
         if (error != null)
         {
-            Notify($"Can't link: {error}");
+            Notify(string.Format(LabelCantLink, error));
             return;
         }
-        Notify($"{from.Profile?.Nickname} follows {leader.Profile?.Nickname}");
+        Notify(string.Format(LabelFollows, from.Profile?.Nickname, leader.Profile?.Nickname));
     }
 
     private void ToggleHud()
@@ -134,7 +195,7 @@ internal sealed class PerunMode
             Hud.Hidden = !Hud.Hidden;
             if (Hud.Hidden)
             {
-                Notify("Interface hidden · H shows it again");
+                Notify(LabelInterfaceHidden);
             }
         }
     }
@@ -189,7 +250,7 @@ internal sealed class PerunMode
         _teleportArmed = false;
         Hud?.Spawn.Disarm();
         _returnArmed = true;
-        Notify("Click where your character should return · right-click cancels");
+        Notify(LabelPickReturn);
         return true;
     }
 
@@ -199,7 +260,7 @@ internal sealed class PerunMode
     {
         if (Picker.Selection.Count == 0)
         {
-            Notify("Select units first");
+            Notify(LabelSelectUnitsFirst);
             return;
         }
         if (OnlyWatchable())
@@ -208,14 +269,14 @@ internal sealed class PerunMode
         }
         _returnArmed = false;
         _teleportArmed = true;
-        Notify("Click where to teleport the selection · right-click cancels");
+        Notify(LabelPickTeleport);
     }
 
     private void TeleportSelection(Vector3 point)
     {
         if (float.IsInfinity(point.x))
         {
-            Notify("Can't teleport there");
+            Notify(LabelCantTeleport);
             return;
         }
         bool self = Picker.IsSelected(_player);
@@ -224,7 +285,7 @@ internal sealed class PerunMode
             _parking.MoveReturn(point);
         }
         int count = Commands.Teleport(WithoutSelf(), point);
-        Notify(count == 0 && self ? "Your character will return here" : count == 0 ? "Nothing to teleport" : $"Teleported {count} unit(s){Skipped}");
+        Notify(count == 0 && self ? LabelReturnHere : count == 0 ? LabelNothingToTeleport : string.Format(LabelTeleported, count, Skipped));
     }
 
     public PerunHud Hud { get; set; }
@@ -379,18 +440,18 @@ internal sealed class PerunMode
     {
         if (Reflect.Lacks(Feature.Control))
         {
-            Notify("Taking control doesn't work with this game version (see the log)");
+            Notify(LabelControlUnsupported);
             return;
         }
         if (Commands.IsRemote || !FikaAllowsControl)
         {
-            Notify(FikaInfo.Present ? "Taking control in Fika: only the host, with \"Allow take control in Fika\" on (F12)" : "Taking control of a bot isn't available here");
+            Notify(FikaInfo.Present ? LabelFikaControlHostOnly : LabelControlUnavailable);
             return;
         }
 
         if (WorldPause.Paused)
         {
-            Notify("Resume the world first (P)");
+            Notify(LabelResumeFirst);
             return;
         }
 
@@ -401,7 +462,7 @@ internal sealed class PerunMode
 
         if (!CanControlSelection)
         {
-            Notify("Select one bot first");
+            Notify(LabelSelectOneBot);
             return;
         }
 
@@ -409,7 +470,7 @@ internal sealed class PerunMode
         if (Compat.OrbitCompat.IsAsleep(bot))
         {
             FlyTo(bot);
-            Notify($"ORBIT has {bot.Profile?.Nickname} asleep; it wakes when the camera gets close, then try again");
+            Notify(string.Format(LabelOrbitAsleep, bot.Profile?.Nickname));
             return;
         }
         if (!_flight.Active || _flyingBack)
@@ -432,7 +493,7 @@ internal sealed class PerunMode
             {
                 _handsLoad = load;
                 _handsFor = bot;
-                Notify($"Loading {bot.Profile?.Nickname}'s arms…");
+                Notify(string.Format(LabelLoadingArms, bot.Profile?.Nickname));
                 return;
             }
         }
@@ -440,7 +501,7 @@ internal sealed class PerunMode
         if (!Possession.Begin(bot))
         {
             FlyBack();
-            Notify("That bot can't be controlled");
+            Notify(LabelCantControl);
             return;
         }
 
@@ -571,7 +632,7 @@ internal sealed class PerunMode
             Possession.End();
             FlyBack();
             Plugin.Log.LogWarning($"Control: {bot.Profile?.Nickname} didn't settle (state {bot.CurrentManagedState?.Name}, hands {bot.HandsController?.GetType().Name}, free {HandsFree(bot)})");
-            Notify($"{bot.Profile?.Nickname} is busy, try again");
+            Notify(string.Format(LabelBusy, bot.Profile?.Nickname));
             return;
         }
         FinishWhenArrived(bot);
@@ -587,7 +648,7 @@ internal sealed class PerunMode
         {
             Possession.End();
             FlyBack();
-            Notify($"Can't take control: {error}");
+            Notify(string.Format(LabelCantTakeControl, error));
             return;
         }
 
@@ -597,7 +658,7 @@ internal sealed class PerunMode
         Picker.Reset();
         _cullingRefreshAt = Time.time + 1f;
         ShowCursor(false);
-        Notify($"You control {bot.Profile?.Nickname} · {Plugin.ToggleKey.Value} gives it back");
+        Notify(string.Format(LabelYouControl, bot.Profile?.Nickname, Plugin.ToggleKey.Value));
         Plugin.Log.LogInfo($"Control: took {bot.Profile?.Nickname}");
     }
 
@@ -605,7 +666,7 @@ internal sealed class PerunMode
     {
         if (FikaInfo.Present || Commands.IsRemote)
         {
-            Notify("The arsenal crate works in single player for now");
+            Notify(LabelCrateSinglePlayer);
             return;
         }
         try
@@ -613,17 +674,17 @@ internal sealed class PerunMode
             string error = ArsenalCrate.Open(_takeover.Owner, bot);
             if (error != null)
             {
-                Notify($"Can't open the arsenal crate: {error}");
+                Notify(string.Format(LabelCantOpenCrate, error));
             }
             else if (ArsenalCrate.Count == 0)
             {
-                Notify("The arsenal crate is empty: fill it in the ARSENAL tab (CRATE view)");
+                Notify(LabelCrateEmpty);
             }
         }
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Arsenal crate failed to open: {ex}");
-            Notify("Can't open the arsenal crate (see log)");
+            Notify(LabelCrateFailed);
         }
     }
 
@@ -636,7 +697,7 @@ internal sealed class PerunMode
         Player bot = _takeover.Bot;
         if (bot == null || bot.HealthController == null || !bot.HealthController.IsAlive)
         {
-            StopControl("Control ended: the bot died", died: true);
+            StopControl(LabelControlEndedDied, died: true);
             return;
         }
 
@@ -653,7 +714,7 @@ internal sealed class PerunMode
 
         if (WorldPause.Paused)
         {
-            StopControl("Control ended: the world was paused");
+            StopControl(LabelControlEndedPaused);
         }
     }
 
@@ -690,7 +751,7 @@ internal sealed class PerunMode
         {
             Plugin.Log.LogError($"Control: giving {bot?.Profile?.Nickname} back left things broken ({string.Join(", ", failed)}); leaving RTS mode to restore your character");
             Exit();
-            Notify($"Giving the bot back failed ({failed[0]}); back to your character");
+            Notify(string.Format(LabelGiveBackFailed, failed[0]));
             return;
         }
         RebindCamera();
@@ -708,7 +769,7 @@ internal sealed class PerunMode
             _flight.Start(_camera.transform, eyes, Camera.CurrentPose, Time.unscaledTime, ZoomOut);
             Log($"zoom out from {bot.Profile?.Nickname}");
         }
-        Notify(failed.Count == 0 ? reason ?? $"{bot?.Profile?.Nickname} is back to its AI" : $"{bot?.Profile?.Nickname} is back to its AI, but {failed.Count} cleanup step(s) failed (see the log)");
+        Notify(failed.Count == 0 ? reason ?? string.Format(LabelBackToAi, bot?.Profile?.Nickname) : string.Format(LabelBackToAiFailed, bot?.Profile?.Nickname, failed.Count));
         Plugin.Log.LogInfo("Control: released");
     }
 
@@ -770,7 +831,7 @@ internal sealed class PerunMode
         }
 
         int healed = Commands.Heal(Picker.Selection);
-        Notify(healed == 0 ? "Nobody to heal" : $"Healed {healed} unit(s){Skipped}");
+        Notify(healed == 0 ? LabelNobodyToHeal : string.Format(LabelHealed, healed, Skipped));
     }
 
     public void HaltSelection()
@@ -786,7 +847,7 @@ internal sealed class PerunMode
         }
 
         int halted = Commands.Halt(Picker.Selection);
-        Notify($"Halted {halted} unit(s){Skipped}");
+        Notify(string.Format(LabelHalted, halted, Skipped));
     }
 
     public void RemoveSelection(bool kill)
@@ -805,12 +866,12 @@ internal sealed class PerunMode
         if (self && kill && Time.time > _killSelfUntil)
         {
             _killSelfUntil = Time.time + KillSelfConfirmSeconds;
-            Notify("Kill your own character? Press Kill again to confirm · it ends your raid");
+            Notify(LabelConfirmKillSelf);
             return;
         }
         if (self && !kill && Picker.Selection.Count == 1)
         {
-            Notify("Your character can't be removed");
+            Notify(LabelCantRemoveSelf);
             return;
         }
 
@@ -847,11 +908,11 @@ internal sealed class PerunMode
             _returnArmed = false;
             if (float.IsInfinity(point.x))
             {
-                Notify("Your character can't return there");
+                Notify(LabelCantReturnThere);
                 return true;
             }
             _parking.MoveReturn(point);
-            Notify("Your character will return here");
+            Notify(LabelReturnHere);
             return true;
         }
 
@@ -872,7 +933,7 @@ internal sealed class PerunMode
         {
             if (!Commands.SpawnGroup(spawn.Group, spawn.GroupDifficulty, point, yaw ?? Camera.Yaw, GroupSpacing))
             {
-                Notify("The host's Perun is too old to spawn groups for a game master");
+                Notify(LabelHostTooOld);
             }
             return true;
         }
@@ -896,12 +957,12 @@ internal sealed class PerunMode
 
         if (float.IsInfinity(point.x))
         {
-            Notify("Can't move there");
+            Notify(LabelCantMoveThere);
             return;
         }
 
         int count = Commands.Move(Picker.Selection, point, run, forced);
-        Notify(count == 0 ? "Select bots first" : $"{count} unit(s): {(forced ? "forced move" : run ? "run" : "move")}{Skipped}");
+        Notify(count == 0 ? LabelSelectBotsFirst : string.Format(LabelOrdered, count, (forced ? LabelForcedMove : run ? LabelRun : LabelMove), Skipped));
     }
 
     private bool CancelPlacing()
@@ -909,14 +970,14 @@ internal sealed class PerunMode
         if (_returnArmed)
         {
             _returnArmed = false;
-            Notify("Return point unchanged");
+            Notify(LabelReturnUnchanged);
             return true;
         }
 
         if (_teleportArmed)
         {
             _teleportArmed = false;
-            Notify("Teleport cancelled");
+            Notify(LabelTeleportCancelled);
             return true;
         }
 
@@ -960,7 +1021,7 @@ internal sealed class PerunMode
         Player player = Singleton<GameWorld>.Instance.MainPlayer;
         if (!IsValid(player))
         {
-            Notify("Perun: no living character");
+            Notify(LabelNoLivingCharacter);
             return;
         }
 
@@ -984,19 +1045,19 @@ internal sealed class PerunMode
         IGameMasterLink link = PerunGameMaster.Link;
         if (string.IsNullOrEmpty(password))
         {
-            Notify("Perun is for the Fika host only (with a headless host: set the game master password in F12)");
+            Notify(LabelHostOnly);
             return;
         }
 
         if (link == null)
         {
-            Notify("Perun.Fika.dll is missing, so Perun can't reach the host");
+            Notify(LabelBridgeMissing);
             return;
         }
 
         if (!link.CanClaim)
         {
-            Notify("The host hasn't confirmed Perun yet, or runs a Perun without game master support");
+            Notify(LabelHostNotConfirmed);
             return;
         }
 
@@ -1008,7 +1069,7 @@ internal sealed class PerunMode
         _claimPending = true;
         _claimUntil = Time.time + 10f;
         link.Claim(password, player.ProfileId);
-        Notify("Asking the host to make you game master…");
+        Notify(LabelAskingGameMaster);
     }
 
     public void OnClaimResult(bool granted, string message)
@@ -1026,7 +1087,7 @@ internal sealed class PerunMode
         _claimPending = false;
         if (!granted)
         {
-            Notify(string.IsNullOrEmpty(message) ? "The host said no" : message);
+            Notify(string.IsNullOrEmpty(message) ? LabelHostSaidNo : message);
             return;
         }
 
@@ -1045,7 +1106,7 @@ internal sealed class PerunMode
             return;
         }
 
-        Notify("You are the game master");
+        Notify(LabelYouAreGameMaster);
     }
 
     public void OnRemoteLost(string reason)
@@ -1061,7 +1122,7 @@ internal sealed class PerunMode
         {
             Exit();
         }
-        Notify($"Game master ended: {reason}");
+        Notify(string.Format(LabelGameMasterEnded, reason));
     }
 
     private bool Enter(Player player)
@@ -1069,14 +1130,14 @@ internal sealed class PerunMode
         UnityEngine.Camera camera = CameraManager.Exist ? CameraManager.Instance.Camera : null;
         if (camera == null)
         {
-            Notify("Perun: no game camera");
+            Notify(LabelNoGameCamera);
             return false;
         }
 
         bool dead = !player.HealthController.IsAlive;
         if (dead && PerunNetwork.SuspendDeathCamera?.Invoke() != true)
         {
-            Notify("Wait until Fika's spectator camera is on, then try again");
+            Notify(LabelWaitSpectator);
             return false;
         }
 
@@ -1360,7 +1421,7 @@ internal sealed class PerunMode
 
     public bool SelectionWatchOnly => Picker.Selection.Count > 0 && CountProtected() == Picker.Selection.Count;
 
-    private string Skipped => CountProtected() > 0 ? " · BTR skipped" : "";
+    private string Skipped => CountProtected() > 0 ? LabelBtrSkipped : "";
 
     private int CountProtected()
     {
@@ -1382,7 +1443,7 @@ internal sealed class PerunMode
         {
             return false;
         }
-        Notify("The BTR can only be watched (L locks the camera)");
+        Notify(LabelBtrWatchOnly);
         return true;
     }
 

@@ -8,21 +8,25 @@ namespace Perun.Client.Compat;
 
 internal static class BigBrainCompat
 {
-    private const string AgentPatchType = "DrakiaXYZ.BigBrain.Patches.BotAgentUpdatePatch";
+    private const string MethodPatchPrefix = "PatchPrefix";
+
+    private const string HarmonyBigBrain = ".bigbrain";
+
+    private const string TypeAgentPatch = "DrakiaXYZ.BigBrain.Patches.BotAgentUpdatePatch";
 
     public static void Enable()
     {
         try
         {
-            Type patch = AccessTools.TypeByName(AgentPatchType);
-            MethodInfo prefix = patch != null ? AccessTools.Method(patch, "PatchPrefix") : null;
+            Type patch = AccessTools.TypeByName(TypeAgentPatch);
+            MethodInfo prefix = patch != null ? AccessTools.Method(patch, MethodPatchPrefix) : null;
             if (prefix == null)
             {
                 Plugin.Log.LogWarning("BigBrain's brain update wasn't found; bot brains may keep running during a pause or while you control a bot");
                 return;
             }
 
-            new Harmony(Plugin.Guid + ".bigbrain").Patch(prefix, prefix: new HarmonyMethod(typeof(BigBrainCompat), nameof(Skip)));
+            new Harmony(Plugin.Guid + HarmonyBigBrain).Patch(prefix, prefix: new HarmonyMethod(typeof(BigBrainCompat), nameof(Skip)));
             Plugin.Log.LogInfo("BigBrain: bot brains stop with the world and while controlled");
         }
         catch (Exception ex)

@@ -6,9 +6,13 @@ namespace Perun.Client.Compat;
 
 internal sealed class SmoothieSettings
 {
-    private const string SmoothieGuid = "com.tominocz.smoothie";
+    private const string ConfigSectionSmoothieOtherFixes = "3. Other fixes";
 
-    private static readonly ConfigDefinition HideCovered = new("3. Other fixes", "Hide objects covered by nearer ones (experimental)");
+    private const string ConfigKeySmoothieHideCovered = "Hide objects covered by nearer ones (experimental)";
+
+    private const string GuidSmoothie = "com.tominocz.smoothie";
+
+    private static readonly ConfigDefinition HideCovered = new(ConfigSectionSmoothieOtherFixes, ConfigKeySmoothieHideCovered);
 
     private readonly List<(ConfigEntryBase entry, object value)> _saved = new();
     private ConfigFile _config;
@@ -17,7 +21,7 @@ internal sealed class SmoothieSettings
     public void Apply()
     {
         Restore();
-        if (!Chainloader.PluginInfos.TryGetValue(SmoothieGuid, out var info) || info.Instance == null)
+        if (!Chainloader.PluginInfos.TryGetValue(GuidSmoothie, out var info) || info.Instance == null)
         {
             return;
         }

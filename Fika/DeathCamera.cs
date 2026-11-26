@@ -12,19 +12,23 @@ namespace Perun.Fika;
 // the extract message. RTS mode takes that camera, so they are paused and put back as they were when it ends.
 internal sealed class DeathCamera
 {
+    private const string FieldFreeCamScript = "_freeCamScript";
+    private const string FieldExtractText = "_extractText";
+    private const string FieldFreecamUI = "_freecamUI";
+
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
-    private static readonly FieldInfo FreeCamField = typeof(FreeCameraController).GetField("_freeCamScript", Private);
-    private static readonly FieldInfo ExtractTextField = typeof(FreeCameraController).GetField("_extractText", Private);
-    private static readonly FieldInfo UiField = typeof(FikaFreeCamera).GetField("_freecamUI", Private);
+    private static readonly FieldInfo FreeCamField = typeof(FreeCameraController).GetField(FieldFreeCamScript, Private);
+    private static readonly FieldInfo ExtractTextField = typeof(FreeCameraController).GetField(FieldExtractText, Private);
+    private static readonly FieldInfo UiField = typeof(FikaFreeCamera).GetField(FieldFreecamUI, Private);
 
     private readonly List<(Behaviour behaviour, bool enabled)> _paused = new();
     private readonly List<(GameObject gameObject, bool active)> _hidden = new();
 
     public static string Missing =>
-        FreeCamField == null ? "FreeCameraController._freeCamScript" :
-        ExtractTextField == null ? "FreeCameraController._extractText" :
-        UiField == null ? "FreeCamera._freecamUI" : null;
+        FreeCamField == null ? nameof(FreeCameraController) + "." + FieldFreeCamScript :
+        ExtractTextField == null ? nameof(FreeCameraController) + "." + FieldExtractText :
+        UiField == null ? nameof(FikaFreeCamera) + "." + FieldFreecamUI : null;
 
     // Its death routine switches the camera on after a delay, from a coroutine that runs even while paused.
     public bool Suspend()

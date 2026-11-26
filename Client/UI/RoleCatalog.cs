@@ -10,16 +10,35 @@ namespace Perun.Client.UI;
 // The spawnable roles by faction, shared by the Bots tab and the group editor.
 internal sealed class RoleCatalog
 {
+    private const string LabelScavs = "Scavs";
+    private const string LabelPmc = "PMC";
+    private const string LabelRaiders = "Raiders";
+    private const string LabelBosses = "Bosses";
+    private const string LabelFollowers = "Followers";
+    private const string LabelCultists = "Cultists";
+    private const string LabelInfected = "Infected";
+    private const string LabelOther = "Other";
+
+    private const string MatchBoss = "boss";
+    private const string MatchFollower = "follower";
+    private const string MatchTagillaHelperAgro = "tagillaHelperAgro";
+    private const string MatchSectant = "sectant";
+    private const string MatchSectantPriestEvent = "sectactPriestEvent";
+    private const string MatchInfected = "infected";
+
+    private const string MarkupCategoryOpen = "  <color=#7f8a95>";
+    private const string MarkupColorClose = "</color>";
+
     private static readonly (string name, Func<WildSpawnType, string, bool> match)[] Categories =
     {
-        ("Scavs", (t, n) => t is WildSpawnType.assault or WildSpawnType.marksman or WildSpawnType.cursedAssault or WildSpawnType.crazyAssaultEvent),
-        ("PMC", (t, n) => t is WildSpawnType.pmcUSEC or WildSpawnType.pmcBEAR),
-        ("Raiders", (t, n) => t is WildSpawnType.pmcBot or WildSpawnType.exUsec or WildSpawnType.arenaFighter or WildSpawnType.arenaFighterEvent),
-        ("Bosses", (t, n) => n.StartsWith("boss", StringComparison.Ordinal)),
-        ("Followers", (t, n) => n.StartsWith("follower", StringComparison.Ordinal) || n == "tagillaHelperAgro"),
-        ("Cultists", (t, n) => n.StartsWith("sectant", StringComparison.Ordinal) || n == "sectactPriestEvent"),
-        ("Infected", (t, n) => n.StartsWith("infected", StringComparison.Ordinal)),
-        ("Other", null)
+        (LabelScavs, (t, n) => t is WildSpawnType.assault or WildSpawnType.marksman or WildSpawnType.cursedAssault or WildSpawnType.crazyAssaultEvent),
+        (LabelPmc, (t, n) => t is WildSpawnType.pmcUSEC or WildSpawnType.pmcBEAR),
+        (LabelRaiders, (t, n) => t is WildSpawnType.pmcBot or WildSpawnType.exUsec or WildSpawnType.arenaFighter or WildSpawnType.arenaFighterEvent),
+        (LabelBosses, (t, n) => n.StartsWith(MatchBoss, StringComparison.Ordinal)),
+        (LabelFollowers, (t, n) => n.StartsWith(MatchFollower, StringComparison.Ordinal) || n == MatchTagillaHelperAgro),
+        (LabelCultists, (t, n) => n.StartsWith(MatchSectant, StringComparison.Ordinal) || n == MatchSectantPriestEvent),
+        (LabelInfected, (t, n) => n.StartsWith(MatchInfected, StringComparison.Ordinal)),
+        (LabelOther, null)
     };
 
     private static RoleCatalog _shared;
@@ -98,7 +117,7 @@ internal sealed class RoleCatalog
                 if (name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0 || SpawnNames.Id(Roles[c][i]).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     roles.Add(Roles[c][i]);
-                    names.Add(name + "  <color=#7f8a95>" + CategoryNames[c] + "</color>");
+                    names.Add(name + MarkupCategoryOpen + CategoryNames[c] + MarkupColorClose);
                 }
             }
         }

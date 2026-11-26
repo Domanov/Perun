@@ -5,6 +5,8 @@ namespace Perun.Client.Units;
 
 internal sealed class PerunProfileData : IGetProfileData
 {
+    private const string DumpPerun = "Perun";
+
     private readonly GetProfileDataParams _inner;
 
     public PerunProfileData(GetProfileDataParams inner)
@@ -58,7 +60,7 @@ internal sealed class PerunProfileData : IGetProfileData
 
     public string GetDebugLocalName() => _inner.GetDebugLocalName();
 
-    public string GetDebugData() => "Perun" + _inner.GetDebugData();
+    public string GetDebugData() => DumpPerun + _inner.GetDebugData();
 
     public bool ShallChooseByData() => _inner.ShallChooseByData();
 

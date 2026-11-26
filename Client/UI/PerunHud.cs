@@ -24,6 +24,70 @@ internal enum AssetTab
 // left as one class until it can be retested panel by panel in game.
 internal sealed class PerunHud
 {
+    private const string ChipReturn = "RETURN  ({0})";
+    private const string ChipControl = "Control ({0})";
+    private const string ChipResume = "▶  RESUME  (P)";
+    private const string ChipPause = "❚❚  PAUSE  (P)";
+    private const string ChipHide = "HIDE  (H)";
+    private const string ChipHelp = "HELP  (F1)";
+    private const string ChipFlyTo = "Fly to";
+    private const string ChipLockCam = "Lock cam";
+    private const string ChipHeal = "Heal";
+    private const string ChipTeleport = "Teleport";
+    private const string ChipHalt = "Halt";
+    private const string ChipDeselect = "Deselect";
+    private const string ChipRemove = "Remove";
+    private const string ChipKill = "Kill";
+    private const string ChipUnits = "UNITS  (B)";
+    private const string ChipEnvironment = "ENV  (T)";
+    private const string ChipArsenal = "ARSENAL  (I)";
+    private const string ChipCloseHelp = "Close  (F1)";
+
+    private const string LabelHelpHint = "<color=#7f8a95>F1 help · H hide · {0} return</color>";
+    private const string LabelTitle = "PERUN";
+    private const string LabelControls = "CONTROLS";
+    private const string LabelABot = "a bot";
+    private const string LabelControlBar = "<color=#ffc847><b>PERUN</b></color>  controlling {0}  ·  <b>{1}</b> gives it back  ·  <b>{2}</b> arsenal crate";
+    private const string LabelMoreQueued = "+{0} more queued";
+    private const string LabelQueued = "<color=#9fb4c8>queued</color>";
+    private const string LabelFetchingProfilesFrom = "<color=#ffc847>fetching profiles from the server…</color>";
+    private const string LabelLoadingGear = "<color=#ffc847>loading gear</color> {0}%";
+    private const string LabelSpawning = "<color=#8be38b>spawning</color> {0}/{1}";
+    private const string LabelDone = "done";
+    private const string LabelInAdvance = "<color=#c8d2dc>{0}</color> <color=#7f8a95>(in advance)</color>";
+    private const string LabelReady = "+ {0} ×{1}  <color=#8be38b>ready</color>";
+    private const string LabelNeedsLoadingFirst = "+ {0} ×{1}  <color=#ffc847>needs loading first</color>";
+    private const string LabelGroupReady = "+ {0} ({1}) · {2:0.0} m  <color=#8be38b>ready</color>";
+    private const string LabelGroupNeedsLoading = "+ {0} ({1}) · {2:0.0} m  <color=#ffc847>needs loading first</color>";
+    private const string LabelCursorHeader = "<color=#7f8a95>CURSOR</color>  ";
+    private const string LabelNoNavmesh = "  <color=#ff8080>no navmesh</color>";
+    private const string LabelSelectedHeader = "     <color=#7f8a95>SELECTED</color>  ";
+    private const string LabelUnitsSuffix = " units";
+    private const string LabelCameraLockedOn = "     <color=#ffd36f>camera locked on ";
+    private const string LabelLockRelease = " · L or WASD releases</color>";
+    private const string LabelPlacingGroupClick = "<color=#ffc847>Placing group: click · drag to turn · Ctrl+wheel spread · RMB cancels</color>";
+    private const string LabelPlacingClickThe = "<color=#ffc847>Placing: click the map · drag to turn · RMB cancels</color>";
+    private const string LabelTimeHeader = "<color=#7f8a95>TIME</color>  ";
+    private const string LabelUnitsHeader = "<color=#7f8a95>UNITS</color>  ";
+    private const string LabelSpawningTail = " spawning</color>";
+    private const string LabelWorldPaused = "     <color=#ffc847><b>WORLD PAUSED</b></color>";
+    private const string LabelPlayer = "Player";
+    private const string LabelHealthSuffix = " health";
+    private const string LabelForcedMove = "Forced move";
+    private const string LabelRunning = "Running";
+    private const string LabelMoving = "Moving";
+    private const string LabelMetersToGo = " m to go";
+    private const string LabelNoOrders = "\nNo orders";
+    private const string LabelUnitsSelected = " UNITS SELECTED";
+    private const string LabelYoursSuffix = " yours · ";
+    private const string LabelWithOrdersHint = " with orders\nRMB on the map to move them";
+    private const string LabelYouReturnHere = "you return here";
+    private const string LabelReturnHere = "return here";
+    private const string LabelYouSuffix = " (you)";
+    private const string LabelPlayerSuffix = " (player)";
+
+    private const string MarkupColorOpen = "<color=";
+
     private const float StatusRefresh = 0.1f;
     private const float LabelPruneInterval = 5f;
     private const float Gap = 10f;
@@ -38,10 +102,10 @@ internal sealed class PerunHud
     private const float EditorMinWidth = 480f;
     private static readonly string[] Spinner = { "◐", "◓", "◑", "◒" };
 
-    private const string PausedHost = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>P to resume</color>";
-    private const string PausedClient = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>by the game master</color>";
-    private const string CantPlace = "<color=#ff8080>can't place here</color>";
-    private const string HelpText =
+    private const string LabelPausedHost = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>P to resume</color>";
+    private const string LabelPausedClient = "<size=20><b>PAUSED</b></size>  <color=#9fb4c8>by the game master</color>";
+    private const string LabelCantPlace = "<color=#ff8080>can't place here</color>";
+    private const string LabelHelp =
         "<b><color=#ffc847>CAMERA</color></b>\n" +
         "WASD pan · Shift faster · Q/E or middle-drag rotate · wheel zoom · {0}+wheel tilt · R/F floor up/down\n" +
         "Home back to your body · click the magenta dot to select yourself (Heal, Kill with a confirm), then the map to change where you return · L lock camera on the selected unit · Ctrl+F fly to the selection\n\n" +
@@ -84,8 +148,8 @@ internal sealed class PerunHud
 
     private static readonly HashSet<string> TextControls = new()
     {
-        SpawnPanel.SearchControl, GroupsPanel.SearchControl, ArsenalPanel.SearchControl, ArsenalPanel.NameControl,
-        GroupEditor.NameControl, GroupEditor.SearchControl
+        SpawnPanel.ControlSearch, GroupsPanel.ControlSearch, ArsenalPanel.ControlSearch, ArsenalPanel.NameControl,
+        GroupEditor.NameControl, GroupEditor.ControlSearch
     };
 
     private float _nextLabelPrune;
@@ -146,10 +210,10 @@ internal sealed class PerunHud
     private void RefreshKeyLabels()
     {
         string toggle = Plugin.ToggleKey.Value.ToString();
-        _help = string.Format(HelpText, Plugin.TiltKey.Value, toggle, Plugin.ControlKey.Value);
-        _returnLabel = $"RETURN  ({toggle})";
-        _hint = $"<color=#7f8a95>F1 help · H hide · {toggle} return</color>";
-        _controlLabel = $"Control ({Plugin.ControlKey.Value})";
+        _help = string.Format(LabelHelp, Plugin.TiltKey.Value, toggle, Plugin.ControlKey.Value);
+        _returnLabel = string.Format(ChipReturn, toggle);
+        _hint = string.Format(LabelHelpHint, toggle);
+        _controlLabel = string.Format(ChipControl, Plugin.ControlKey.Value);
         _controlKey = toggle;
         _controlHintFor = null;
     }
@@ -380,7 +444,7 @@ internal sealed class PerunHud
         GUI.Box(rect, GUIContent.none, Theme.Bar);
         GUILayout.BeginArea(new Rect(rect.x + 10f, rect.y + 4f, rect.width - 20f, rect.height - 8f));
         GUILayout.BeginHorizontal();
-        GUILayout.Label("PERUN", Theme.Title, GUILayout.Width(80f), GUILayout.ExpandHeight(true));
+        GUILayout.Label(LabelTitle, Theme.Title, GUILayout.Width(80f), GUILayout.ExpandHeight(true));
         GUILayout.Label(_topInfo, Theme.BarText, GUILayout.ExpandHeight(true));
         GUILayout.FlexibleSpace();
 
@@ -390,15 +454,15 @@ internal sealed class PerunHud
         }
 
         bool paused = WorldPause.Paused;
-        if (GUILayout.Toggle(paused, paused ? "▶  RESUME  (P)" : "❚❚  PAUSE  (P)", Theme.Tab, GUILayout.Width(150f), GUILayout.ExpandHeight(true)) != paused)
+        if (GUILayout.Toggle(paused, paused ? ChipResume : ChipPause, Theme.Tab, GUILayout.Width(150f), GUILayout.ExpandHeight(true)) != paused)
         {
             _mode.TogglePause();
         }
-        if (GUILayout.Button("HIDE  (H)", Theme.Button, GUILayout.Width(90f), GUILayout.ExpandHeight(true)))
+        if (GUILayout.Button(ChipHide, Theme.Button, GUILayout.Width(90f), GUILayout.ExpandHeight(true)))
         {
             Hidden = true;
         }
-        if (GUILayout.Toggle(HelpVisible, "HELP  (F1)", Theme.Tab, GUILayout.Width(100f), GUILayout.ExpandHeight(true)) != HelpVisible)
+        if (GUILayout.Toggle(HelpVisible, ChipHelp, Theme.Tab, GUILayout.Width(100f), GUILayout.ExpandHeight(true)) != HelpVisible)
         {
             _pendingHelp = true;
         }
@@ -438,12 +502,12 @@ internal sealed class PerunHud
         GUILayout.FlexibleSpace();
 
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Fly to", Theme.Button))
+        if (GUILayout.Button(ChipFlyTo, Theme.Button))
         {
             _mode.FocusSelected();
         }
         bool locked = _mode.Camera.Following != null;
-        if (GUILayout.Toggle(locked, "Lock cam", Theme.Tab) != locked)
+        if (GUILayout.Toggle(locked, ChipLockCam, Theme.Tab) != locked)
         {
             _mode.ToggleLock();
         }
@@ -457,31 +521,31 @@ internal sealed class PerunHud
         bool actionable = !_mode.SelectionWatchOnly;
         GUI.enabled = actionable;
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Heal", Theme.Button))
+        if (GUILayout.Button(ChipHeal, Theme.Button))
         {
             _mode.HealSelection();
         }
-        if (GUILayout.Toggle(_mode.TeleportArmed, "Teleport", Theme.Tab) && !_mode.TeleportArmed)
+        if (GUILayout.Toggle(_mode.TeleportArmed, ChipTeleport, Theme.Tab) && !_mode.TeleportArmed)
         {
             _mode.ArmTeleport();
         }
-        if (GUILayout.Button("Halt", Theme.Button))
+        if (GUILayout.Button(ChipHalt, Theme.Button))
         {
             _mode.HaltSelection();
         }
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
         GUI.enabled = true;
-        if (GUILayout.Button("Deselect", Theme.Button))
+        if (GUILayout.Button(ChipDeselect, Theme.Button))
         {
             picker.ClearSelection();
         }
         GUI.enabled = actionable;
-        if (GUILayout.Button("Remove", Theme.DangerButton))
+        if (GUILayout.Button(ChipRemove, Theme.DangerButton))
         {
             _mode.RemoveSelection(false);
         }
-        if (GUILayout.Button("Kill", Theme.DangerButton))
+        if (GUILayout.Button(ChipKill, Theme.DangerButton))
         {
             _mode.RemoveSelection(true);
         }
@@ -499,15 +563,15 @@ internal sealed class PerunHud
         bool units = _dockOpen && _tab == AssetTab.Units;
         bool environment = _dockOpen && _tab == AssetTab.Environment;
         bool arsenal = _dockOpen && _tab == AssetTab.Arsenal;
-        if (GUILayout.Toggle(units, "UNITS  (B)", Theme.Tab) != units)
+        if (GUILayout.Toggle(units, ChipUnits, Theme.Tab) != units)
         {
             _pendingTab = (int)AssetTab.Units;
         }
-        if (GUILayout.Toggle(environment, "ENV  (T)", Theme.Tab) != environment)
+        if (GUILayout.Toggle(environment, ChipEnvironment, Theme.Tab) != environment)
         {
             _pendingTab = (int)AssetTab.Environment;
         }
-        if (GUILayout.Toggle(arsenal, "ARSENAL  (I)", Theme.Tab) != arsenal)
+        if (GUILayout.Toggle(arsenal, ChipArsenal, Theme.Tab) != arsenal)
         {
             _pendingTab = (int)AssetTab.Arsenal;
         }
@@ -550,11 +614,11 @@ internal sealed class PerunHud
     {
         GUI.Box(rect, GUIContent.none, Theme.Panel);
         GUILayout.BeginArea(new Rect(rect.x + 14f, rect.y + 12f, rect.width - 28f, rect.height - 24f));
-        GUILayout.Label("CONTROLS", Theme.Header);
+        GUILayout.Label(LabelControls, Theme.Header);
         GUILayout.Space(6f);
         GUILayout.Label(_help, Theme.Label);
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button("Close  (F1)", Theme.Button))
+        if (GUILayout.Button(ChipCloseHelp, Theme.Button))
         {
             _pendingHelp = true;
         }
@@ -565,7 +629,7 @@ internal sealed class PerunHud
     {
         if (showPause && WorldPause.Paused)
         {
-            GUI.Label(new Rect(Screen.width / 2f - 200f, 40f, 400f, 34f), _mode.Active ? PausedHost : PausedClient, _banner);
+            GUI.Label(new Rect(Screen.width / 2f - 200f, 40f, 400f, 34f), _mode.Active ? LabelPausedHost : LabelPausedClient, _banner);
         }
 
         if (HasMessage)
@@ -591,8 +655,8 @@ internal sealed class PerunHud
         if (bot != _controlHintFor || _controlHintText.Length == 0)
         {
             _controlHintFor = bot;
-            string name = bot?.Profile != null ? bot.Profile.Nickname : "a bot";
-            _controlHintText = $"<color=#ffc847><b>PERUN</b></color>  controlling {name}  ·  <b>{_controlKey}</b> gives it back  ·  <b>{Plugin.CrateKey.Value}</b> arsenal crate";
+            string name = bot?.Profile != null ? bot.Profile.Nickname : LabelABot;
+            _controlHintText = string.Format(LabelControlBar, name, _controlKey, Plugin.CrateKey.Value);
         }
         GUI.Label(new Rect(Screen.width / 2f - 280f, 6f, 560f, 24f), _controlHintText, Theme.Toast);
     }
@@ -628,7 +692,7 @@ internal sealed class PerunHud
 
         if (jobs.Count > shown)
         {
-            GUI.Label(new Rect(box.x + 12f, box.yMax - 20f, box.width - 24f, 16f), $"+{jobs.Count - shown} more queued", Theme.Small);
+            GUI.Label(new Rect(box.x + 12f, box.yMax - 20f, box.width - 24f, 16f), string.Format(LabelMoreQueued, jobs.Count - shown), Theme.Small);
         }
     }
 
@@ -642,13 +706,13 @@ internal sealed class PerunHud
             _jobKey[slot] = key;
             string stage = job.Stage switch
             {
-                LoadStage.Waiting => "<color=#9fb4c8>queued</color>",
-                LoadStage.Server => "<color=#ffc847>fetching profiles from the server…</color>",
-                LoadStage.Gear => $"<color=#ffc847>loading gear</color> {percent}%",
-                LoadStage.Creating => $"<color=#8be38b>spawning</color> {job.Created}/{job.Total}",
-                _ => "done"
+                LoadStage.Waiting => LabelQueued,
+                LoadStage.Server => LabelFetchingProfilesFrom,
+                LoadStage.Gear => string.Format(LabelLoadingGear, percent),
+                LoadStage.Creating => string.Format(LabelSpawning, job.Created, job.Total),
+                _ => LabelDone
             };
-            string title = job.IsSpawn ? $"<b><color=#ffc847>{job.Title}</color></b>" : $"<color=#c8d2dc>{job.Title}</color> <color=#7f8a95>(in advance)</color>";
+            string title = job.IsSpawn ? $"<b><color=#ffc847>{job.Title}</color></b>" : string.Format(LabelInAdvance, job.Title);
             _jobText[slot] = $"{title}  ·  {stage}  <color=#7f8a95>{seconds} s</color>";
         }
         return _jobText[slot];
@@ -722,7 +786,7 @@ internal sealed class PerunHud
             GroupPlan group = _spawn.Group;
             if (group != null)
             {
-                ghost = picker.HasNavPoint || picker.Turning ? GroupGhost(group, _spawn.GroupReady) : CantPlace;
+                ghost = picker.HasNavPoint || picker.Turning ? GroupGhost(group, _spawn.GroupReady) : LabelCantPlace;
                 if (picker.HasNavPoint || picker.Turning)
                 {
                     DrawGroupPreview(camera, picker, group);
@@ -731,7 +795,7 @@ internal sealed class PerunHud
             else
             {
                 bool ready = Commands.ReadyCount(_spawn.Role, _spawn.Difficulty) >= _spawn.Count;
-                ghost = picker.HasNavPoint ? Ghost(_spawn.RoleName, _spawn.Role, _spawn.Count, ready) : CantPlace;
+                ghost = picker.HasNavPoint ? Ghost(_spawn.RoleName, _spawn.Role, _spawn.Count, ready) : LabelCantPlace;
             }
             GUI.Label(new Rect(cursorPosition.x + 14f, Screen.height - cursorPosition.y - 8f, 300f, 22f), ghost, _label2);
         }
@@ -744,7 +808,7 @@ internal sealed class PerunHud
             _ghostRole = role;
             _ghostCount = count;
             _ghostReady = ready;
-            _ghost = ready ? $"+ {name} ×{count}  <color=#8be38b>ready</color>" : $"+ {name} ×{count}  <color=#ffc847>needs loading first</color>";
+            _ghost = ready ? string.Format(LabelReady, name, count) : string.Format(LabelNeedsLoadingFirst, name, count);
         }
         return _ghost;
     }
@@ -758,8 +822,8 @@ internal sealed class PerunHud
             _ghostGroupReady = ready;
             _ghostSpacing = spacing;
             _groupGhost = ready
-                ? $"+ {group.Name} ({group.CountText}) · {spacing:0.0} m  <color=#8be38b>ready</color>"
-                : $"+ {group.Name} ({group.CountText}) · {spacing:0.0} m  <color=#ffc847>needs loading first</color>";
+                ? string.Format(LabelGroupReady, group.Name, group.CountText, spacing)
+                : string.Format(LabelGroupNeedsLoading, group.Name, group.CountText, spacing);
         }
         return _groupGhost;
     }
@@ -813,14 +877,14 @@ internal sealed class PerunHud
     private void BuildStatus(CursorPicker picker)
     {
         StringBuilder b = _builder.Clear();
-        b.Append("<color=#7f8a95>CURSOR</color>  ");
+        b.Append(LabelCursorHeader);
         if (picker.HasGround)
         {
             Vector3 ground = picker.Ground;
             b.Append(Mathf.RoundToInt(ground.x)).Append(", ").Append(Mathf.RoundToInt(ground.y)).Append(", ").Append(Mathf.RoundToInt(ground.z));
             if (!picker.HasNavPoint)
             {
-                b.Append("  <color=#ff8080>no navmesh</color>");
+                b.Append(LabelNoNavmesh);
             }
         }
         else
@@ -828,7 +892,7 @@ internal sealed class PerunHud
             b.Append('-');
         }
 
-        b.Append("     <color=#7f8a95>SELECTED</color>  ");
+        b.Append(LabelSelectedHeader);
         int count = picker.Selection.Count;
         if (count == 0)
         {
@@ -840,35 +904,35 @@ internal sealed class PerunHud
         }
         else
         {
-            b.Append(count).Append(" units");
+            b.Append(count).Append(LabelUnitsSuffix);
         }
 
         Player following = _mode.Camera.Following;
         if (following != null)
         {
-            b.Append("     <color=#ffd36f>camera locked on ").Append(following.Profile?.Nickname).Append(" · L or WASD releases</color>");
+            b.Append(LabelCameraLockedOn).Append(following.Profile?.Nickname).Append(LabelLockRelease);
         }
         _statusLeft = b.ToString();
 
         _statusRight = _spawn.Group != null
-            ? "<color=#ffc847>Placing group: click · drag to turn · Ctrl+wheel spread · RMB cancels</color>"
+            ? LabelPlacingGroupClick
             : _spawn.Armed
-                ? "<color=#ffc847>Placing: click the map · drag to turn · RMB cancels</color>"
+                ? LabelPlacingClickThe
                 : _hint;
 
         b.Clear();
         if (Singleton<GameWorld>.Instantiated && Singleton<GameWorld>.Instance.GameDateTime != null)
         {
-            b.Append("<color=#7f8a95>TIME</color>  ").Append(Theme.Time(Singleton<GameWorld>.Instance.GameDateTime.Calculate())).Append("     ");
+            b.Append(LabelTimeHeader).Append(Theme.Time(Singleton<GameWorld>.Instance.GameDateTime.Calculate())).Append("     ");
         }
-        b.Append("<color=#7f8a95>UNITS</color>  ").Append(Commands.AliveCount).Append('/').Append(Commands.MaxUnits);
+        b.Append(LabelUnitsHeader).Append(Commands.AliveCount).Append('/').Append(Commands.MaxUnits);
         if (Commands.Pending > 0)
         {
-            b.Append("  <color=#ffc847>+").Append(Commands.Pending).Append(" spawning</color>");
+            b.Append("  <color=#ffc847>+").Append(Commands.Pending).Append(LabelSpawningTail);
         }
         if (WorldPause.Paused)
         {
-            b.Append("     <color=#ffc847><b>WORLD PAUSED</b></color>");
+            b.Append(LabelWorldPaused);
         }
         _topInfo = b.ToString();
 
@@ -887,7 +951,7 @@ internal sealed class PerunHud
         if (count == 1)
         {
             Player unit = picker.Selected;
-            b.Append("<color=").Append(BotKinds.Hex(BotKinds.Classify(unit))).Append('>').Append(unit.Profile?.Nickname ?? "?").Append("</color>");
+            b.Append(MarkupColorOpen).Append(BotKinds.Hex(BotKinds.Classify(unit))).Append('>').Append(unit.Profile?.Nickname ?? "?").Append("</color>");
             if (Commands.IsOurs(unit))
             {
                 b.Append("  <color=#ffc847>★</color>");
@@ -902,25 +966,25 @@ internal sealed class PerunHud
             }
             else
             {
-                b.Append("Player");
+                b.Append(LabelPlayer);
             }
             if (_cardHealth <= 100)
             {
-                b.Append(" · ").Append(Theme.Percent(_cardHealth)).Append(" health");
+                b.Append(" · ").Append(Theme.Percent(_cardHealth)).Append(LabelHealthSuffix);
             }
             if (Commands.TryGetOrder(unit, out Vector3 destination, out bool run, out bool forced))
             {
-                b.Append("\n<color=#ffc847>").Append(forced ? "Forced move" : run ? "Running" : "Moving").Append("</color> · ").Append(Mathf.RoundToInt(Vector3.Distance(unit.Position, destination))).Append(" m to go");
+                b.Append("\n<color=#ffc847>").Append(forced ? LabelForcedMove : run ? LabelRunning : LabelMoving).Append("</color> · ").Append(Mathf.RoundToInt(Vector3.Distance(unit.Position, destination))).Append(LabelMetersToGo);
             }
             else
             {
-                b.Append("\nNo orders");
+                b.Append(LabelNoOrders);
             }
             _cardInfo = b.ToString();
             return;
         }
 
-        b.Append(count).Append(" UNITS SELECTED");
+        b.Append(count).Append(LabelUnitsSelected);
         _cardTitle = b.ToString();
         _cardHealth = 127;
         b.Clear();
@@ -939,7 +1003,7 @@ internal sealed class PerunHud
                 ours++;
             }
         }
-        b.Append(ours).Append(" yours · ").Append(ordered).Append(" with orders\nRMB on the map to move them");
+        b.Append(ours).Append(LabelYoursSuffix).Append(ordered).Append(LabelWithOrdersHint);
         _cardInfo = b.ToString();
     }
 
@@ -1110,11 +1174,11 @@ internal sealed class PerunHud
             {
                 DrawSelectedRing(screen);
             }
-            DrawDot(screen, moving ? 0.45f : 1f, moving ? null : "you return here");
+            DrawDot(screen, moving ? 0.45f : 1f, moving ? null : LabelYouReturnHere);
         }
         if (moving && picker.HasNavPoint && CursorPicker.ToScreen(camera, picker.NavPoint, out Vector2 preview))
         {
-            DrawDot(preview, 1f, "return here");
+            DrawDot(preview, 1f, LabelReturnHere);
         }
     }
 
@@ -1168,7 +1232,7 @@ internal sealed class PerunHud
         {
             b.Append("<b>");
         }
-        b.Append("<color=").Append(BotKinds.Hex(BotKinds.Classify(player))).Append('>');
+        b.Append(MarkupColorOpen).Append(BotKinds.Hex(BotKinds.Classify(player))).Append('>');
         if (selected)
         {
             b.Append("▶ ");
@@ -1223,7 +1287,7 @@ internal sealed class PerunHud
 
         if (!Bots.IsBot(player))
         {
-            b.Append(profile.Nickname).Append(player.IsYourPlayer || player == Singleton<GameWorld>.Instance?.MainPlayer ? " (you)" : " (player)");
+            b.Append(profile.Nickname).Append(player.IsYourPlayer || player == Singleton<GameWorld>.Instance?.MainPlayer ? LabelYouSuffix : LabelPlayerSuffix);
             return;
         }
 

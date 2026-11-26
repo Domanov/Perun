@@ -11,8 +11,18 @@ namespace Perun.Client.Compat;
 // character, not the bot you control.
 internal static class FovFixCompat
 {
-    private const string PatchType = "FOVFix.CalculateScaleValueByFovPatch";
-    private const string PluginType = "FOVFix.Plugin";
+    private const string MethodSetCompensationScale = "SetCompensationScale";
+
+    private const string PropertyFovController = "FovController";
+    private const string PropertyEnableFovScaleFix = "EnableFovScaleFix";
+    private const string PropertyFovScale = "FovScale";
+
+    private const string FieldPlayer = "_player";
+
+    private const string HarmonyFovFix = ".fovfix";
+
+    private const string TypeScalePatch = "FOVFix.CalculateScaleValueByFovPatch";
+    private const string TypeFovFixPlugin = "FOVFix.Plugin";
 
     private static MethodInfo _setScale;
     private static PropertyInfo _controller;
@@ -22,20 +32,20 @@ internal static class FovFixCompat
 
     public static void Enable()
     {
-        Type patch = AccessTools.TypeByName(PatchType);
-        _setScale = patch != null ? AccessTools.Method(patch, "SetCompensationScale", new[] { typeof(float) }) : null;
+        Type patch = AccessTools.TypeByName(TypeScalePatch);
+        _setScale = patch != null ? AccessTools.Method(patch, MethodSetCompensationScale, new[] { typeof(float) }) : null;
         if (_setScale == null)
         {
             return;
         }
         try
         {
-            new Harmony(Plugin.Guid + ".fovfix").Patch(_setScale, prefix: new HarmonyMethod(typeof(FovFixCompat), nameof(ScaleYourBody)));
-            Type plugin = AccessTools.TypeByName(PluginType);
-            _controller = plugin != null ? AccessTools.Property(plugin, "FovController") : null;
-            _controllerPlayer = _controller != null ? AccessTools.Field(_controller.PropertyType, "_player") : null;
-            _enabled = plugin != null ? AccessTools.Property(plugin, "EnableFovScaleFix")?.GetValue(null) as ConfigEntry<bool> : null;
-            _scale = plugin != null ? AccessTools.Property(plugin, "FovScale")?.GetValue(null) as ConfigEntry<float> : null;
+            new Harmony(Plugin.Guid + HarmonyFovFix).Patch(_setScale, prefix: new HarmonyMethod(typeof(FovFixCompat), nameof(ScaleYourBody)));
+            Type plugin = AccessTools.TypeByName(TypeFovFixPlugin);
+            _controller = plugin != null ? AccessTools.Property(plugin, PropertyFovController) : null;
+            _controllerPlayer = _controller != null ? AccessTools.Field(_controller.PropertyType, FieldPlayer) : null;
+            _enabled = plugin != null ? AccessTools.Property(plugin, PropertyEnableFovScaleFix)?.GetValue(null) as ConfigEntry<bool> : null;
+            _scale = plugin != null ? AccessTools.Property(plugin, PropertyFovScale)?.GetValue(null) as ConfigEntry<float> : null;
             Plugin.Log.LogInfo("FOV Fix: its weapon FOV scale follows the bot you control");
         }
         catch (Exception ex)

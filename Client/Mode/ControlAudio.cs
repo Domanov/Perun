@@ -14,6 +14,14 @@ namespace Perun.Client.Mode;
 
 internal static class ControlAudio
 {
+    private const string FieldTinnitusEnd = "float_2";
+    private const string FieldNestedStepSoundSource = "NestedStepSoundSource";
+    private const string FieldAudioRoomStorage = "_audioRoomStorage";
+    private const string FieldListenerIndoorRooms = "list_3";
+    private const string FieldListenerOutdoorRooms = "list_4";
+    private const string FieldPlayerCurrentIndoorRooms = "_playerCurrentIndoorRooms";
+    private const string FieldPlayerCurrentOutdoorRooms = "_playerCurrentOutdoorRooms";
+
     public static void FollowCamera()
     {
         if (!CameraManager.Exist || CameraManager.Instance.Camera == null)
@@ -43,7 +51,7 @@ internal static class ControlAudio
     }
 
     // Tinnitus is one global BetterAudio effect, not tied to a player: it keeps ringing until its end time.
-    private static readonly FieldInfo TinnitusEndField = Reflect.Field(Feature.ControlScreenEffects, typeof(BetterAudio), "float_2");
+    private static readonly FieldInfo TinnitusEndField = Reflect.Field(Feature.ControlScreenEffects, typeof(BetterAudio), FieldTinnitusEnd);
 
     public static void StopTinnitus()
     {
@@ -62,7 +70,7 @@ internal static class ControlAudio
         }
     }
 
-    private static readonly FieldInfo StepSourceField = Reflect.Field(Feature.ControlAudio, typeof(Player), "NestedStepSoundSource");
+    private static readonly FieldInfo StepSourceField = Reflect.Field(Feature.ControlAudio, typeof(Player), FieldNestedStepSoundSource);
 
     // The step sound source is set up once at spawn for the body's point of view: a third-person body gets the observed
     // mixer and occlusion from the listener, which muffles its steps once the camera sits in its own head.
@@ -76,11 +84,11 @@ internal static class ControlAudio
         player.InitAudioSources();
     }
 
-    private static readonly FieldInfo RoomStorageField = Reflect.Field(Feature.ControlAudio, typeof(SpatialAudioSystem), "_audioRoomStorage");
-    private static readonly FieldInfo ListenerIndoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), "list_3");
-    private static readonly FieldInfo ListenerOutdoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), "list_4");
-    private static readonly FieldInfo PlayerIndoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), "_playerCurrentIndoorRooms");
-    private static readonly FieldInfo PlayerOutdoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), "_playerCurrentOutdoorRooms");
+    private static readonly FieldInfo RoomStorageField = Reflect.Field(Feature.ControlAudio, typeof(SpatialAudioSystem), FieldAudioRoomStorage);
+    private static readonly FieldInfo ListenerIndoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), FieldListenerIndoorRooms);
+    private static readonly FieldInfo ListenerOutdoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), FieldListenerOutdoorRooms);
+    private static readonly FieldInfo PlayerIndoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), FieldPlayerCurrentIndoorRooms);
+    private static readonly FieldInfo PlayerOutdoorField = Reflect.Field(Feature.ControlAudio, typeof(AudioRoomStorage), FieldPlayerCurrentOutdoorRooms);
 
     // The listener's rooms decide how muffled every other sound is (indoor, outdoor, through walls). The game moves them
     // only when "your player" passes a room trigger, so they would stay where the old body stood; they are handed over

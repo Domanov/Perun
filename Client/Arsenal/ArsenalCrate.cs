@@ -9,6 +9,14 @@ namespace Perun.Client.Arsenal;
 
 internal static class ArsenalCrate
 {
+    private const string ObjectCrateGrid = "perunArsenalCrate";
+    private const string ObjectCrateController = "Perun arsenal crate";
+
+    private const string LabelUnknownItem = "unknown item";
+    private const string LabelNoItemFactory = "no item factory yet";
+    private const string LabelNoControlledUnit = "no controlled unit";
+    private const string LabelCouldNotAdd = "couldn't add it: ";
+
     private static Stash _stash;
     private static GameWorld _world;
     private static Grid _grid;
@@ -49,7 +57,7 @@ internal static class ArsenalCrate
             return false;
         }
         _stash = Singleton<ItemFactory>.Instance.CreateFakeStash();
-        _grid = new Grid("perunArsenalCrate", 10, 1, true, Array.Empty<ItemFilter>(), _stash);
+        _grid = new Grid(ObjectCrateGrid, 10, 1, true, Array.Empty<ItemFilter>(), _stash);
         _stash.Grids[0] = _grid;
         return true;
     }
@@ -58,11 +66,11 @@ internal static class ArsenalCrate
     {
         if (tree == null)
         {
-            return ArsenalResult.Invalid("unknown item");
+            return ArsenalResult.Invalid(LabelUnknownItem);
         }
         if (!Ensure())
         {
-            return ArsenalResult.Busy("no item factory yet");
+            return ArsenalResult.Busy(LabelNoItemFactory);
         }
         Grid grid = _grid;
         await ArsenalOps.Load(tree);
@@ -73,7 +81,7 @@ internal static class ArsenalCrate
         var added = grid.AddAnywhere(tree, EErrorHandlingType.Ignore);
         if (added.Failed)
         {
-            return ArsenalResult.NoRoom($"couldn't add it: {added.Error}");
+            return ArsenalResult.NoRoom(LabelCouldNotAdd + added.Error);
         }
         Plugin.Log.LogInfo($"Arsenal crate: added {tree.ShortName.Localized()} ({tree.TemplateId})");
         return ArsenalResult.Ok;
@@ -127,7 +135,7 @@ internal static class ArsenalCrate
     {
         if (owner == null || unit?.InventoryController == null)
         {
-            return "no controlled unit";
+            return LabelNoControlledUnit;
         }
         if (IsOpen)
         {
@@ -135,9 +143,9 @@ internal static class ArsenalCrate
         }
         if (!Ensure())
         {
-            return "no item factory yet";
+            return LabelNoItemFactory;
         }
-        new ItemController(_stash, unit.InventoryController.ID, "Perun arsenal crate", false, EOwnerType.Profile);
+        new ItemController(_stash, unit.InventoryController.ID, ObjectCrateController, false, EOwnerType.Profile);
         IsOpen = true;
         try
         {

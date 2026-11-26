@@ -10,6 +10,12 @@ namespace Perun.Client.Compat;
 // can't resolve and every mod that lists all types (HarmonyX's TypeByName among them) logs errors on it.
 internal static class FikaBridgeLoader
 {
+    private const string TypeBridgePlugin = "Perun.Fika.Plugin";
+
+    private const string MethodStart = "Start";
+
+    private const string FieldVersion = "Version";
+
     private const string FileName = "Perun.Fika.dll";
 
     public static string Version { get; private set; }
@@ -30,9 +36,9 @@ internal static class FikaBridgeLoader
 
         try
         {
-            Type entry = Assembly.LoadFrom(path).GetType("Perun.Fika.Plugin", true);
-            entry.GetMethod("Start", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { host, config });
-            Version = (string)entry.GetField("Version").GetValue(null);
+            Type entry = Assembly.LoadFrom(path).GetType(TypeBridgePlugin, true);
+            entry.GetMethod(MethodStart, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { host, config });
+            Version = (string)entry.GetField(FieldVersion).GetValue(null);
         }
         catch (Exception ex)
         {
